@@ -1,0 +1,27 @@
+target_type,target_slug,username,rating,body_az,tags,photos,days_ago
+place,xinaliq-kendi,aysel.go,5,"Həyatımın ən unudulmaz səyahətlərindən biri oldu. Təbiət möhtəşəm, insanlar isə çox səmimi!",tebiet|samimi-insanlar,post-aysel-village.jpg|place-xinaliq.jpg,5
+place,xinaliq-kendi,tural.travels,5,"Yol çətindir amma mənzərə hər şeyə dəyər. 4x4 məsləhətdir.",yol-cetindir,,7
+place,xinaliq-kendi,gulnar.k,4,"Kənd çox gözəldir, yalnız yemək yerləri azdır.",yerli-metbex,,14
+place,xinaliq-kendi,rustem.q,5,"Qonaqlarımı hər dəfə bura gətirirəm — heç vaxt məyus etmir.",beledci-tovsiyesi,,30
+place,xinaliq-kendi,leriman.m,5,"Səhər dumanı arasında kəndi görmək ayrı bir hissdir.",,,21
+place,lahic,gulnar.k,5,"Misgər ustaları ilə söhbət etmək təcrübənin ən yaxşı hissəsi idi.",senetkarliq,place-lahic.jpg,10
+place,lahic,aysel.go,4,"Daş küçələr çox gözəl, amma rahat ayaqqabı geyinin.",,,25
+place,icherisheher,tural.travels,5,"Bakının ürəyi. Hər dəfə yeni bir şey kəşf edirsən.",tarix,,3
+place,icherisheher,lale.travel,5,"Qız qalasından mənzərə əvəzsizdir.",,,12
+place,icherisheher,kamran.b,4,"Turist çox olur, səhər tez getmək daha yaxşıdır.",,,18
+place,shahdag-turizm-merkezi,samire.q,5,"Yay yürüşləri üçün ideal başlanğıc nöqtəsi.",dag-turu,,8
+place,shahdag-turizm-merkezi,kamran.b,4,"Qışda əla, yayda bir az sakit qalır.",,,40
+place,nohurgol,aysel.go,5,"Göl kənarında nahar etmək marşrutun ən yaxşı anı idi.",tebiet,card-lake.jpg,5
+place,quba-mese-piknik,rustem.q,5,"Piknik üçün ən yaxşı yer — kölgə də var, su da.",,,15
+place,laza,tural.travels,5,"Şəlaləyə piyada yürüş 40 dəqiqə çəkir, dəyər.",,,9
+place,seki-xan-sarayi,lale.travel,5,"Şəbəkə pəncərələr nəfəs kəsir. Bələdçi mütləq götürün.",tarix|beledci-tovsiyesi,,20
+place,goygol,nigar.s,5,"Su o qədər təmizdir ki, dibi görünür.",tebiet,,11
+route,quba-daglar-turu,aysel.go,5,"3 gün kifayət etdi, marşrut çox yaxşı planlaşdırılıb.",,,6
+route,quba-daglar-turu,leriman.m,5,"Xınalıq son gün üçün doğru seçimdir.",,,16
+route,baki-medeniyyet-marsrutu,gulnar.k,4,"Bir günə çox şey sığışdırılıb, tələsmək lazım gəlir.",,,13
+experience,kend-metbexi-masterklassi,aysel.go,5,"Dolma bişirməyi öyrəndim, ev sahibləri çox mehriban idi.",qastronomiya|samimi-insanlar,exp-kend-metbexi.jpg,4
+experience,kend-metbexi-masterklassi,nigar.s,5,"Nahar özü ayrıca dəyər. Tövsiyə edirəm.",,,17
+experience,lahic-misgerlik-tecrubesi,tural.travels,5,"Öz misdən fincanımı hazırladım — evə ən yaxşı hədiyyə.",senetkarliq,exp-lahic-misgerlik.jpg,22
+experience,dag-yurushu-shahdag,kamran.b,5,"Bələdçi çox peşəkar idi, təhlükəsizlik ön planda.",dag-turu,,9
+business,gabala-resort-spa,lale.travel,5,"Dağ mənzərəli otaq gözlədiyimdən də yaxşı idi.",,,19
+business,gabala-resort-spa,tural.travels,4,"Spa əla, restoran orta səviyyə.",,,28

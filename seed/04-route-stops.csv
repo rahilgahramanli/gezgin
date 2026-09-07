@@ -1,0 +1,11 @@
+route_slug,day,order,place_slug,arrive_time,duration_min,note_az
+quba-daglar-turu,1,1,quba-mese-piknik,09:00,120,"Marşrutun başlanğıcı — səhər yeməyi"
+quba-daglar-turu,1,2,nohurgol,12:30,90,"Göl kənarında nahar"
+quba-daglar-turu,2,1,laza,10:00,180,"Şəlaləyə piyada yürüş"
+quba-daglar-turu,2,2,qecresh,15:00,120,"Meşədə istirahət"
+quba-daglar-turu,3,1,xinaliq-kendi,11:00,240,"Kənd gəzintisi və yerli nahar"
+baki-medeniyyet-marsrutu,1,1,icherisheher,10:00,180,"Qala divarları və Qız qalası"
+baki-medeniyyet-marsrutu,1,2,ateshgah,16:00,120,"Gün batımında ziyarət"
+quba-qusar-tebiet-turu,1,1,quba-mese-piknik,09:30,150,
+quba-qusar-tebiet-turu,1,2,qecresh,13:00,120,
+quba-qusar-tebiet-turu,2,1,laza,10:00,240,

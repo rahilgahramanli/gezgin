@@ -1,0 +1,9 @@
+action,name_az,xp,daily_cap,note
+place_checkin,Məkanı kəşf et,600,3,"slayd 8"
+experience_completed,Təcrübə yaşa,800,,"slayd 8"
+review_written,Rəy yaz,400,3,"slayd 8"
+media_shared,Foto / Video paylaş,300,5,"slayd 8"
+route_created,Marşrut yarat,350,2,"slayd 8"
+profile_completed,Profili tamamla,100,,"ekran 39"
+booking_completed,Rezervasiya tamamla,50,,"ekran 17 — təcrübə xalı"
+trip_completed,Səyahəti tamamla,500,,"təklif — təsdiq lazımdır"

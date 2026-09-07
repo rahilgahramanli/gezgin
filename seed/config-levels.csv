@@ -1,0 +1,21 @@
+level,tier_az,tier_en,xp_required,note
+1,Başlanğıc,Beginner,0,"slayd 8 — tier adı"
+2,Başlanğıc,Beginner,150,
+3,Başlanğıc,Beginner,350,
+4,Başlanğıc,Beginner,600,
+5,Başlanğıc,Beginner,900,"tier sonu (slayd 8: 0–499 XP aralığı yenidən baxılmalı)"
+6,Kəşf edən,Explorer,1300,"slayd 8 — tier adı"
+7,Kəşf edən,Explorer,1800,
+8,Kəşf edən,Explorer,2400,
+9,Kəşf edən,Explorer,3100,
+10,Kəşf edən,Explorer,3900,
+11,Kəşf edən,Explorer,4800,
+12,Kəşf edən,Explorer,5800,"Aysel M. bu leveldədir (ekran 28, 29)"
+13,Səyyah,Traveler,6900,"slayd 8 — tier adı"
+14,Səyyah,Traveler,8100,"Tural bu leveldədir (ekran 41)"
+15,Səyyah,Traveler,9400,
+16,Səyyah,Traveler,10800,
+17,Səyyah,Traveler,12300,
+18,Kəşfçi,Discoverer,13900,"slayd 8 — tier adı"
+19,Kəşfçi,Discoverer,15600,
+20,Gezgin,Gezgin,17400,"'Əfsanə' badge-i bu leveldə açılır (ekran 30)"

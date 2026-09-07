@@ -1,0 +1,9 @@
+slug,name_az,name_en,description_az,condition_type,condition_value,icon,tier
+ilk-zirve,İlk Zirvə,First Summit,"10 məkan kəşf et",places_visited,10,i-mountain-flag,green
+fotoqu,Fotoqu,Photographer,"50 foto və ya video paylaş",posts_created,50,i-camera,teal
+marsrutcu,Marşrutçu,Route Maker,"5 marşrut yarat",routes_created,5,i-route,brown
+tecrubeci,Təcrübəçi,Experiencer,"20 təcrübə yaşa",experiences_done,20,i-star,purple
+efsane,Əfsanə,Legend,"Level 20-yə çat",level_reached,20,i-trophy,gold
+reyci,Rəyçi,Reviewer,"25 rəy yaz",reviews_written,25,i-chat,teal
+region-kesfcisi,Region Kəşfçisi,Region Explorer,"10 region kəşf et",regions_visited,10,i-globe,green
+ilk-addim,İlk Addım,First Step,"İlk check-in",checkins,1,i-pin,green

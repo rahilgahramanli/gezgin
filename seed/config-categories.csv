@@ -1,0 +1,13 @@
+slug,name_az,name_en,name_ru,type,icon
+tebiet,Təbiət,Nature,Природа,place|route|experience,i-tree
+tarix,Tarix,History,История,place|route,i-landmark
+medeniyyet,Mədəniyyət,Culture,Культура,place|route|experience,i-palette
+macera,Macəra,Adventure,Приключение,place|route|experience,i-compass
+qastronomiya,Qastronomiya,Gastronomy,Гастрономия,place|experience,i-utensils
+senetkarliq,Sənətkarlıq,Craft,Ремесло,experience,i-hammer
+deniz,Dəniz,Sea,Море,place|route,i-waves
+dag,Dağ,Mountain,Горы,place|route,i-mountain
+kempinq,Kempinq,Camping,Кемпинг,experience,i-tent
+festival,Festival,Festival,Фестиваль,event,i-sparkle
+konsert,Konsert,Concert,Концерт,event,i-music
+sergi,Sərgi,Exhibition,Выставка,event,i-image

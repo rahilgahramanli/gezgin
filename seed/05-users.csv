@@ -1,0 +1,11 @@
+username,full_name,role,region_slug,level,gezgin_score,bio_az,avatar,languages,specialties
+aysel.go,Aysel Məmmədova,gezgin,quba,12,2450,"Dağları və yerli mətbəxi sevirəm 🏔️",avatar-sen.jpg,az|en,
+tural.travels,Tural Əliyev,gezgin,baki,14,3980,"Həftəsonları dağlardayam. 32 region, 120+ məkan. Marşrutlarımı paylaşıram 🥾",avatar-tural.jpg,az|en|ru,
+gulnar.k,Gülnar Kərimova,gezgin,qebele,9,3110,"Foto və səyahət.",avatar-gulnar.jpg,az|ru,
+lale.travel,Lalə Hüseynova,gezgin,seki,7,2980,"Yeni yerlər kəşf etməyi sevirəm.",avatar-lale.jpg,az,
+leriman.m,Leriman Məmmədli,gezgin,lenkeran,11,3420,"Sahil və təbiət marşrutları.",avatar-leriman.jpg,az|ru,
+kamran.b,Kamran Bağırov,gezgin,qebele,12,2410,"Kempinq və dağ yürüşləri.",avatar-tural.jpg,az,
+nigar.s,Nigar Səfərova,gezgin,baki,8,2280,"Mədəniyyət və muzeylər.",avatar-lale.jpg,az|en,
+rustem.q,Rüstəm Quliyev,local_expert,quba,13,2760,"Quba dağlarında doğulmuşam. 10 ildir bələdçilik edirəm, yerli mətbəx və kənd həyatını sevdirirəm.",avatar-rustem.jpg,az|ru|en,beledci|qastronomiya
+elvin.lahic,Elvin Məmmədov,local_expert,ismayilli,10,2140,"Lahıcda misgər ailəsindənəm, sənətkarlıq təcrübələri təqdim edirəm.",avatar-tural.jpg,az|ru,senetkarliq|medeniyyet
+samire.q,Samirə Qasımova,local_expert,qebele,11,2320,"Qəbələ meşələrində yürüş və kempinq bələdçisi.",avatar-gulnar.jpg,az|en,dag-turu|kempinq

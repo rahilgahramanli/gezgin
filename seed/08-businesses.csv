@@ -1,0 +1,4 @@
+slug,name,type,region_slug,lat,lng,phone,website,description_az,cover_photo,logo,services
+gabala-resort-spa,Gabala Resort & Spa,otel,qebele,40.981900,47.845600,+994123456789,gabalaresort.az,"Dağ mənzərəli otel və istirahət mərkəzi — spa, hovuz və restoran.",business-gabala.jpg,,spa|hovuz|restoran|transfer|konfrans
+shahdag-hotel,Şahdağ Mountain Resort,otel,qusar,41.316700,48.033300,+994123456790,,"Qış idmanı mərkəzində otel kompleksi.",thumb-shahdag-center.jpg,,ski|restoran|transfer
+quba-guest-house,Quba Qonaq Evi,qonaq-evi,quba,41.360600,48.512800,+994123456791,,"Ailə tipli qonaq evi — ev şəraiti və yerli mətbəx.",thumb-quba-forest.jpg,,yerli-metbex|beledci
