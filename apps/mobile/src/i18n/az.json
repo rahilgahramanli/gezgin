@@ -1,0 +1,29 @@
+{
+  "tabs": {
+    "discover": "Discover",
+    "explore": "Explore",
+    "trips": "Trips",
+    "profile": "Profile"
+  },
+  "common": {
+    "loading": "Yüklənir...",
+    "retry": "Yenidən cəhd et",
+    "seeAll": "Hamısına bax",
+    "more": "Daha çox",
+    "cancel": "Ləğv et",
+    "save": "Saxla",
+    "continue": "Davam et"
+  },
+  "errors": {
+    "NETWORK": "İnternet bağlantısı yoxdur",
+    "NOT_FOUND": "Tapılmadı",
+    "UNAUTHORIZED": "Yenidən daxil olmalısınız",
+    "VALIDATION_FAILED": "Məlumatları yoxlayın",
+    "RATE_LIMITED": "Çox sayda sorğu — bir az gözləyin",
+    "INTERNAL": "Xəta baş verdi, yenidən cəhd edin"
+  },
+  "home": {
+    "greeting": "Salam!",
+    "question": "Harada kəşf edək bu gün?"
+  }
+}
