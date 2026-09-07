@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist",
+    // tsbuildinfo dist-in içindədir ki, nest-in `deleteOutDir` əməliyyatı onu da silsin.
+    // Əks halda köhnəlmiş keş "dəyişiklik yoxdur" deyir və heç nə emit olunmur.
+    "tsBuildInfoFile": "dist/.tsbuildinfo"
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "prisma", "test", "**/*.spec.ts"]
+}

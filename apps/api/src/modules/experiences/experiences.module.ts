@@ -1,0 +1,11 @@
+import { Module } from '@nestjs/common';
+import { ExperiencesController } from './experiences.controller';
+import { ExpertsController } from './experts.controller';
+import { ExperiencesService } from './experiences.service';
+
+@Module({
+  controllers: [ExperiencesController, ExpertsController],
+  providers: [ExperiencesService],
+  exports: [ExperiencesService],
+})
+export class ExperiencesModule {}

@@ -1,0 +1,1999 @@
+// ═══════════════════════════════════════════════════════════════════════
+//  GEZGIN.app — Prisma sxemi (MySQL 8.4)
+//  Mənbə: TECH-PLAN.md §4 · design/ (56 ekran) · seed/ (CSV şablonları)
+//
+//  Qaydalar:
+//   • Daxili ID: BigInt autoincrement · xaricə açıq: publicId (ULID, 26 simvol)
+//   • Bütün tarixlər UTC · soft delete: deletedAt
+//   • Çoxdilli kontent ayrıca *Translation modelində (AZ/EN/RU)
+//   • Coğrafi sorğular: lat/lng Decimal + `geo POINT SRID 4326` generated sütunu
+//     (migration SQL-də əlavə olunur, sorğular $queryRaw ilə — bax prisma/sql/)
+// ═══════════════════════════════════════════════════════════════════════
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider          = "mysql"
+  url               = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+}
+
+// ─────────────────────────── ENUM-lar ───────────────────────────
+
+enum UserRole {
+  gezgin
+  local_expert
+  business
+  admin
+}
+
+enum UserStatus {
+  active
+  suspended
+  deleted
+}
+
+enum Language {
+  az
+  en
+  ru
+}
+
+enum Gender {
+  female
+  male
+  other
+  unspecified
+}
+
+enum OtpChannel {
+  email
+  sms
+}
+
+enum OtpPurpose {
+  register
+  login
+  password_reset
+  email_change
+  phone_change
+}
+
+enum DevicePlatform {
+  ios
+  android
+  web
+}
+
+enum MediaType {
+  image
+  video
+  audio
+  document
+}
+
+enum MediaStatus {
+  pending
+  ready
+  failed
+}
+
+enum ContentStatus {
+  draft
+  published
+  archived
+}
+
+enum CategoryType {
+  place
+  route
+  experience
+  event
+}
+
+enum RouteDifficulty {
+  asan
+  orta
+  cetin
+}
+
+enum RouteVisibility {
+  private
+  public
+  official
+}
+
+enum ExperienceDuration {
+  two_hours
+  half_day
+  full_day
+  multi_day
+}
+
+enum EventCategory {
+  festival
+  konsert
+  sergi
+  idman
+  diger
+}
+
+enum BusinessType {
+  otel
+  restoran
+  qonaq_evi
+  tur_sirketi
+  diger
+}
+
+enum TripStatus {
+  planned
+  active
+  completed
+  cancelled
+}
+
+enum TripItemType {
+  place
+  experience
+  event
+  custom
+}
+
+enum BookingType {
+  experience
+  business_package
+  event
+}
+
+enum BookingStatus {
+  pending
+  awaiting_payment
+  confirmed
+  cancelled
+  completed
+  refunded
+}
+
+enum PaymentStatus {
+  created
+  requires_action
+  succeeded
+  failed
+  refunded
+  partially_refunded
+}
+
+enum PaymentProviderCode {
+  mock
+  kapital
+  azericard
+  pasha
+  apple_iap
+  google_iap
+}
+
+enum PayoutStatus {
+  pending
+  processing
+  paid
+  failed
+}
+
+enum PostVisibility {
+  public
+  followers
+  private
+}
+
+enum ReactionTargetType {
+  post
+  comment
+  review
+}
+
+enum ReviewTargetType {
+  place
+  route
+  experience
+  business
+  event
+}
+
+enum SavedItemType {
+  place
+  route
+  experience
+  event
+  post
+  business
+}
+
+enum ConversationType {
+  direct
+  support
+}
+
+enum MessageType {
+  text
+  image
+  experience_card
+  route_card
+  booking_card
+  system
+}
+
+enum NotificationType {
+  social_follow
+  social_like
+  social_comment
+  booking_update
+  payment_update
+  xp_gained
+  level_up
+  badge_earned
+  event_reminder
+  trip_reminder
+  offer
+  system
+}
+
+enum ReportTargetType {
+  post
+  comment
+  review
+  user
+  place
+  experience
+  message
+}
+
+enum ReportStatus {
+  open
+  reviewing
+  resolved
+  rejected
+}
+
+enum ExpertApplicationStatus {
+  draft
+  submitted
+  reviewing
+  approved
+  rejected
+}
+
+enum SubscriptionPlanCode {
+  gezgin_pro
+  expert_pro
+  business_pro
+}
+
+enum SubscriptionStatus {
+  trialing
+  active
+  past_due
+  cancelled
+  expired
+}
+
+enum BadgeCondition {
+  places_visited
+  posts_created
+  routes_created
+  experiences_done
+  level_reached
+  reviews_written
+  regions_visited
+  checkins
+}
+
+enum XpAction {
+  place_checkin
+  experience_completed
+  review_written
+  media_shared
+  route_created
+  profile_completed
+  booking_completed
+  trip_completed
+  admin_adjustment
+}
+
+enum LeaderboardPeriod {
+  weekly
+  monthly
+  all_time
+}
+
+enum OfflinePackageStatus {
+  available
+  building
+  unavailable
+}
+
+enum SearchEntityType {
+  place
+  route
+  experience
+  event
+  user
+  business
+}
+
+// ═══════════════════ 1. İSTİFADƏÇİ (8 cədvəl) ═══════════════════
+
+model User {
+  id           BigInt     @id @default(autoincrement()) @db.UnsignedBigInt
+  publicId     String     @unique @map("public_id") @db.Char(26)
+  username     String     @unique @db.VarChar(32)
+  email        String?    @unique @db.VarChar(190)
+  phone        String?    @unique @db.VarChar(24)
+  passwordHash String?    @map("password_hash") @db.VarChar(255)
+  fullName     String     @map("full_name") @db.VarChar(120)
+  bio          String?    @db.VarChar(300)
+  gender       Gender     @default(unspecified)
+  birthDate    DateTime?  @map("birth_date") @db.Date
+  role         UserRole   @default(gezgin)
+  status       UserStatus @default(active)
+
+  avatarId     BigInt? @map("avatar_id") @db.UnsignedBigInt
+  coverId      BigInt? @map("cover_id") @db.UnsignedBigInt
+  homeRegionId BigInt? @map("home_region_id") @db.UnsignedBigInt
+
+  level       Int @default(1) @db.UnsignedSmallInt
+  xp          Int @default(0) @db.UnsignedInt
+  gezginScore Int @default(0) @map("gezgin_score") @db.UnsignedInt
+
+  isPublic        Boolean   @default(true) @map("is_public")
+  isVerified      Boolean   @default(false) @map("is_verified")
+  emailVerifiedAt DateTime? @map("email_verified_at") @db.DateTime(3)
+  phoneVerifiedAt DateTime? @map("phone_verified_at") @db.DateTime(3)
+  lastActiveAt    DateTime? @map("last_active_at") @db.DateTime(3)
+
+  createdAt DateTime  @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.DateTime(3)
+  deletedAt DateTime? @map("deleted_at") @db.DateTime(3)
+
+  avatar     MediaAsset? @relation("UserAvatar", fields: [avatarId], references: [id], onDelete: SetNull)
+  cover      MediaAsset? @relation("UserCover", fields: [coverId], references: [id], onDelete: SetNull)
+  homeRegion Region?     @relation(fields: [homeRegionId], references: [id], onDelete: SetNull)
+
+  settings             UserSettings?
+  notificationPrefs    NotificationPreference?
+  expertProfile        ExpertProfile?
+  interests            UserInterest[]
+  otpCodes             OtpCode[]
+  refreshTokens        RefreshToken[]
+  devices              Device[]
+  following            Follow[]                  @relation("Follower")
+  followers            Follow[]                  @relation("Following")
+  blocksMade           Block[]                   @relation("Blocker")
+  blocksReceived       Block[]                   @relation("Blocked")
+  places               Place[]                   @relation("PlaceCreator")
+  placePhotos          PlacePhoto[]
+  routes               Route[]
+  experiences          Experience[]
+  businesses           Business[]
+  trips                Trip[]
+  bookings             Booking[]
+  paymentMethods       PaymentMethod[]
+  payouts              Payout[]
+  posts                Post[]
+  postLikes            PostLike[]
+  comments             Comment[]
+  commentLikes         CommentLike[]
+  stories              Story[]
+  storyViews           StoryView[]
+  reviews              Review[]
+  reviewHelpful        ReviewHelpful[]
+  reviewReplies        ReviewReply[]
+  savedItems           SavedItem[]
+  collections          Collection[]
+  badges               UserBadge[]
+  xpTransactions       XpTransaction[]
+  checkins             Checkin[]
+  leaderboardSnapshots LeaderboardSnapshot[]
+  notifications        Notification[]
+  conversations        ConversationParticipant[]
+  messages             Message[]
+  expertApplication    ExpertApplication?
+  subscriptions        Subscription[]
+  mediaUploads         MediaAsset[]              @relation("MediaOwner")
+  reportsMade          Report[]                  @relation("Reporter")
+  reportsReceived      Report[]                  @relation("ReportedUser")
+  searchHistory        SearchHistory[]
+  auditLogs            AuditLog[]
+  eventAttendance      EventAttendee[]
+  offlineDownloads     OfflineDownload[]
+
+  @@index([role, status])
+  @@index([homeRegionId])
+  @@index([gezginScore(sort: Desc)])
+  @@index([createdAt])
+  @@map("users")
+}
+
+model UserSettings {
+  userId            BigInt         @id @map("user_id") @db.UnsignedBigInt
+  language          Language       @default(az)
+  currency          String         @default("AZN") @db.Char(3)
+  darkMode          Boolean        @default(false) @map("dark_mode")
+  pushEnabled       Boolean        @default(true) @map("push_enabled")
+  emailEnabled      Boolean        @default(true) @map("email_enabled")
+  locationEnabled   Boolean        @default(true) @map("location_enabled")
+  wifiOnlyDownload  Boolean        @default(true) @map("wifi_only_download")
+  profileVisibility PostVisibility @default(public) @map("profile_visibility")
+  updatedAt         DateTime       @updatedAt @map("updated_at") @db.DateTime(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_settings")
+}
+
+model UserInterest {
+  userId     BigInt   @map("user_id") @db.UnsignedBigInt
+  categoryId BigInt   @map("category_id") @db.UnsignedBigInt
+  createdAt  DateTime @default(now()) @map("created_at") @db.DateTime(3)
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([userId, categoryId])
+  @@index([categoryId])
+  @@map("user_interests")
+}
+
+model OtpCode {
+  id         BigInt     @id @default(autoincrement()) @db.UnsignedBigInt
+  userId     BigInt?    @map("user_id") @db.UnsignedBigInt
+  target     String     @db.VarChar(190)
+  channel    OtpChannel
+  purpose    OtpPurpose
+  codeHash   String     @map("code_hash") @db.VarChar(255)
+  attempts   Int        @default(0) @db.UnsignedTinyInt
+  expiresAt  DateTime   @map("expires_at") @db.DateTime(3)
+  consumedAt DateTime?  @map("consumed_at") @db.DateTime(3)
+  createdAt  DateTime   @default(now()) @map("created_at") @db.DateTime(3)
+
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([target, purpose, expiresAt])
+  @@index([userId])
+  @@map("otp_codes")
+}
+
+model RefreshToken {
+  id           BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  userId       BigInt    @map("user_id") @db.UnsignedBigInt
+  tokenHash    String    @unique @map("token_hash") @db.VarChar(255)
+  family       String    @db.Char(26)
+  userAgent    String?   @map("user_agent") @db.VarChar(255)
+  ip           String?   @db.VarChar(45)
+  expiresAt    DateTime  @map("expires_at") @db.DateTime(3)
+  revokedAt    DateTime? @map("revoked_at") @db.DateTime(3)
+  replacedById BigInt?   @map("replaced_by_id") @db.UnsignedBigInt
+  createdAt    DateTime  @default(now()) @map("created_at") @db.DateTime(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+  @@index([family])
+  @@map("refresh_tokens")
+}
+
+model Device {
+  id         BigInt         @id @default(autoincrement()) @db.UnsignedBigInt
+  userId     BigInt         @map("user_id") @db.UnsignedBigInt
+  platform   DevicePlatform
+  pushToken  String         @map("push_token") @db.VarChar(255)
+  appVersion String?        @map("app_version") @db.VarChar(24)
+  locale     String?        @db.VarChar(10)
+  lastSeenAt DateTime       @default(now()) @map("last_seen_at") @db.DateTime(3)
+  createdAt  DateTime       @default(now()) @map("created_at") @db.DateTime(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, pushToken])
+  @@index([platform])
+  @@map("devices")
+}
+
+model Follow {
+  followerId  BigInt   @map("follower_id") @db.UnsignedBigInt
+  followingId BigInt   @map("following_id") @db.UnsignedBigInt
+  createdAt   DateTime @default(now()) @map("created_at") @db.DateTime(3)
+
+  follower  User @relation("Follower", fields: [followerId], references: [id], onDelete: Cascade)
+  following User @relation("Following", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@id([followerId, followingId])
+  @@index([followingId, createdAt])
+  @@map("follows")
+}
+
+model Block {
+  blockerId BigInt   @map("blocker_id") @db.UnsignedBigInt
+  blockedId BigInt   @map("blocked_id") @db.UnsignedBigInt
+  reason    String?  @db.VarChar(255)
+  createdAt DateTime @default(now()) @map("created_at") @db.DateTime(3)
+
+  blocker User @relation("Blocker", fields: [blockerId], references: [id], onDelete: Cascade)
+  blocked User @relation("Blocked", fields: [blockedId], references: [id], onDelete: Cascade)
+
+  @@id([blockerId, blockedId])
+  @@index([blockedId])
+  @@map("blocks")
+}
+
+// ═══════════════════ 2. KONTENT (12 cədvəl) ═══════════════════
+
+model Region {
+  id         BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  publicId   String   @unique @map("public_id") @db.Char(26)
+  slug       String   @unique @db.VarChar(80)
+  parentId   BigInt?  @map("parent_id") @db.UnsignedBigInt
+  lat        Decimal? @db.Decimal(10, 7)
+  lng        Decimal? @db.Decimal(10, 7)
+  coverId    BigInt?  @map("cover_id") @db.UnsignedBigInt
+  isFeatured Boolean  @default(false) @map("is_featured")
+  placeCount Int      @default(0) @map("place_count") @db.UnsignedInt
+  sortOrder  Int      @default(0) @map("sort_order")
+  createdAt  DateTime @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.DateTime(3)
+
+  parent       Region?             @relation("RegionTree", fields: [parentId], references: [id], onDelete: SetNull)
+  children     Region[]            @relation("RegionTree")
+  cover        MediaAsset?         @relation(fields: [coverId], references: [id], onDelete: SetNull)
+  translations RegionTranslation[]
+  places       Place[]
+  routes       Route[]
+  experiences  Experience[]
+  events       Event[]
+  businesses   Business[]
+  users        User[]
+  checkins     Checkin[]
+  offlinePkg   OfflinePackage?
+
+  @@index([parentId])
+  @@index([isFeatured, sortOrder])
+  @@map("regions")
+}
+
+model RegionTranslation {
+  regionId    BigInt   @map("region_id") @db.UnsignedBigInt
+  lang        Language
+  name        String   @db.VarChar(120)
+  description String?  @db.Text
+
+  region Region @relation(fields: [regionId], references: [id], onDelete: Cascade)
+
+  @@id([regionId, lang])
+  @@fulltext([name, description])
+  @@map("region_translations")
+}
+
+model Category {
+  id        BigInt  @id @default(autoincrement()) @db.UnsignedBigInt
+  slug      String  @unique @db.VarChar(60)
+  nameAz    String  @map("name_az") @db.VarChar(80)
+  nameEn    String  @map("name_en") @db.VarChar(80)
+  nameRu    String  @map("name_ru") @db.VarChar(80)
+  icon      String? @db.VarChar(60)
+  types     String  @db.VarChar(120) // "place|route|experience" — CategoryType siyahısı
+  sortOrder Int     @default(0) @map("sort_order")
+  isActive  Boolean @default(true) @map("is_active")
+
+  places      PlaceCategory[]
+  interests   UserInterest[]
+  experiences Experience[]
+  routes      Route[]
+
+  @@index([isActive, sortOrder])
+  @@map("categories")
+}
+
+model Place {
+  id          BigInt        @id @default(autoincrement()) @db.UnsignedBigInt
+  publicId    String        @unique @map("public_id") @db.Char(26)
+  slug        String        @unique @db.VarChar(120)
+  regionId    BigInt        @map("region_id") @db.UnsignedBigInt
+  createdById BigInt?       @map("created_by_id") @db.UnsignedBigInt
+  status      ContentStatus @default(published)
+
+  lat       Decimal @db.Decimal(10, 7)
+  lng       Decimal @db.Decimal(10, 7)
+  altitudeM Int?    @map("altitude_m") @db.SmallInt
+  address   String? @db.VarChar(255)
+  phone     String? @db.VarChar(24)
+  website   String? @db.VarChar(190)
+
+  bestSeason     String?  @map("best_season") @db.VarChar(60)
+  visitDurationH Decimal? @map("visit_duration_h") @db.Decimal(4, 1)
+  entranceFeeAzn Decimal? @map("entrance_fee_azn") @db.Decimal(8, 2)
+
+  ratingAvg    Decimal @default(0) @map("rating_avg") @db.Decimal(3, 2)
+  ratingCount  Int     @default(0) @map("rating_count") @db.UnsignedInt
+  saveCount    Int     @default(0) @map("save_count") @db.UnsignedInt
+  checkinCount Int     @default(0) @map("checkin_count") @db.UnsignedInt
+  isFeatured   Boolean @default(false) @map("is_featured")
+
+  createdAt DateTime  @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.DateTime(3)
+  deletedAt DateTime? @map("deleted_at") @db.DateTime(3)
+
+  region       Region             @relation(fields: [regionId], references: [id], onDelete: Restrict)
+  createdBy    User?              @relation("PlaceCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  translations PlaceTranslation[]
+  photos       PlacePhoto[]
+  categories   PlaceCategory[]
+  routeStops   RouteStop[]
+  tripItems    TripItem[]
+  checkins     Checkin[]
+  posts        Post[]
+  experiences  Experience[]
+
+  @@index([regionId, status])
+  @@index([isFeatured, ratingAvg(sort: Desc)])
+  @@index([lat, lng])
+  @@map("places")
+}
+
+model PlaceTranslation {
+  placeId     BigInt   @map("place_id") @db.UnsignedBigInt
+  lang        Language
+  name        String   @db.VarChar(160)
+  description String?  @db.Text
+
+  place Place @relation(fields: [placeId], references: [id], onDelete: Cascade)
+
+  @@id([placeId, lang])
+  @@fulltext([name, description])
+  @@map("place_translations")
+}
+
+model PlacePhoto {
+  id           BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  placeId      BigInt   @map("place_id") @db.UnsignedBigInt
+  mediaId      BigInt   @map("media_id") @db.UnsignedBigInt
+  uploadedById BigInt?  @map("uploaded_by_id") @db.UnsignedBigInt
+  isOfficial   Boolean  @default(false) @map("is_official")
+  isCover      Boolean  @default(false) @map("is_cover")
+  sortOrder    Int      @default(0) @map("sort_order")
+  createdAt    DateTime @default(now()) @map("created_at") @db.DateTime(3)
+
+  place      Place      @relation(fields: [placeId], references: [id], onDelete: Cascade)
+  media      MediaAsset @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+  uploadedBy User?      @relation(fields: [uploadedById], references: [id], onDelete: SetNull)
+
+  @@index([placeId, isCover, sortOrder])
+  @@index([mediaId])
+  @@index([uploadedById])
+  @@map("place_photos")
+}
+
+model PlaceCategory {
+  placeId    BigInt  @map("place_id") @db.UnsignedBigInt
+  categoryId BigInt  @map("category_id") @db.UnsignedBigInt
+  isPrimary  Boolean @default(false) @map("is_primary")
+
+  place    Place    @relation(fields: [placeId], references: [id], onDelete: Cascade)
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([placeId, categoryId])
+  @@index([categoryId])
+  @@map("place_categories")
+}
+
+model Event {
+  id       BigInt        @id @default(autoincrement()) @db.UnsignedBigInt
+  publicId String        @unique @map("public_id") @db.Char(26)
+  slug     String        @unique @db.VarChar(120)
+  regionId BigInt        @map("region_id") @db.UnsignedBigInt
+  category EventCategory @default(festival)
+  status   ContentStatus @default(published)
+
+  titleAz       String  @map("title_az") @db.VarChar(160)
+  titleEn       String? @map("title_en") @db.VarChar(160)
+  descriptionAz String? @map("description_az") @db.Text
+
+  startDate DateTime @map("start_date") @db.Date
+  endDate   DateTime @map("end_date") @db.Date
+  startTime String?  @map("start_time") @db.VarChar(5)
+  endTime   String?  @map("end_time") @db.VarChar(5)
+
+  venue String?  @db.VarChar(190)
+  lat   Decimal? @db.Decimal(10, 7)
+  lng   Decimal? @db.Decimal(10, 7)
+
+  isFree    Boolean  @default(true) @map("is_free")
+  priceAzn  Decimal? @map("price_azn") @db.Decimal(8, 2)
+  organizer String?  @db.VarChar(160)
+  coverId   BigInt?  @map("cover_id") @db.UnsignedBigInt
+
+  attendeeCount Int @default(0) @map("attendee_count") @db.UnsignedInt
+
+  createdAt DateTime  @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.DateTime(3)
+  deletedAt DateTime? @map("deleted_at") @db.DateTime(3)
+
+  region    Region          @relation(fields: [regionId], references: [id], onDelete: Restrict)
+  cover     MediaAsset?     @relation(fields: [coverId], references: [id], onDelete: SetNull)
+  attendees EventAttendee[]
+  tripItems TripItem[]
+
+  @@index([regionId, startDate])
+  @@index([startDate, endDate])
+  @@index([category, status])
+  @@fulltext([titleAz, descriptionAz])
+  @@map("events")
+}
+
+model EventAttendee {
+  eventId   BigInt   @map("event_id") @db.UnsignedBigInt
+  userId    BigInt   @map("user_id") @db.UnsignedBigInt
+  createdAt DateTime @default(now()) @map("created_at") @db.DateTime(3)
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([eventId, userId])
+  @@index([userId])
+  @@map("event_attendees")
+}
+
+model Business {
+  id       BigInt        @id @default(autoincrement()) @db.UnsignedBigInt
+  publicId String        @unique @map("public_id") @db.Char(26)
+  slug     String        @unique @db.VarChar(120)
+  ownerId  BigInt?       @map("owner_id") @db.UnsignedBigInt
+  regionId BigInt        @map("region_id") @db.UnsignedBigInt
+  type     BusinessType  @default(otel)
+  status   ContentStatus @default(published)
+
+  name          String  @db.VarChar(160)
+  descriptionAz String? @map("description_az") @db.Text
+  services      String? @db.VarChar(255) // "spa|hovuz|restoran"
+
+  lat     Decimal? @db.Decimal(10, 7)
+  lng     Decimal? @db.Decimal(10, 7)
+  address String?  @db.VarChar(255)
+  phone   String?  @db.VarChar(24)
+  website String?  @db.VarChar(190)
+
+  coverId BigInt? @map("cover_id") @db.UnsignedBigInt
+  logoId  BigInt? @map("logo_id") @db.UnsignedBigInt
+
+  ratingAvg   Decimal @default(0) @map("rating_avg") @db.Decimal(3, 2)
+  ratingCount Int     @default(0) @map("rating_count") @db.UnsignedInt
+  isVerified  Boolean @default(false) @map("is_verified")
+
+  createdAt DateTime  @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.DateTime(3)
+  deletedAt DateTime? @map("deleted_at") @db.DateTime(3)
+
+  owner    User?             @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  region   Region            @relation(fields: [regionId], references: [id], onDelete: Restrict)
+  cover    MediaAsset?       @relation("BusinessCover", fields: [coverId], references: [id], onDelete: SetNull)
+  logo     MediaAsset?       @relation("BusinessLogo", fields: [logoId], references: [id], onDelete: SetNull)
+  packages BusinessPackage[]
+  photos   BusinessPhoto[]
+
+  @@index([regionId, type, status])
+  @@index([ownerId])
+  @@fulltext([name, descriptionAz])
+  @@map("businesses")
+}
+
+model BusinessPackage {
+  id            BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  publicId      String   @unique @map("public_id") @db.Char(26)
+  businessId    BigInt   @map("business_id") @db.UnsignedBigInt
+  titleAz       String   @map("title_az") @db.VarChar(160)
+  descriptionAz String?  @map("description_az") @db.Text
+  nights        Int      @default(1) @db.UnsignedTinyInt
+  days          Int      @default(2) @db.UnsignedTinyInt
+  priceAzn      Decimal  @map("price_azn") @db.Decimal(10, 2)
+  includes      String?  @db.VarChar(255)
+  isActive      Boolean  @default(true) @map("is_active")
+  sortOrder     Int      @default(0) @map("sort_order")
+  createdAt     DateTime @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.DateTime(3)
+
+  business Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  bookings Booking[]
+
+  @@index([businessId, isActive, sortOrder])
+  @@map("business_packages")
+}
+
+model BusinessPhoto {
+  id         BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  businessId BigInt   @map("business_id") @db.UnsignedBigInt
+  mediaId    BigInt   @map("media_id") @db.UnsignedBigInt
+  sortOrder  Int      @default(0) @map("sort_order")
+  createdAt  DateTime @default(now()) @map("created_at") @db.DateTime(3)
+
+  business Business   @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  media    MediaAsset @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+
+  @@index([businessId, sortOrder])
+  @@index([mediaId])
+  @@map("business_photos")
+}
+
+// ═══════════════ 3. MARŞRUT & TƏCRÜBƏ (9 cədvəl) ═══════════════
+
+model Route {
+  id         BigInt          @id @default(autoincrement()) @db.UnsignedBigInt
+  publicId   String          @unique @map("public_id") @db.Char(26)
+  slug       String          @unique @db.VarChar(120)
+  authorId   BigInt?         @map("author_id") @db.UnsignedBigInt
+  regionId   BigInt          @map("region_id") @db.UnsignedBigInt
+  categoryId BigInt?         @map("category_id") @db.UnsignedBigInt
+  visibility RouteVisibility @default(public)
+  status     ContentStatus   @default(published)
+
+  days       Int             @default(1) @db.UnsignedTinyInt
+  nights     Int             @default(0) @db.UnsignedTinyInt
+  distanceKm Decimal?        @map("distance_km") @db.Decimal(7, 2)
+  difficulty RouteDifficulty @default(asan)
+  categories String?         @db.VarChar(160) // "tebiet|macera"
+  coverId    BigInt?         @map("cover_id") @db.UnsignedBigInt
+
+  ratingAvg   Decimal @default(0) @map("rating_avg") @db.Decimal(3, 2)
+  ratingCount Int     @default(0) @map("rating_count") @db.UnsignedInt
+  copyCount   Int     @default(0) @map("copy_count") @db.UnsignedInt
+  saveCount   Int     @default(0) @map("save_count") @db.UnsignedInt
+
+  createdAt DateTime  @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.DateTime(3)
+  deletedAt DateTime? @map("deleted_at") @db.DateTime(3)
+
+  author       User?              @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  region       Region             @relation(fields: [regionId], references: [id], onDelete: Restrict)
+  category     Category?          @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  cover        MediaAsset?        @relation(fields: [coverId], references: [id], onDelete: SetNull)
+  translations RouteTranslation[]
+  routeDays    RouteDay[]
+  stops        RouteStop[]
+  trips        Trip[]
+  posts        Post[]
+
+  @@index([regionId, visibility, status])
+  @@index([authorId])
+  @@index([ratingAvg(sort: Desc)])
+  @@map("routes")
+}
+
+model RouteTranslation {
+  routeId     BigInt   @map("route_id") @db.UnsignedBigInt
+  lang        Language
+  title       String   @db.VarChar(160)
+  description String?  @db.Text
+
+  route Route @relation(fields: [routeId], references: [id], onDelete: Cascade)
+
+  @@id([routeId, lang])
+  @@fulltext([title, description])
+  @@map("route_translations")
+}
+
+model RouteDay {
+  id        BigInt  @id @default(autoincrement()) @db.UnsignedBigInt
+  routeId   BigInt  @map("route_id") @db.UnsignedBigInt
+  dayNumber Int     @map("day_number") @db.UnsignedTinyInt
+  titleAz   String? @map("title_az") @db.VarChar(160)
+  noteAz    String? @map("note_az") @db.Text
+
+  route Route       @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  stops RouteStop[]
+
+  @@unique([routeId, dayNumber])
+  @@map("route_days")
+}
+
+model RouteStop {
+  id          BigInt  @id @default(autoincrement()) @db.UnsignedBigInt
+  routeId     BigInt  @map("route_id") @db.UnsignedBigInt
+  routeDayId  BigInt? @map("route_day_id") @db.UnsignedBigInt
+  placeId     BigInt  @map("place_id") @db.UnsignedBigInt
+  dayNumber   Int     @default(1) @map("day_number") @db.UnsignedTinyInt
+  sortOrder   Int     @default(0) @map("sort_order") @db.UnsignedSmallInt
+  arriveTime  String? @map("arrive_time") @db.VarChar(5)
+  durationMin Int?    @map("duration_min") @db.UnsignedSmallInt
+  noteAz      String? @map("note_az") @db.VarChar(500)
+
+  route    Route     @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  // Cascade (SetNull deyil): MySQL eyni cədvəli iki fərqli kaskad yolu ilə
+  // dəyişdirməyə icazə vermir. `routes` silinəndə həm `route_days` (CASCADE),
+  // həm də `route_stops` (CASCADE) silinir; `route_days`-dən SET NULL gəlsəydi,
+  // MySQL silinməkdə olan sətirləri yeniləməyə çalışıb xəta verərdi.
+  // Günü tək silərkən dayanacaqlar əvvəlcə başqa günə köçürülür (bax RoutesService).
+  routeDay RouteDay? @relation(fields: [routeDayId], references: [id], onDelete: Cascade)
+  place    Place     @relation(fields: [placeId], references: [id], onDelete: Restrict)
+
+  @@unique([routeId, dayNumber, sortOrder])
+  @@index([placeId])
+  @@index([routeDayId])
+  @@map("route_stops")
+}
+
+model ExpertProfile {
+  userId              BigInt    @id @map("user_id") @db.UnsignedBigInt
+  headlineAz          String?   @map("headline_az") @db.VarChar(190)
+  bioAz               String?   @map("bio_az") @db.Text
+  specialties         String?   @db.VarChar(255) // "beledci|qastronomiya"
+  languages           String?   @db.VarChar(60) // "az|ru|en"
+  regions             String?   @db.VarChar(255) // "quba|qusar"
+  yearsActive         Int?      @map("years_active") @db.UnsignedTinyInt
+  ratingAvg           Decimal   @default(0) @map("rating_avg") @db.Decimal(3, 2)
+  ratingCount         Int       @default(0) @map("rating_count") @db.UnsignedInt
+  experienceCount     Int       @default(0) @map("experience_count") @db.UnsignedInt
+  payoutRate          Decimal   @default(0.80) @map("payout_rate") @db.Decimal(4, 3)
+  isAcceptingBookings Boolean   @default(true) @map("is_accepting_bookings")
+  approvedAt          DateTime? @map("approved_at") @db.DateTime(3)
+  createdAt           DateTime  @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt           DateTime  @updatedAt @map("updated_at") @db.DateTime(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([ratingAvg(sort: Desc)])
+  @@map("expert_profiles")
+}
+
+model Experience {
+  id         BigInt        @id @default(autoincrement()) @db.UnsignedBigInt
+  publicId   String        @unique @map("public_id") @db.Char(26)
+  slug       String        @unique @db.VarChar(120)
+  expertId   BigInt        @map("expert_id") @db.UnsignedBigInt
+  regionId   BigInt        @map("region_id") @db.UnsignedBigInt
+  placeId    BigInt?       @map("place_id") @db.UnsignedBigInt
+  categoryId BigInt?       @map("category_id") @db.UnsignedBigInt
+  status     ContentStatus @default(published)
+
+  titleAz       String  @map("title_az") @db.VarChar(160)
+  titleEn       String? @map("title_en") @db.VarChar(160)
+  descriptionAz String? @map("description_az") @db.Text
+
+  duration     ExperienceDuration @default(half_day)
+  durationText String?            @map("duration_text") @db.VarChar(40)
+  priceAzn     Decimal            @map("price_azn") @db.Decimal(10, 2)
+  maxGroup     Int                @default(10) @map("max_group") @db.UnsignedTinyInt
+  minGroup     Int                @default(1) @map("min_group") @db.UnsignedTinyInt
+
+  meetingPoint String?  @map("meeting_point") @db.VarChar(255)
+  lat          Decimal? @db.Decimal(10, 7)
+  lng          Decimal? @db.Decimal(10, 7)
+
+  ratingAvg    Decimal @default(0) @map("rating_avg") @db.Decimal(3, 2)
+  ratingCount  Int     @default(0) @map("rating_count") @db.UnsignedInt
+  bookingCount Int     @default(0) @map("booking_count") @db.UnsignedInt
+  isFeatured   Boolean @default(false) @map("is_featured")
+
+  createdAt DateTime  @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.DateTime(3)
+  deletedAt DateTime? @map("deleted_at") @db.DateTime(3)
+
+  expert     User                  @relation(fields: [expertId], references: [id], onDelete: Cascade)
+  region     Region                @relation(fields: [regionId], references: [id], onDelete: Restrict)
+  place      Place?                @relation(fields: [placeId], references: [id], onDelete: SetNull)
+  category   Category?             @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  photos     ExperiencePhoto[]
+  slots      ExperienceSlot[]
+  inclusions ExperienceInclusion[]
+  bookings   Booking[]
+  tripItems  TripItem[]
+
+  @@index([regionId, status])
+  @@index([expertId, status])
+  @@index([isFeatured, ratingAvg(sort: Desc)])
+  @@fulltext([titleAz, descriptionAz])
+  @@map("experiences")
+}
+
+model ExperiencePhoto {
+  id           BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  experienceId BigInt   @map("experience_id") @db.UnsignedBigInt
+  mediaId      BigInt   @map("media_id") @db.UnsignedBigInt
+  isCover      Boolean  @default(false) @map("is_cover")
+  sortOrder    Int      @default(0) @map("sort_order")
+  createdAt    DateTime @default(now()) @map("created_at") @db.DateTime(3)
+
+  experience Experience @relation(fields: [experienceId], references: [id], onDelete: Cascade)
+  media      MediaAsset @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+
+  @@index([experienceId, isCover, sortOrder])
+  @@index([mediaId])
+  @@map("experience_photos")
+}
+
+model ExperienceSlot {
+  id           BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  experienceId BigInt    @map("experience_id") @db.UnsignedBigInt
+  startAt      DateTime  @map("start_at") @db.DateTime(3)
+  endAt        DateTime? @map("end_at") @db.DateTime(3)
+  capacity     Int       @default(10) @db.UnsignedTinyInt
+  booked       Int       @default(0) @db.UnsignedTinyInt
+  priceAzn     Decimal?  @map("price_azn") @db.Decimal(10, 2)
+  isCancelled  Boolean   @default(false) @map("is_cancelled")
+
+  experience Experience @relation(fields: [experienceId], references: [id], onDelete: Cascade)
+  bookings   Booking[]
+
+  @@unique([experienceId, startAt])
+  @@index([startAt])
+  @@map("experience_slots")
+}
+
+model ExperienceInclusion {
+  id           BigInt  @id @default(autoincrement()) @db.UnsignedBigInt
+  experienceId BigInt  @map("experience_id") @db.UnsignedBigInt
+  code         String  @db.VarChar(40) // beledci, neqliyyat, yerli-nahar, sigorta, materiallar
+  nameAz       String  @map("name_az") @db.VarChar(80)
+  icon         String? @db.VarChar(60)
+  isIncluded   Boolean @default(true) @map("is_included")
+
+  experience Experience @relation(fields: [experienceId], references: [id], onDelete: Cascade)
+
+  @@unique([experienceId, code])
+  @@map("experience_inclusions")
+}
+
+// ═══════════════════ 4. PLANLAMA (5 cədvəl) ═══════════════════
+
+model Trip {
+  id             BigInt     @id @default(autoincrement()) @db.UnsignedBigInt
+  publicId       String     @unique @map("public_id") @db.Char(26)
+  userId         BigInt     @map("user_id") @db.UnsignedBigInt
+  routeId        BigInt?    @map("route_id") @db.UnsignedBigInt
+  title          String     @db.VarChar(160)
+  status         TripStatus @default(planned)
+  startDate      DateTime?  @map("start_date") @db.Date
+  endDate        DateTime?  @map("end_date") @db.Date
+  travelers      Int        @default(1) @db.UnsignedTinyInt
+  coverId        BigInt?    @map("cover_id") @db.UnsignedBigInt
+  offlineEnabled Boolean    @default(false) @map("offline_enabled")
+  startedAt      DateTime?  @map("started_at") @db.DateTime(3)
+  completedAt    DateTime?  @map("completed_at") @db.DateTime(3)
+
+  createdAt DateTime  @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.DateTime(3)
+  deletedAt DateTime? @map("deleted_at") @db.DateTime(3)
+
+  user  User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  route Route?      @relation(fields: [routeId], references: [id], onDelete: SetNull)
+  cover MediaAsset? @relation(fields: [coverId], references: [id], onDelete: SetNull)
+  days  TripDay[]
+  items TripItem[]
+  notes TripNote[]
+
+  @@index([userId, status, startDate])
+  @@index([routeId])
+  @@map("trips")
+}
+
+model TripDay {
+  id        BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  tripId    BigInt    @map("trip_id") @db.UnsignedBigInt
+  dayNumber Int       @map("day_number") @db.UnsignedTinyInt
+  date      DateTime? @db.Date
+  titleAz   String?   @map("title_az") @db.VarChar(160)
+
+  trip  Trip       @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  items TripItem[]
+
+  @@unique([tripId, dayNumber])
+  @@map("trip_days")
+}
+
+model TripItem {
+  id           BigInt       @id @default(autoincrement()) @db.UnsignedBigInt
+  tripId       BigInt       @map("trip_id") @db.UnsignedBigInt
+  tripDayId    BigInt?      @map("trip_day_id") @db.UnsignedBigInt
+  type         TripItemType
+  placeId      BigInt?      @map("place_id") @db.UnsignedBigInt
+  experienceId BigInt?      @map("experience_id") @db.UnsignedBigInt
+  eventId      BigInt?      @map("event_id") @db.UnsignedBigInt
+  bookingId    BigInt?      @map("booking_id") @db.UnsignedBigInt
+
+  customTitle String?   @map("custom_title") @db.VarChar(160)
+  startTime   String?   @map("start_time") @db.VarChar(5)
+  durationMin Int?      @map("duration_min") @db.UnsignedSmallInt
+  sortOrder   Int       @default(0) @map("sort_order") @db.UnsignedSmallInt
+  noteAz      String?   @map("note_az") @db.VarChar(500)
+  isDone      Boolean   @default(false) @map("is_done")
+  doneAt      DateTime? @map("done_at") @db.DateTime(3)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.DateTime(3)
+
+  trip       Trip        @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  // Cascade — səbəb üçün bax: RouteStop.routeDay. Bu olmadan istifadəçi
+  // hesabının silinməsi (users → trips → trip_days/trip_items) MySQL-də xəta verirdi.
+  tripDay    TripDay?    @relation(fields: [tripDayId], references: [id], onDelete: Cascade)
+  place      Place?      @relation(fields: [placeId], references: [id], onDelete: SetNull)
+  experience Experience? @relation(fields: [experienceId], references: [id], onDelete: SetNull)
+  event      Event?      @relation(fields: [eventId], references: [id], onDelete: SetNull)
+  booking    Booking?    @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+
+  @@index([tripId, tripDayId, sortOrder])
+  @@index([placeId])
+  @@index([experienceId])
+  @@index([eventId])
+  @@index([bookingId])
+  @@map("trip_items")
+}
+
+model TripNote {
+  id        BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  tripId    BigInt   @map("trip_id") @db.UnsignedBigInt
+  body      String   @db.Text
+  createdAt DateTime @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.DateTime(3)
+
+  trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+
+  @@index([tripId, createdAt])
+  @@map("trip_notes")
+}
+
+model OfflinePackage {
+  id          BigInt               @id @default(autoincrement()) @db.UnsignedBigInt
+  regionId    BigInt               @unique @map("region_id") @db.UnsignedBigInt
+  status      OfflinePackageStatus @default(available)
+  version     Int                  @default(1) @db.UnsignedInt
+  sizeMb      Int                  @default(0) @map("size_mb") @db.UnsignedInt
+  placeCount  Int                  @default(0) @map("place_count") @db.UnsignedInt
+  manifestUrl String?              @map("manifest_url") @db.VarChar(500)
+  builtAt     DateTime?            @map("built_at") @db.DateTime(3)
+  updatedAt   DateTime             @updatedAt @map("updated_at") @db.DateTime(3)
+
+  region    Region            @relation(fields: [regionId], references: [id], onDelete: Cascade)
+  downloads OfflineDownload[]
+
+  @@map("offline_packages")
+}
+
+model OfflineDownload {
+  packageId    BigInt   @map("package_id") @db.UnsignedBigInt
+  userId       BigInt   @map("user_id") @db.UnsignedBigInt
+  version      Int      @db.UnsignedInt
+  downloadedAt DateTime @default(now()) @map("downloaded_at") @db.DateTime(3)
+
+  package OfflinePackage @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  user    User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([packageId, userId])
+  @@index([userId])
+  @@map("offline_downloads")
+}
+
+// ═══════════════════ 5. REZERVASİYA (6 cədvəl) ═══════════════════
+
+model Booking {
+  id       BigInt        @id @default(autoincrement()) @db.UnsignedBigInt
+  publicId String        @unique @map("public_id") @db.Char(26)
+  code     String        @unique @db.VarChar(16) // GZ-27A4K9 — ekran 19, 53
+  userId   BigInt        @map("user_id") @db.UnsignedBigInt
+  type     BookingType
+  status   BookingStatus @default(pending)
+
+  experienceId BigInt? @map("experience_id") @db.UnsignedBigInt
+  slotId       BigInt? @map("slot_id") @db.UnsignedBigInt
+  packageId    BigInt? @map("package_id") @db.UnsignedBigInt
+
+  startAt  DateTime  @map("start_at") @db.DateTime(3)
+  endAt    DateTime? @map("end_at") @db.DateTime(3)
+  adults   Int       @default(1) @db.UnsignedTinyInt
+  children Int       @default(0) @db.UnsignedTinyInt
+
+  subtotalAzn   Decimal @map("subtotal_azn") @db.Decimal(10, 2)
+  extrasAzn     Decimal @default(0) @map("extras_azn") @db.Decimal(10, 2)
+  serviceFeeAzn Decimal @default(0) @map("service_fee_azn") @db.Decimal(10, 2)
+  totalAzn      Decimal @map("total_azn") @db.Decimal(10, 2)
+
+  idempotencyKey String? @unique @map("idempotency_key") @db.VarChar(64)
+  note           String? @db.VarChar(500)
+  cancelReason   String? @map("cancel_reason") @db.VarChar(255)
+
+  confirmedAt DateTime? @map("confirmed_at") @db.DateTime(3)
+  cancelledAt DateTime? @map("cancelled_at") @db.DateTime(3)
+  completedAt DateTime? @map("completed_at") @db.DateTime(3)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.DateTime(3)
+
+  user       User             @relation(fields: [userId], references: [id], onDelete: Restrict)
+  experience Experience?      @relation(fields: [experienceId], references: [id], onDelete: SetNull)
+  slot       ExperienceSlot?  @relation(fields: [slotId], references: [id], onDelete: SetNull)
+  package    BusinessPackage? @relation(fields: [packageId], references: [id], onDelete: SetNull)
+  items      BookingItem[]
+  payments   Payment[]
+  commission Commission?
+  tripItems  TripItem[]
+
+  @@index([userId, status, startAt])
+  @@index([experienceId, startAt])
+  @@index([packageId, startAt])
+  @@index([status, startAt])
+  @@map("bookings")
+}
+
+model BookingItem {
+  id        BigInt  @id @default(autoincrement()) @db.UnsignedBigInt
+  bookingId BigInt  @map("booking_id") @db.UnsignedBigInt
+  code      String  @db.VarChar(40) // transfer, sigorta, spa
+  nameAz    String  @map("name_az") @db.VarChar(120)
+  quantity  Int     @default(1) @db.UnsignedSmallInt
+  unitAzn   Decimal @map("unit_azn") @db.Decimal(10, 2)
+  totalAzn  Decimal @map("total_azn") @db.Decimal(10, 2)
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([bookingId])
+  @@map("booking_items")
+}
+
+model Payment {
+  id             BigInt              @id @default(autoincrement()) @db.UnsignedBigInt
+  publicId       String              @unique @map("public_id") @db.Char(26)
+  bookingId      BigInt?             @map("booking_id") @db.UnsignedBigInt
+  subscriptionId BigInt?             @map("subscription_id") @db.UnsignedBigInt
+  provider       PaymentProviderCode @default(mock)
+  status         PaymentStatus       @default(created)
+
+  amountAzn   Decimal @map("amount_azn") @db.Decimal(10, 2)
+  refundedAzn Decimal @default(0) @map("refunded_azn") @db.Decimal(10, 2)
+  currency    String  @default("AZN") @db.Char(3)
+
+  providerIntentId  String? @map("provider_intent_id") @db.VarChar(190)
+  providerPaymentId String? @map("provider_payment_id") @db.VarChar(190)
+  methodId          BigInt? @map("method_id") @db.UnsignedBigInt
+  failureCode       String? @map("failure_code") @db.VarChar(60)
+  failureMessage    String? @map("failure_message") @db.VarChar(255)
+  rawPayload        Json?   @map("raw_payload")
+
+  paidAt     DateTime? @map("paid_at") @db.DateTime(3)
+  refundedAt DateTime? @map("refunded_at") @db.DateTime(3)
+  createdAt  DateTime  @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt  DateTime  @updatedAt @map("updated_at") @db.DateTime(3)
+
+  booking      Booking?       @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+  subscription Subscription?  @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+  method       PaymentMethod? @relation(fields: [methodId], references: [id], onDelete: SetNull)
+
+  @@index([bookingId])
+  @@index([subscriptionId])
+  @@index([status, createdAt])
+  @@index([providerIntentId])
+  @@index([methodId])
+  @@map("payments")
+}
+
+model PaymentMethod {
+  id            BigInt              @id @default(autoincrement()) @db.UnsignedBigInt
+  // Xaricə açıq identifikator — ardıcıl `id` sızdırılmır
+  publicId      String              @unique @map("public_id") @db.Char(26)
+  userId        BigInt              @map("user_id") @db.UnsignedBigInt
+  provider      PaymentProviderCode @default(mock)
+  brand         String?             @db.VarChar(24) // visa, mastercard
+  last4         String?             @db.Char(4)
+  expMonth      Int?                @map("exp_month") @db.UnsignedTinyInt
+  expYear       Int?                @map("exp_year") @db.UnsignedSmallInt
+  holderName    String?             @map("holder_name") @db.VarChar(120)
+  // PAN heç vaxt saxlanılmır — yalnız provayderin tokeni
+  providerToken String              @map("provider_token") @db.VarChar(255)
+  isDefault     Boolean             @default(false) @map("is_default")
+  createdAt     DateTime            @default(now()) @map("created_at") @db.DateTime(3)
+  deletedAt     DateTime?           @map("deleted_at") @db.DateTime(3)
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  payments Payment[]
+
+  @@index([userId, isDefault])
+  @@map("payment_methods")
+}
+
+model Commission {
+  id          BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  bookingId   BigInt   @unique @map("booking_id") @db.UnsignedBigInt
+  grossAzn    Decimal  @map("gross_azn") @db.Decimal(10, 2)
+  rate        Decimal  @default(0.20) @db.Decimal(4, 3)
+  platformAzn Decimal  @map("platform_azn") @db.Decimal(10, 2)
+  expertAzn   Decimal  @map("expert_azn") @db.Decimal(10, 2)
+  payoutId    BigInt?  @map("payout_id") @db.UnsignedBigInt
+  createdAt   DateTime @default(now()) @map("created_at") @db.DateTime(3)
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  payout  Payout? @relation(fields: [payoutId], references: [id], onDelete: SetNull)
+
+  @@index([payoutId])
+  @@map("commissions")
+}
+
+model Payout {
+  id           BigInt       @id @default(autoincrement()) @db.UnsignedBigInt
+  publicId     String       @unique @map("public_id") @db.Char(26)
+  userId       BigInt       @map("user_id") @db.UnsignedBigInt
+  status       PayoutStatus @default(pending)
+  amountAzn    Decimal      @map("amount_azn") @db.Decimal(10, 2)
+  periodStart  DateTime     @map("period_start") @db.Date
+  periodEnd    DateTime     @map("period_end") @db.Date
+  bankName     String?      @map("bank_name") @db.VarChar(120)
+  accountLast4 String?      @map("account_last4") @db.Char(4)
+  reference    String?      @db.VarChar(120)
+  paidAt       DateTime?    @map("paid_at") @db.DateTime(3)
+  createdAt    DateTime     @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt    DateTime     @updatedAt @map("updated_at") @db.DateTime(3)
+
+  user        User         @relation(fields: [userId], references: [id], onDelete: Restrict)
+  commissions Commission[]
+
+  @@index([userId, status])
+  @@index([periodStart, periodEnd])
+  @@map("payouts")
+}
+
+// ═══════════════════ 6. SOSİAL (11 cədvəl) ═══════════════════
+
+model Post {
+  id         BigInt         @id @default(autoincrement()) @db.UnsignedBigInt
+  publicId   String         @unique @map("public_id") @db.Char(26)
+  userId     BigInt         @map("user_id") @db.UnsignedBigInt
+  placeId    BigInt?        @map("place_id") @db.UnsignedBigInt
+  routeId    BigInt?        @map("route_id") @db.UnsignedBigInt
+  visibility PostVisibility @default(public)
+
+  body     String?  @db.Text
+  hashtags String?  @db.VarChar(500)
+  lat      Decimal? @db.Decimal(10, 7)
+  lng      Decimal? @db.Decimal(10, 7)
+
+  likeCount    Int @default(0) @map("like_count") @db.UnsignedInt
+  commentCount Int @default(0) @map("comment_count") @db.UnsignedInt
+  shareCount   Int @default(0) @map("share_count") @db.UnsignedInt
+  saveCount    Int @default(0) @map("save_count") @db.UnsignedInt
+
+  createdAt DateTime  @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.DateTime(3)
+  deletedAt DateTime? @map("deleted_at") @db.DateTime(3)
+
+  user     User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  place    Place?      @relation(fields: [placeId], references: [id], onDelete: SetNull)
+  route    Route?      @relation(fields: [routeId], references: [id], onDelete: SetNull)
+  media    PostMedia[]
+  likes    PostLike[]
+  comments Comment[]
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([createdAt(sort: Desc)])
+  @@index([placeId])
+  @@index([routeId])
+  @@fulltext([body, hashtags])
+  @@map("posts")
+}
+
+model PostMedia {
+  id        BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  postId    BigInt   @map("post_id") @db.UnsignedBigInt
+  mediaId   BigInt   @map("media_id") @db.UnsignedBigInt
+  sortOrder Int      @default(0) @map("sort_order") @db.UnsignedTinyInt
+  createdAt DateTime @default(now()) @map("created_at") @db.DateTime(3)
+
+  post  Post       @relation(fields: [postId], references: [id], onDelete: Cascade)
+  media MediaAsset @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, sortOrder])
+  @@index([mediaId])
+  @@map("post_media")
+}
+
+model PostLike {
+  postId    BigInt   @map("post_id") @db.UnsignedBigInt
+  userId    BigInt   @map("user_id") @db.UnsignedBigInt
+  createdAt DateTime @default(now()) @map("created_at") @db.DateTime(3)
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([postId, userId])
+  @@index([userId, createdAt])
+  @@map("post_likes")
+}
+
+model Comment {
+  id        BigInt  @id @default(autoincrement()) @db.UnsignedBigInt
+  publicId  String  @unique @map("public_id") @db.Char(26)
+  postId    BigInt  @map("post_id") @db.UnsignedBigInt
+  userId    BigInt  @map("user_id") @db.UnsignedBigInt
+  parentId  BigInt? @map("parent_id") @db.UnsignedBigInt
+  body      String  @db.Text
+  likeCount Int     @default(0) @map("like_count") @db.UnsignedInt
+
+  createdAt DateTime  @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.DateTime(3)
+  deletedAt DateTime? @map("deleted_at") @db.DateTime(3)
+
+  post    Post          @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user    User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent  Comment?      @relation("CommentThread", fields: [parentId], references: [id], onDelete: Cascade)
+  replies Comment[]     @relation("CommentThread")
+  likes   CommentLike[]
+
+  @@index([postId, createdAt])
+  @@index([userId])
+  @@index([parentId])
+  @@map("comments")
+}
+
+model CommentLike {
+  commentId BigInt   @map("comment_id") @db.UnsignedBigInt
+  userId    BigInt   @map("user_id") @db.UnsignedBigInt
+  createdAt DateTime @default(now()) @map("created_at") @db.DateTime(3)
+
+  comment Comment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([commentId, userId])
+  @@index([userId])
+  @@map("comment_likes")
+}
+
+model Story {
+  id        BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  publicId  String    @unique @map("public_id") @db.Char(26)
+  userId    BigInt    @map("user_id") @db.UnsignedBigInt
+  mediaId   BigInt    @map("media_id") @db.UnsignedBigInt
+  placeId   BigInt?   @map("place_id") @db.UnsignedBigInt
+  caption   String?   @db.VarChar(255)
+  viewCount Int       @default(0) @map("view_count") @db.UnsignedInt
+  expiresAt DateTime  @map("expires_at") @db.DateTime(3)
+  createdAt DateTime  @default(now()) @map("created_at") @db.DateTime(3)
+  deletedAt DateTime? @map("deleted_at") @db.DateTime(3)
+
+  user  User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  media MediaAsset  @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+  views StoryView[]
+
+  @@index([userId, expiresAt])
+  @@index([expiresAt])
+  @@index([mediaId])
+  @@map("stories")
+}
+
+model StoryView {
+  storyId  BigInt   @map("story_id") @db.UnsignedBigInt
+  userId   BigInt   @map("user_id") @db.UnsignedBigInt
+  viewedAt DateTime @default(now()) @map("viewed_at") @db.DateTime(3)
+
+  story Story @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([storyId, userId])
+  @@index([userId])
+  @@map("story_views")
+}
+
+model Conversation {
+  id                 BigInt           @id @default(autoincrement()) @db.UnsignedBigInt
+  publicId           String           @unique @map("public_id") @db.Char(26)
+  type               ConversationType @default(direct)
+  lastMessageAt      DateTime?        @map("last_message_at") @db.DateTime(3)
+  lastMessagePreview String?          @map("last_message_preview") @db.VarChar(190)
+  createdAt          DateTime         @default(now()) @map("created_at") @db.DateTime(3)
+
+  participants ConversationParticipant[]
+  messages     Message[]
+
+  @@index([lastMessageAt(sort: Desc)])
+  @@map("conversations")
+}
+
+model ConversationParticipant {
+  conversationId BigInt    @map("conversation_id") @db.UnsignedBigInt
+  userId         BigInt    @map("user_id") @db.UnsignedBigInt
+  unreadCount    Int       @default(0) @map("unread_count") @db.UnsignedInt
+  lastReadAt     DateTime? @map("last_read_at") @db.DateTime(3)
+  mutedUntil     DateTime? @map("muted_until") @db.DateTime(3)
+  joinedAt       DateTime  @default(now()) @map("joined_at") @db.DateTime(3)
+  leftAt         DateTime? @map("left_at") @db.DateTime(3)
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([conversationId, userId])
+  @@index([userId, unreadCount])
+  @@map("conversation_participants")
+}
+
+model Message {
+  id             BigInt      @id @default(autoincrement()) @db.UnsignedBigInt
+  publicId       String      @unique @map("public_id") @db.Char(26)
+  conversationId BigInt      @map("conversation_id") @db.UnsignedBigInt
+  senderId       BigInt      @map("sender_id") @db.UnsignedBigInt
+  type           MessageType @default(text)
+  body           String?     @db.Text
+  mediaId        BigInt?     @map("media_id") @db.UnsignedBigInt
+  payload        Json? // experience_card / booking_card məlumatı
+  createdAt      DateTime    @default(now()) @map("created_at") @db.DateTime(3)
+  deletedAt      DateTime?   @map("deleted_at") @db.DateTime(3)
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  media        MediaAsset?  @relation(fields: [mediaId], references: [id], onDelete: SetNull)
+
+  @@index([conversationId, createdAt(sort: Desc)])
+  @@index([senderId])
+  @@index([mediaId])
+  @@map("messages")
+}
+
+model Report {
+  id             BigInt           @id @default(autoincrement()) @db.UnsignedBigInt
+  publicId       String           @unique @map("public_id") @db.Char(26)
+  reporterId     BigInt           @map("reporter_id") @db.UnsignedBigInt
+  targetType     ReportTargetType @map("target_type")
+  targetId       BigInt           @map("target_id") @db.UnsignedBigInt
+  reportedUserId BigInt?          @map("reported_user_id") @db.UnsignedBigInt
+  reason         String           @db.VarChar(60)
+  details        String?          @db.VarChar(1000)
+  status         ReportStatus     @default(open)
+  resolvedById   BigInt?          @map("resolved_by_id") @db.UnsignedBigInt
+  resolvedAt     DateTime?        @map("resolved_at") @db.DateTime(3)
+  createdAt      DateTime         @default(now()) @map("created_at") @db.DateTime(3)
+
+  reporter     User  @relation("Reporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  reportedUser User? @relation("ReportedUser", fields: [reportedUserId], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt])
+  @@index([targetType, targetId])
+  @@index([reporterId])
+  @@index([reportedUserId])
+  @@map("reports")
+}
+
+// ═══════════════════ 7. RƏY (4 cədvəl) ═══════════════════
+
+model Review {
+  id         BigInt           @id @default(autoincrement()) @db.UnsignedBigInt
+  publicId   String           @unique @map("public_id") @db.Char(26)
+  userId     BigInt           @map("user_id") @db.UnsignedBigInt
+  targetType ReviewTargetType @map("target_type")
+  targetId   BigInt           @map("target_id") @db.UnsignedBigInt
+  bookingId  BigInt?          @map("booking_id") @db.UnsignedBigInt
+
+  rating       Int     @db.UnsignedTinyInt // 1–5
+  body         String? @db.Text
+  tags         String? @db.VarChar(255) // "samimi-insanlar|yerli-metbex"
+  helpfulCount Int     @default(0) @map("helpful_count") @db.UnsignedInt
+  isVisible    Boolean @default(true) @map("is_visible")
+
+  createdAt DateTime  @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.DateTime(3)
+  deletedAt DateTime? @map("deleted_at") @db.DateTime(3)
+
+  user    User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  photos  ReviewPhoto[]
+  helpful ReviewHelpful[]
+  replies ReviewReply[]
+
+  @@unique([userId, targetType, targetId])
+  @@index([targetType, targetId, createdAt(sort: Desc)])
+  @@index([targetType, targetId, rating])
+  @@index([bookingId])
+  @@map("reviews")
+}
+
+model ReviewPhoto {
+  id        BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  reviewId  BigInt   @map("review_id") @db.UnsignedBigInt
+  mediaId   BigInt   @map("media_id") @db.UnsignedBigInt
+  sortOrder Int      @default(0) @map("sort_order") @db.UnsignedTinyInt
+  createdAt DateTime @default(now()) @map("created_at") @db.DateTime(3)
+
+  review Review     @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  media  MediaAsset @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+
+  @@index([reviewId, sortOrder])
+  @@index([mediaId])
+  @@map("review_photos")
+}
+
+model ReviewHelpful {
+  reviewId  BigInt   @map("review_id") @db.UnsignedBigInt
+  userId    BigInt   @map("user_id") @db.UnsignedBigInt
+  createdAt DateTime @default(now()) @map("created_at") @db.DateTime(3)
+
+  review Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([reviewId, userId])
+  @@index([userId])
+  @@map("review_helpful")
+}
+
+model ReviewReply {
+  id        BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  reviewId  BigInt    @map("review_id") @db.UnsignedBigInt
+  userId    BigInt    @map("user_id") @db.UnsignedBigInt
+  body      String    @db.Text
+  createdAt DateTime  @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.DateTime(3)
+  deletedAt DateTime? @map("deleted_at") @db.DateTime(3)
+
+  review Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([reviewId])
+  @@index([userId])
+  @@map("review_replies")
+}
+
+// ═══════════════════ 8. SAXLANILAN (3 cədvəl) ═══════════════════
+
+model SavedItem {
+  id         BigInt        @id @default(autoincrement()) @db.UnsignedBigInt
+  userId     BigInt        @map("user_id") @db.UnsignedBigInt
+  targetType SavedItemType @map("target_type")
+  targetId   BigInt        @map("target_id") @db.UnsignedBigInt
+  createdAt  DateTime      @default(now()) @map("created_at") @db.DateTime(3)
+
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  collectionItems CollectionItem[]
+
+  @@unique([userId, targetType, targetId])
+  @@index([userId, createdAt(sort: Desc)])
+  @@map("saved_items")
+}
+
+model Collection {
+  id        BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  publicId  String   @unique @map("public_id") @db.Char(26)
+  userId    BigInt   @map("user_id") @db.UnsignedBigInt
+  name      String   @db.VarChar(120)
+  coverId   BigInt?  @map("cover_id") @db.UnsignedBigInt
+  isPrivate Boolean  @default(false) @map("is_private")
+  itemCount Int      @default(0) @map("item_count") @db.UnsignedInt
+  createdAt DateTime @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.DateTime(3)
+
+  user  User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cover MediaAsset?      @relation(fields: [coverId], references: [id], onDelete: SetNull)
+  items CollectionItem[]
+
+  @@index([userId])
+  @@map("collections")
+}
+
+model CollectionItem {
+  collectionId BigInt   @map("collection_id") @db.UnsignedBigInt
+  savedItemId  BigInt   @map("saved_item_id") @db.UnsignedBigInt
+  sortOrder    Int      @default(0) @map("sort_order") @db.UnsignedSmallInt
+  createdAt    DateTime @default(now()) @map("created_at") @db.DateTime(3)
+
+  collection Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  savedItem  SavedItem  @relation(fields: [savedItemId], references: [id], onDelete: Cascade)
+
+  @@id([collectionId, savedItemId])
+  @@index([savedItemId])
+  @@map("collection_items")
+}
+
+// ═══════════════════ 9. GAMIFICATION (6 cədvəl) ═══════════════════
+
+model Level {
+  level      Int    @id @db.UnsignedSmallInt
+  tierCode   String @map("tier_code") @db.VarChar(30)
+  tierNameAz String @map("tier_name_az") @db.VarChar(60)
+  tierNameEn String @map("tier_name_en") @db.VarChar(60)
+  xpRequired Int    @map("xp_required") @db.UnsignedInt
+
+  @@map("levels")
+}
+
+model Badge {
+  id             BigInt         @id @default(autoincrement()) @db.UnsignedBigInt
+  slug           String         @unique @db.VarChar(60)
+  nameAz         String         @map("name_az") @db.VarChar(80)
+  nameEn         String         @map("name_en") @db.VarChar(80)
+  descriptionAz  String?        @map("description_az") @db.VarChar(255)
+  conditionType  BadgeCondition @map("condition_type")
+  conditionValue Int            @map("condition_value") @db.UnsignedInt
+  icon           String?        @db.VarChar(60)
+  tier           String?        @db.VarChar(20) // green, teal, brown, purple, gold
+  sortOrder      Int            @default(0) @map("sort_order")
+  isActive       Boolean        @default(true) @map("is_active")
+
+  users UserBadge[]
+
+  @@index([isActive, sortOrder])
+  @@map("badges")
+}
+
+model UserBadge {
+  userId   BigInt    @map("user_id") @db.UnsignedBigInt
+  badgeId  BigInt    @map("badge_id") @db.UnsignedBigInt
+  progress Int       @default(0) @db.UnsignedInt
+  earnedAt DateTime? @map("earned_at") @db.DateTime(3)
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badge Badge @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+
+  @@id([userId, badgeId])
+  @@index([badgeId, earnedAt])
+  @@map("user_badges")
+}
+
+model XpTransaction {
+  id         BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  userId     BigInt   @map("user_id") @db.UnsignedBigInt
+  action     XpAction
+  xp         Int      @db.Int
+  scoreDelta Int      @default(0) @map("score_delta") @db.Int
+  targetType String?  @map("target_type") @db.VarChar(40)
+  targetId   BigInt?  @map("target_id") @db.UnsignedBigInt
+  levelAfter Int      @map("level_after") @db.UnsignedSmallInt
+  note       String?  @db.VarChar(190)
+  createdAt  DateTime @default(now()) @map("created_at") @db.DateTime(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([userId, action, createdAt])
+  @@map("xp_transactions")
+}
+
+model Checkin {
+  id        BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  userId    BigInt   @map("user_id") @db.UnsignedBigInt
+  placeId   BigInt   @map("place_id") @db.UnsignedBigInt
+  regionId  BigInt   @map("region_id") @db.UnsignedBigInt
+  tripId    BigInt?  @map("trip_id") @db.UnsignedBigInt
+  lat       Decimal? @db.Decimal(10, 7)
+  lng       Decimal? @db.Decimal(10, 7)
+  xpAwarded Int      @default(0) @map("xp_awarded") @db.UnsignedInt
+  isFirst   Boolean  @default(true) @map("is_first")
+  createdAt DateTime @default(now()) @map("created_at") @db.DateTime(3)
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  place  Place  @relation(fields: [placeId], references: [id], onDelete: Cascade)
+  region Region @relation(fields: [regionId], references: [id], onDelete: Restrict)
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([placeId])
+  @@index([userId, placeId])
+  @@index([regionId])
+  @@map("checkins")
+}
+
+model LeaderboardSnapshot {
+  id        BigInt            @id @default(autoincrement()) @db.UnsignedBigInt
+  period    LeaderboardPeriod
+  scope     String            @db.VarChar(60) // "global" və ya region slug
+  // 2026-W35 / 2026-08 / all
+  periodKey String            @map("period_key") @db.VarChar(20)
+  userId    BigInt            @map("user_id") @db.UnsignedBigInt
+  rank      Int               @db.UnsignedInt
+  score     Int               @db.UnsignedInt
+  xpGained  Int               @default(0) @map("xp_gained") @db.UnsignedInt
+  createdAt DateTime          @default(now()) @map("created_at") @db.DateTime(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([period, scope, periodKey, userId])
+  @@index([period, scope, periodKey, rank])
+  @@index([userId])
+  @@map("leaderboard_snapshots")
+}
+
+// ═══════════════════ 10. SİSTEM (8 cədvəl) ═══════════════════
+
+model Notification {
+  id         BigInt           @id @default(autoincrement()) @db.UnsignedBigInt
+  publicId   String           @unique @map("public_id") @db.Char(26)
+  userId     BigInt           @map("user_id") @db.UnsignedBigInt
+  actorId    BigInt?          @map("actor_id") @db.UnsignedBigInt
+  type       NotificationType
+  titleAz    String           @map("title_az") @db.VarChar(190)
+  bodyAz     String?          @map("body_az") @db.VarChar(500)
+  targetType String?          @map("target_type") @db.VarChar(40)
+  targetId   BigInt?          @map("target_id") @db.UnsignedBigInt
+  deepLink   String?          @map("deep_link") @db.VarChar(255)
+  imageUrl   String?          @map("image_url") @db.VarChar(500)
+  readAt     DateTime?        @map("read_at") @db.DateTime(3)
+  sentAt     DateTime?        @map("sent_at") @db.DateTime(3)
+  createdAt  DateTime         @default(now()) @map("created_at") @db.DateTime(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt, createdAt(sort: Desc)])
+  @@index([type])
+  @@map("notifications")
+}
+
+model NotificationPreference {
+  userId           BigInt   @id @map("user_id") @db.UnsignedBigInt
+  socialPush       Boolean  @default(true) @map("social_push")
+  socialEmail      Boolean  @default(false) @map("social_email")
+  bookingPush      Boolean  @default(true) @map("booking_push")
+  bookingEmail     Boolean  @default(true) @map("booking_email")
+  gamificationPush Boolean  @default(true) @map("gamification_push")
+  offersPush       Boolean  @default(true) @map("offers_push")
+  offersEmail      Boolean  @default(false) @map("offers_email")
+  remindersPush    Boolean  @default(true) @map("reminders_push")
+  quietHoursStart  String?  @map("quiet_hours_start") @db.VarChar(5)
+  quietHoursEnd    String?  @map("quiet_hours_end") @db.VarChar(5)
+  updatedAt        DateTime @updatedAt @map("updated_at") @db.DateTime(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notification_preferences")
+}
+
+model ExpertApplication {
+  id              BigInt                  @id @default(autoincrement()) @db.UnsignedBigInt
+  publicId        String                  @unique @map("public_id") @db.Char(26)
+  userId          BigInt                  @unique @map("user_id") @db.UnsignedBigInt
+  status          ExpertApplicationStatus @default(draft)
+  specialties     String?                 @db.VarChar(255)
+  regions         String?                 @db.VarChar(255)
+  languages       String?                 @db.VarChar(60)
+  aboutAz         String?                 @map("about_az") @db.Text
+  idDocumentId    BigInt?                 @map("id_document_id") @db.UnsignedBigInt
+  certificateId   BigInt?                 @map("certificate_id") @db.UnsignedBigInt
+  termsAcceptedAt DateTime?               @map("terms_accepted_at") @db.DateTime(3)
+  submittedAt     DateTime?               @map("submitted_at") @db.DateTime(3)
+  reviewedById    BigInt?                 @map("reviewed_by_id") @db.UnsignedBigInt
+  reviewedAt      DateTime?               @map("reviewed_at") @db.DateTime(3)
+  rejectReason    String?                 @map("reject_reason") @db.VarChar(500)
+  createdAt       DateTime                @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt       DateTime                @updatedAt @map("updated_at") @db.DateTime(3)
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  idDocument  MediaAsset? @relation("ExpertIdDoc", fields: [idDocumentId], references: [id], onDelete: SetNull)
+  certificate MediaAsset? @relation("ExpertCert", fields: [certificateId], references: [id], onDelete: SetNull)
+
+  @@index([status, submittedAt])
+  @@map("expert_applications")
+}
+
+model SubscriptionPlan {
+  id              BigInt               @id @default(autoincrement()) @db.UnsignedBigInt
+  code            SubscriptionPlanCode
+  interval        String               @db.VarChar(10) // month | year
+  nameAz          String               @map("name_az") @db.VarChar(120)
+  priceAzn        Decimal              @map("price_azn") @db.Decimal(10, 2)
+  appleProductId  String?              @map("apple_product_id") @db.VarChar(120)
+  googleProductId String?              @map("google_product_id") @db.VarChar(120)
+  features        Json?
+  trialDays       Int                  @default(0) @map("trial_days") @db.UnsignedTinyInt
+  isActive        Boolean              @default(true) @map("is_active")
+  sortOrder       Int                  @default(0) @map("sort_order")
+
+  subscriptions Subscription[]
+
+  @@unique([code, interval])
+  @@map("subscription_plans")
+}
+
+model Subscription {
+  id       BigInt              @id @default(autoincrement()) @db.UnsignedBigInt
+  publicId String              @unique @map("public_id") @db.Char(26)
+  userId   BigInt              @map("user_id") @db.UnsignedBigInt
+  planId   BigInt              @map("plan_id") @db.UnsignedBigInt
+  status   SubscriptionStatus  @default(active)
+  provider PaymentProviderCode @default(mock)
+
+  currentPeriodStart DateTime  @map("current_period_start") @db.DateTime(3)
+  currentPeriodEnd   DateTime  @map("current_period_end") @db.DateTime(3)
+  cancelAtPeriodEnd  Boolean   @default(false) @map("cancel_at_period_end")
+  cancelledAt        DateTime? @map("cancelled_at") @db.DateTime(3)
+  trialEndsAt        DateTime? @map("trial_ends_at") @db.DateTime(3)
+
+  providerSubscriptionId String? @map("provider_subscription_id") @db.VarChar(190)
+  latestReceipt          String? @map("latest_receipt") @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.DateTime(3)
+
+  user     User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan     SubscriptionPlan @relation(fields: [planId], references: [id], onDelete: Restrict)
+  payments Payment[]
+
+  @@index([userId, status])
+  @@index([status, currentPeriodEnd])
+  @@index([planId])
+  @@map("subscriptions")
+}
+
+model MediaAsset {
+  id       BigInt      @id @default(autoincrement()) @db.UnsignedBigInt
+  publicId String      @unique @map("public_id") @db.Char(26)
+  ownerId  BigInt?     @map("owner_id") @db.UnsignedBigInt
+  type     MediaType   @default(image)
+  status   MediaStatus @default(pending)
+
+  storageKey String  @map("storage_key") @db.VarChar(500)
+  mimeType   String  @map("mime_type") @db.VarChar(80)
+  sizeBytes  Int     @default(0) @map("size_bytes") @db.UnsignedInt
+  width      Int?    @db.UnsignedSmallInt
+  height     Int?    @db.UnsignedSmallInt
+  durationS  Int?    @map("duration_s") @db.UnsignedSmallInt
+  blurhash   String? @db.VarChar(60)
+  variants   Json? // { thumb, card, full }
+  altText    String? @map("alt_text") @db.VarChar(255)
+
+  createdAt DateTime  @default(now()) @map("created_at") @db.DateTime(3)
+  deletedAt DateTime? @map("deleted_at") @db.DateTime(3)
+
+  owner User? @relation("MediaOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+
+  userAvatars      User[]              @relation("UserAvatar")
+  userCovers       User[]              @relation("UserCover")
+  regionCovers     Region[]
+  placePhotos      PlacePhoto[]
+  eventCovers      Event[]
+  businessCovers   Business[]          @relation("BusinessCover")
+  businessLogos    Business[]          @relation("BusinessLogo")
+  businessPhotos   BusinessPhoto[]
+  routeCovers      Route[]
+  experiencePhotos ExperiencePhoto[]
+  tripCovers       Trip[]
+  postMedia        PostMedia[]
+  stories          Story[]
+  reviewPhotos     ReviewPhoto[]
+  collectionCovers Collection[]
+  messages         Message[]
+  expertIdDocs     ExpertApplication[] @relation("ExpertIdDoc")
+  expertCerts      ExpertApplication[] @relation("ExpertCert")
+
+  @@index([ownerId, createdAt])
+  @@index([status])
+  @@map("media_assets")
+}
+
+model AppSetting {
+  key       String   @id @db.VarChar(80)
+  value     Json
+  isPublic  Boolean  @default(false) @map("is_public")
+  updatedAt DateTime @updatedAt @map("updated_at") @db.DateTime(3)
+
+  @@map("app_settings")
+}
+
+model AuditLog {
+  id         BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  actorId    BigInt?  @map("actor_id") @db.UnsignedBigInt
+  action     String   @db.VarChar(80)
+  targetType String?  @map("target_type") @db.VarChar(40)
+  targetId   BigInt?  @map("target_id") @db.UnsignedBigInt
+  before     Json?
+  after      Json?
+  ip         String?  @db.VarChar(45)
+  userAgent  String?  @map("user_agent") @db.VarChar(255)
+  createdAt  DateTime @default(now()) @map("created_at") @db.DateTime(3)
+
+  actor User? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([actorId, createdAt])
+  @@index([targetType, targetId])
+  @@map("audit_logs")
+}
+
+// ═══════════════════ 11. AXTARIŞ (1 cədvəl) ═══════════════════
+
+model SearchHistory {
+  id          BigInt            @id @default(autoincrement()) @db.UnsignedBigInt
+  userId      BigInt            @map("user_id") @db.UnsignedBigInt
+  query       String            @db.VarChar(190)
+  entityType  SearchEntityType? @map("entity_type")
+  resultCount Int               @default(0) @map("result_count") @db.UnsignedInt
+  createdAt   DateTime          @default(now()) @map("created_at") @db.DateTime(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@map("search_history")
+}

@@ -1,0 +1,64 @@
+import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Public } from '@/common/decorators/public.decorator';
+import { PrismaService } from '@/common/prisma/prisma.service';
+import { CreateFeedbackDto } from './dto/feedback.dto';
+import { SystemService } from './system.service';
+
+@ApiTags('system')
+@Controller()
+export class SystemController {
+  constructor(
+    private readonly system: SystemService,
+    private readonly prisma: PrismaService,
+  ) {}
+
+  @Public()
+  @Get('health')
+  @ApiOperation({ summary: 'Servis vəziyyəti — konteyner healthcheck bunu çağırır' })
+  health() {
+    return this.system.health();
+  }
+
+  @Public()
+  @Get('config')
+  @ApiOperation({ summary: 'Tətbiq konfiqurasiyası: XP qaydaları, levellər, feature flag-lar' })
+  config() {
+    return this.system.appConfig();
+  }
+
+  @Public()
+  @Get('categories')
+  @ApiOperation({ summary: 'Kateqoriyalar — məkan, marşrut, təcrübə, tədbir' })
+  categories(@Query('type') type?: string) {
+    return this.system.categories(type);
+  }
+
+  @Public()
+  @Get('app-version')
+  @ApiOperation({ summary: 'Minimum və son tətbiq versiyası' })
+  appVersion() {
+    return this.system.appVersion();
+  }
+
+  @Public()
+  @Get('legal/:slug')
+  @ApiOperation({ summary: 'Hüquqi sənəd: terms, privacy, expert-terms' })
+  legal(@Param('slug') slug: string) {
+    return this.system.legal(slug);
+  }
+
+  @Public()
+  @Post('feedback')
+  @ApiOperation({ summary: 'İstifadəçi rəyi və ya xəta bildirişi' })
+  async feedback(@Body() dto: CreateFeedbackDto) {
+    await this.prisma.auditLog.create({
+      data: {
+        action: `feedback.${dto.type}`,
+        targetType: 'feedback',
+        after: { message: dto.message, email: dto.email ?? null, context: dto.context ?? null },
+      },
+    });
+    return { received: true };
+  }
+}
