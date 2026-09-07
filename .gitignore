@@ -1,0 +1,54 @@
+node_modules/
+dist/
+build/
+.turbo/
+coverage/
+*.tsbuildinfo
+
+.env
+.env.local
+.env.*.local
+!.env.example
+
+.DS_Store
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# React Native
+# Native layihələr (ios/, android/) repoda SAXLANILIR — CLI ilə işləyirik,
+# Expo prebuild yoxdur. Aşağıda yalnız qurulma artefaktları atılır.
+apps/mobile/ios/Pods/
+apps/mobile/ios/build/
+apps/mobile/ios/*.xcworkspace/xcuserdata/
+apps/mobile/ios/*.xcodeproj/xcuserdata/
+apps/mobile/ios/.xcode.env.local
+apps/mobile/ios/vendor/
+apps/mobile/vendor/
+apps/mobile/android/.gradle/
+apps/mobile/android/.cxx/
+apps/mobile/android/app/build/
+apps/mobile/android/build/
+apps/mobile/android/local.properties
+
+# İmzalama açarları heç vaxt repoya düşmür
+*.jks
+*.keystore
+*.p8
+*.p12
+*.mobileprovision
+
+# Docker volumes / uploads
+docker/data/
+uploads/
+
+# Prisma
+apps/api/prisma/*.db
+
+# Seed media (kontent komandası əlavə edir)
+seed/photos/*
+!seed/photos/.gitkeep
+
+# Mənbə prezentasiyası (56 MB) — git tarixini daimi şişirdir.
+# Lazım olsa bu sətri silin və ya Git LFS ilə əlavə edin.
+Presentation - Gezgin - Prototip).pdf

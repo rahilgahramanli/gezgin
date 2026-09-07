@@ -1,0 +1,155 @@
+name: gezgin
+
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: gezgin-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpass}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-gezgin}
+      MYSQL_USER: ${MYSQL_USER:-gezgin}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-gezginpass}
+      TZ: UTC
+    command: >
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_0900_ai_ci
+      --default-time-zone=+00:00
+      --max-connections=200
+    ports:
+      - "${MYSQL_PORT:-3306}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./docker/mysql-init.sql:/docker-entrypoint-initdb.d/00-init.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-rootpass}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    container_name: gezgin-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    ports:
+      - "${REDIS_HOST_PORT:-6381}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  minio:
+    image: minio/minio:latest
+    container_name: gezgin-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY:-minioadmin}
+    ports:
+      - "${MINIO_PORT:-9010}:9000"
+      - "${MINIO_CONSOLE_PORT:-9011}:9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  minio-init:
+    image: minio/mc:latest
+    container_name: gezgin-minio-init
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 ${S3_ACCESS_KEY:-minioadmin} ${S3_SECRET_KEY:-minioadmin};
+      mc mb --ignore-existing local/${S3_BUCKET:-gezgin};
+      mc anonymous set download local/${S3_BUCKET:-gezgin};
+      echo 'minio bucket hazırdır';
+      "
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: gezgin-mailhog
+    restart: unless-stopped
+    ports:
+      - "${MAILHOG_SMTP_PORT:-1025}:1025"
+      - "${MAILHOG_UI_PORT:-8025}:8025"
+
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: gezgin-phpmyadmin
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      UPLOAD_LIMIT: 200M
+    ports:
+      - "${PMA_PORT_HOST:-8083}:80"
+
+  api:
+    build:
+      context: .
+      dockerfile: docker/api.Dockerfile
+      target: development
+    container_name: gezgin-api
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: mysql://${MYSQL_USER:-gezgin}:${MYSQL_PASSWORD:-gezginpass}@mysql:3306/${MYSQL_DATABASE:-gezgin}
+      REDIS_HOST: redis
+      MAIL_HOST: mailhog
+      S3_ENDPOINT: http://minio:9000
+    env_file: [.env]
+    ports:
+      - "${API_PORT:-3100}:3000"
+    volumes:
+      - ./apps/api:/app/apps/api
+      - ./packages:/app/packages
+      - ./seed:/app/seed
+      - /app/node_modules
+      - /app/apps/api/node_modules
+    command: pnpm --filter @gezgin/api start:dev
+
+  worker:
+    build:
+      context: .
+      dockerfile: docker/api.Dockerfile
+      target: development
+    container_name: gezgin-worker
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_started
+    environment:
+      NODE_ENV: development
+      APP_ROLE: worker
+      DATABASE_URL: mysql://${MYSQL_USER:-gezgin}:${MYSQL_PASSWORD:-gezginpass}@mysql:3306/${MYSQL_DATABASE:-gezgin}
+      REDIS_HOST: redis
+    env_file: [.env]
+    volumes:
+      - ./apps/api:/app/apps/api
+      - ./packages:/app/packages
+      - /app/node_modules
+      - /app/apps/api/node_modules
+    command: pnpm --filter @gezgin/api start:worker
+
+volumes:
+  mysql_data:
+  redis_data:
+  minio_data:

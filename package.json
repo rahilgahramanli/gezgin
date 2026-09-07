@@ -1,0 +1,28 @@
+{
+  "name": "gezgin",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@9.15.9",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "api": "pnpm --filter @gezgin/api",
+    "mobile": "pnpm --filter @gezgin/mobile",
+    "db:migrate": "pnpm --filter @gezgin/api db:migrate",
+    "db:generate": "pnpm --filter @gezgin/api db:generate",
+    "db:seed": "pnpm --filter @gezgin/api db:seed",
+    "db:reset": "pnpm --filter @gezgin/api db:reset",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f api"
+  },
+  "devDependencies": {
+    "turbo": "^2.3.3",
+    "typescript": "^5.7.3",
+    "prettier": "^3.4.2"
+  }
+}

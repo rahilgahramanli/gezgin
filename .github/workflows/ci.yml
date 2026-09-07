@@ -1,0 +1,72 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+
+jobs:
+  api:
+    name: API — lint, typecheck, test
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: rootpass
+          MYSQL_DATABASE: gezgin
+          MYSQL_USER: gezgin
+          MYSQL_PASSWORD: gezginpass
+        ports: ["3306:3306"]
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost -u root -prootpass"
+          --health-interval=5s --health-timeout=5s --health-retries=20
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+        options: --health-cmd="redis-cli ping" --health-interval=5s --health-retries=10
+
+    env:
+      DATABASE_URL: mysql://gezgin:gezginpass@127.0.0.1:3306/gezgin
+      SHADOW_DATABASE_URL: mysql://root:rootpass@127.0.0.1:3306/gezgin_shadow
+      JWT_ACCESS_SECRET: ci-access-secret-0123456789
+      JWT_REFRESH_SECRET: ci-refresh-secret-0123456789
+      NODE_ENV: test
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 9.15.9 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm }
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Shadow bazası yarat
+        run: mysql -h 127.0.0.1 -u root -prootpass -e "CREATE DATABASE IF NOT EXISTS gezgin_shadow;"
+
+      - run: pnpm --filter @gezgin/shared build
+      - run: pnpm --filter @gezgin/api exec prisma generate
+      - run: pnpm --filter @gezgin/api exec prisma migrate deploy
+      - run: pnpm --filter @gezgin/api exec ts-node -T -r tsconfig-paths/register prisma/seed.ts
+        working-directory: apps/api
+
+      - run: pnpm --filter @gezgin/api typecheck
+      - run: pnpm --filter @gezgin/api test
+      - run: pnpm --filter @gezgin/api build
+
+  docker:
+    name: Docker image qurulur
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/api.Dockerfile
+          target: production
+          push: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
