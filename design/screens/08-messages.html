@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="az">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GEZGIN — 08 Mesajlar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../gezgin.css">
+<script src="../icons.js" defer></script>
+<style>
+  .msgs .item { padding: 14px 0; }
+  .msgs .item .avatar { width: 50px; height: 50px; }
+  .msgs .item .txt .top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .msgs .item .txt .top b { display: inline; font-size: 15px; }
+  .msgs .item .txt .time { font-size: 12px; color: var(--muted); flex: none; }
+  .msgs .item .txt .time.on { color: var(--green-900); font-weight: 600; }
+  .msgs .item .txt .bot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 3px; }
+  .msgs .item .txt .bot span.msg { display: block; font-size: 13px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .msgs .item .txt .bot span.msg.on { color: var(--ink); font-weight: 500; }
+  .msgs .logo-mark-round { width: 50px; height: 50px; flex: none; }
+</style>
+</head>
+<body class="canvas">
+<div class="device"><div class="phone">
+
+  <div class="statusbar">
+    <span>9:41</span>
+    <span class="icons"><svg class="i"><use href="#i-signal"/></svg><svg class="i"><use href="#i-wifi"/></svg><svg class="i" style="width:26px"><use href="#i-battery"/></svg></span>
+  </div>
+  <div class="topbar">
+    <span style="width:40px"></span>
+    <div class="ttl" style="font-size:20px;font-weight:700">Mesajlar</div>
+    <a class="icon-btn"><svg class="i"><use href="#i-edit"/></svg></a>
+  </div>
+
+  <main class="screen">
+    <div class="content" style="padding-top:2px">
+
+      <div class="search plain">
+        <svg class="i"><use href="#i-search"/></svg>
+        <input placeholder="Söhbət axtar">
+      </div>
+
+      <div class="chips mt-12">
+        <a class="chip active">Hamısı</a>
+        <a class="chip"><svg class="i xs" style="color:var(--brown-700)"><use href="#i-badge-check"/></svg>Local Expert</a>
+        <a class="chip"><svg class="i xs"><use href="#i-store"/></svg>Biznes</a>
+        <a class="chip"><svg class="i xs"><use href="#i-users"/></svg>Gezginlər</a>
+      </div>
+
+      <div class="list msgs mt-8">
+        <a class="item">
+          <span class="avatar ring"><img src="../assets/avatar-rustem.jpg" alt=""></span>
+          <div class="txt">
+            <div class="top"><span class="row gap-6"><b>Rüstəm Q.</b><span class="pill brown" style="height:20px;padding:0 8px">Local Expert</span></span><span class="time on">10:24</span></div>
+            <div class="bot"><span class="msg on">Sabah saat 9-da Quba mərkəzdə görüşərik 👍</span><span class="count-badge">2</span></div>
+          </div>
+        </a>
+        <a class="item">
+          <span class="logo-mark-round" style="background:var(--brown-700)"><svg class="i"><use href="#i-store"/></svg></span>
+          <div class="txt">
+            <div class="top"><span class="row gap-6"><b>Gabala Resort &amp; Spa</b><svg class="i xs" style="color:var(--green-900)"><use href="#i-badge-check"/></svg></span><span class="time">09:10</span></div>
+            <div class="bot"><span class="msg">Rezervasiyanız təsdiqləndi. Sizi gözləyirik!</span></div>
+          </div>
+        </a>
+        <a class="item">
+          <span class="avatar ring"><img src="../assets/avatar-tural.jpg" alt=""></span>
+          <div class="txt">
+            <div class="top"><b>Tural</b><span class="time on">Dünən</span></div>
+            <div class="bot"><span class="msg on">Xınalıq marşrutunu mənə göndərə bilərsən?</span><span class="count-badge">1</span></div>
+          </div>
+        </a>
+        <a class="item">
+          <span class="avatar"><img src="../assets/avatar-gulnar.jpg" alt=""></span>
+          <div class="txt">
+            <div class="top"><b>Gülnar</b><span class="time">Dünən</span></div>
+            <div class="bot"><span class="msg">Fotolar əladır 😍</span></div>
+          </div>
+        </a>
+        <a class="item">
+          <span class="avatar"><img src="../assets/avatar-lale.jpg" alt=""></span>
+          <div class="txt">
+            <div class="top"><b>Lalə</b><span class="time">2 gün</span></div>
+            <div class="bot"><span class="msg">Qəbələ festivalına birlikdə gedək?</span></div>
+          </div>
+        </a>
+        <a class="item">
+          <span class="avatar"><img src="../assets/avatar-leriman.jpg" alt=""></span>
+          <div class="txt">
+            <div class="top"><b>Leriman</b><span class="time">1 həftə</span></div>
+            <div class="bot"><span class="msg">Təşəkkürlər!</span></div>
+          </div>
+        </a>
+        <a class="item">
+          <span class="logo-mark-round">g</span>
+          <div class="txt">
+            <div class="top"><span class="row gap-6"><b>GEZGIN Dəstək</b><svg class="i xs" style="color:var(--green-900)"><use href="#i-badge-check"/></svg></span><span class="time">1 həftə</span></div>
+            <div class="bot"><span class="msg">Salam Aysel! Sualınız varsa buradayıq.</span></div>
+          </div>
+        </a>
+      </div>
+
+    </div>
+  </main>
+
+  <nav class="tabbar">
+    <a class="tab-item active"><svg class="i"><use href="#i-pin"/></svg>Discover</a>
+    <a class="tab-item"><svg class="i nofill"><use href="#i-search"/></svg>Explore</a>
+    <div class="tab-plus"><a class="fab"><svg class="i lg"><use href="#i-plus"/></svg></a></div>
+    <a class="tab-item"><svg class="i"><use href="#i-map"/></svg>Trips</a>
+    <a class="tab-item"><svg class="i"><use href="#i-user"/></svg>Profile</a>
+  </nav>
+  <div class="home-indicator"></div>
+</div></div>
+</body>
+</html>

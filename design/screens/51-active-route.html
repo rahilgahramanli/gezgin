@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="az">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GEZGIN — 51 Aktiv marşrut</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../gezgin.css">
+<script src="../icons.js" defer></script>
+<style>
+  .pin.passed { filter: grayscale(1); opacity: .7; }
+  .pin.active .lbl { background: var(--green-900); color: #fff; }
+  .map-ctl.on { background: var(--green-900); color: #fff; }
+  .nav-panel { position: absolute; top: 60px; left: 16px; right: 16px; z-index: 12; }
+  .ctl-stack { position: absolute; top: 170px; right: 16px; display: flex; flex-direction: column; gap: 8px; z-index: 12; }
+  .ctl-stack .map-ctl { position: static; }
+</style>
+</head>
+<body class="canvas">
+<div class="device"><div class="phone">
+
+  <div class="map full">
+    <svg class="route" viewBox="0 0 390 844" preserveAspectRatio="none">
+      <path d="M60 480 C 85 455, 110 435, 135 410 S 190 365, 215 345 S 280 260, 300 200" stroke="var(--green-900)" stroke-width="3" stroke-dasharray="6 6" fill="none" stroke-linecap="round"/>
+    </svg>
+    <span class="pin passed" style="left:60px;top:480px"><svg class="i"><use href="#i-pin-solid"/></svg><span class="lbl">Quba</span></span>
+    <span class="pin passed" style="left:135px;top:410px"><svg class="i"><use href="#i-pin-solid"/></svg><span class="lbl">Laza</span></span>
+    <span class="pin active" style="left:215px;top:345px"><svg class="i"><use href="#i-pin-solid"/></svg><span class="lbl">Qəçrəş</span></span>
+    <span class="pin brown" style="left:300px;top:200px"><svg class="i"><use href="#i-pin-solid"/></svg><span class="lbl">Xınalıq</span></span>
+    <span class="me-dot" style="left:172px;top:381px"></span>
+  </div>
+
+  <div class="statusbar overlay">
+    <span>9:41</span>
+    <span class="icons"><svg class="i"><use href="#i-signal"/></svg><svg class="i"><use href="#i-wifi"/></svg><svg class="i" style="width:26px"><use href="#i-battery"/></svg></span>
+  </div>
+
+  <div class="card pad nav-panel">
+    <div class="row gap-10">
+      <a class="icon-btn soft"><svg class="i"><use href="#i-x"/></svg></a>
+      <div class="flex-1">
+        <h3 class="h3 ellipsis">Quba – Dağlar turu</h3>
+        <div class="meta">1-ci gün · 3/8 məkan · 14:32</div>
+        <div class="progress thin mt-8"><div class="bar" style="width:37%"></div></div>
+      </div>
+      <a class="icon-btn"><svg class="i"><use href="#i-more-v"/></svg></a>
+    </div>
+  </div>
+
+  <div class="ctl-stack">
+    <span class="map-ctl"><svg class="i sm"><use href="#i-layers"/></svg></span>
+    <span class="map-ctl"><svg class="i sm"><use href="#i-location"/></svg></span>
+    <span class="map-ctl on"><svg class="i sm"><use href="#i-wifi-off"/></svg></span>
+  </div>
+
+  <div class="sheet" style="padding-bottom:30px">
+    <div class="handle"></div>
+    <span class="pill teal">Növbəti dayanacaq · 3 / 8</span>
+    <div class="between mt-8">
+      <h2 class="h2">Qəçrəş meşəsi</h2>
+      <span class="rating"><svg class="i"><use href="#i-star"/></svg>4.8 <span class="cnt">(212)</span></span>
+    </div>
+    <div class="meta row gap-6 mt-4"><svg class="i sm" style="color:var(--green-900)"><use href="#i-car"/></svg>12 km · 18 dəq</div>
+    <div class="row gap-8 mt-12">
+      <span class="pill gray"><svg class="i"><use href="#i-clock"/></svg>Plan: 15:00</span>
+      <span class="pill gray"><svg class="i"><use href="#i-tree"/></svg>Təbiət</span>
+      <span class="pill gray"><svg class="i"><use href="#i-coins"/></svg>Pulsuz</span>
+    </div>
+    <a class="btn btn-primary btn-block mt-16"><svg class="i sm"><use href="#i-navigation"/></svg> Naviqasiyanı başlat</a>
+    <div class="row gap-10 mt-10">
+      <a class="btn btn-outline flex-1" style="padding:0 10px 0 16px;font-size:15px;justify-content:flex-start"><svg class="i sm"><use href="#i-check"/></svg> Çatdım — check-in <span class="pill teal" style="margin-left:auto">+600 XP</span></a>
+      <a class="icon-btn paper" style="width:52px;height:52px"><svg class="i"><use href="#i-more"/></svg></a>
+    </div>
+    <div class="caption center mt-12">Sonra: Xınalıq kəndi · 57 km · 1 s 40 dəq</div>
+  </div>
+
+  <div class="home-indicator"></div>
+</div></div>
+</body>
+</html>

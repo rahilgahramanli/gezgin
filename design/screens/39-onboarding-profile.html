@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="az">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GEZGIN — 39 Profilini tamamla</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../gezgin.css">
+<script src="../icons.js" defer></script>
+<style>
+  .option-card .ic { width: 36px; height: 36px; border-radius: 10px; background: var(--green-100); color: var(--green-900); display: grid; place-items: center; flex: none; }
+  .option-card .txt { flex: 1; min-width: 0; }
+  .option-card .txt b { display: block; font-size: 14px; font-weight: 600; }
+  .option-card .txt span { font-size: 13px; color: var(--muted); }
+</style>
+</head>
+<body class="canvas">
+<div class="device"><div class="phone">
+
+  <div class="statusbar">
+    <span>9:41</span>
+    <span class="icons"><svg class="i"><use href="#i-signal"/></svg><svg class="i"><use href="#i-wifi"/></svg><svg class="i" style="width:26px"><use href="#i-battery"/></svg></span>
+  </div>
+  <div class="topbar">
+    <a class="icon-btn"><svg class="i"><use href="#i-back"/></svg></a>
+    <a class="muted semi" style="font-size:15px;padding:0 4px">Keç</a>
+  </div>
+
+  <main class="screen">
+    <div class="content" style="padding-bottom:120px">
+      <span class="pill">Addım 3 / 3</span>
+      <h1 class="title-xl mt-12">Özünü tanıt</h1>
+      <p class="meta mt-8" style="font-size:14px">Digər gezginlər səni belə görəcək</p>
+
+      <div class="col mt-20" style="align-items:center;gap:8px">
+        <div style="position:relative">
+          <span class="avatar xxl border"><img src="../assets/avatar-sen.jpg" alt="" style="object-position:top"></span>
+          <a class="icon-btn" style="position:absolute;right:-2px;bottom:2px;width:34px;height:34px;background:var(--green-900);color:#fff;border:2px solid #fff;box-shadow:0 4px 12px rgba(15,61,58,.3)"><svg class="i sm"><use href="#i-camera"/></svg></a>
+        </div>
+        <span class="caption semi" style="color:var(--green-900)">Foto dəyiş</span>
+      </div>
+
+      <div class="col gap-16 mt-20">
+        <div class="field">
+          <label>İstifadəçi adı</label>
+          <div class="input"><svg class="i"><use href="#i-at"/></svg><input value="@aysel.go"><svg class="i" style="color:var(--teal-400)"><use href="#i-check-circle"/></svg></div>
+        </div>
+        <div class="field">
+          <label>Haqqında</label>
+          <div class="textarea" style="color:var(--ink);min-height:88px;position:relative;padding-bottom:28px">Dağları və yerli mətbəxi sevirəm 🏔️<span class="caption" style="position:absolute;right:12px;bottom:8px">38 / 150</span></div>
+        </div>
+        <div class="field">
+          <label>Şəhər</label>
+          <div class="input"><svg class="i"><use href="#i-pin"/></svg><input value="Quba, Azərbaycan"></div>
+        </div>
+      </div>
+
+      <h3 class="h3 mt-24">İcazələr</h3>
+      <div class="col gap-10 mt-12">
+        <div class="option-card">
+          <span class="ic"><svg class="i"><use href="#i-bell"/></svg></span>
+          <div class="txt"><b>Bildirişlər</b><span>Təkliflər, plan xatırlatmaları</span></div>
+          <span class="toggle on"></span>
+        </div>
+        <div class="option-card">
+          <span class="ic"><svg class="i"><use href="#i-pin"/></svg></span>
+          <div class="txt"><b>Yerləşmə</b><span>Yaxınlıqdakı yerlər və check-in</span></div>
+          <span class="toggle on"></span>
+        </div>
+      </div>
+
+      <div class="notice mt-16">
+        <svg class="i sm" style="margin-top:1px"><use href="#i-sparkle"/></svg>
+        <span>Profilini tamamla → <b>+100 XP</b></span>
+      </div>
+    </div>
+  </main>
+
+  <div class="bottom-cta">
+    <a class="btn btn-primary btn-block">Başla!</a>
+  </div>
+  <div class="home-indicator"></div>
+</div></div>
+</body>
+</html>

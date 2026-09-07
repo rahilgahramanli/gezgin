@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="az">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GEZGIN — 03 Qeydiyyat</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../gezgin.css">
+<script src="../icons.js" defer></script>
+<style>
+  .steps { display:flex; gap:6px; }
+  .steps span { width:32px; height:4px; border-radius:2px; background:var(--line); }
+  .steps span.on { background:var(--green-900); }
+</style>
+</head>
+<body class="canvas">
+<div class="device"><div class="phone">
+
+  <div class="statusbar">
+    <span>9:41</span>
+    <span class="icons"><svg class="i"><use href="#i-signal"/></svg><svg class="i"><use href="#i-wifi"/></svg><svg class="i" style="width:26px"><use href="#i-battery"/></svg></span>
+  </div>
+  <div class="topbar">
+    <a class="icon-btn"><svg class="i"><use href="#i-back"/></svg></a>
+    <div class="ttl">Qeydiyyat</div>
+    <span style="width:40px"></span>
+  </div>
+
+  <main class="screen">
+    <div class="content">
+      <div class="between">
+        <div>
+          <h1 class="title-xl">Hesab yarat</h1>
+          <p class="meta mt-4" style="font-size:14px">Gezgin icmasına qoşul, kəşf et və paylaş</p>
+        </div>
+      </div>
+      <div class="between mt-12">
+        <div class="steps"><span class="on"></span><span></span><span></span></div>
+        <span class="caption semi">Addım 1 / 3</span>
+      </div>
+
+      <div class="col gap-10 mt-8">
+        <div class="field">
+          <label>Ad Soyad</label>
+          <div class="input focus"><svg class="i"><use href="#i-user"/></svg><input value="Aysel Məmmədova"></div>
+        </div>
+        <div class="field">
+          <label>İstifadəçi adı</label>
+          <div class="input"><svg class="i"><use href="#i-at"/></svg><input placeholder="@aysel.go"></div>
+        </div>
+        <div class="field">
+          <label>E-mail</label>
+          <div class="input"><svg class="i"><use href="#i-mail"/></svg><input placeholder="aysel@gezgin.app"></div>
+        </div>
+        <div class="field">
+          <label>Şifrə</label>
+          <div class="input"><svg class="i"><use href="#i-lock"/></svg><input placeholder="Ən azı 8 simvol"><svg class="i"><use href="#i-eye"/></svg></div>
+        </div>
+      </div>
+
+      <label class="row gap-10 mt-12">
+        <span class="checkbox on"><svg class="i xs"><use href="#i-check"/></svg></span>
+        <span class="small" style="color:var(--ink-2)"><b class="green">İstifadə şərtləri</b> və <b class="green">Məxfilik siyasəti</b> ilə razıyam</span>
+      </label>
+
+      <a class="btn btn-primary btn-block mt-16">Davam et</a>
+
+      <div class="or mt-12">və ya</div>
+
+      <div class="col gap-10 mt-8">
+        <a class="social-btn"><svg class="i"><use href="#i-google"/></svg> Google ilə davam et</a>
+        <a class="social-btn"><svg class="i" style="color:#000"><use href="#i-apple"/></svg> Apple ilə davam et</a>
+      </div>
+
+      <p class="center meta mt-12" style="font-size:14px">Artıq hesabın var? <b class="green">Daxil ol</b></p>
+    </div>
+  </main>
+
+  <div class="home-indicator"></div>
+</div></div>
+</body>
+</html>

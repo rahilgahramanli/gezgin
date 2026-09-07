@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="az">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GEZGIN — 19 Təsdiq</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../gezgin.css">
+<script src="../icons.js" defer></script>
+<style>
+  .success-top { border-radius: 0; height: 300px; padding: 84px 28px 0; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .success-top::before { content: ""; position: absolute; width: 360px; height: 360px; border-radius: 50%; background: rgba(255,255,255,.06); top: -140px; left: -90px; }
+  .success-top::after { content: ""; position: absolute; width: 260px; height: 260px; border-radius: 50%; background: rgba(255,255,255,.06); bottom: -120px; right: -70px; }
+  .success-top > * { position: relative; }
+  .check-circle { width: 88px; height: 88px; border-radius: 50%; background: #fff; color: var(--green-900); display: grid; place-items: center; box-shadow: 0 10px 30px rgba(0,0,0,.25); }
+  .ticket .kv { padding: 7px 0; }
+  .ticket .kv span { color: var(--muted); }
+</style>
+</head>
+<body class="canvas">
+<div class="device"><div class="phone">
+
+  <div class="statusbar light overlay">
+    <span>9:41</span>
+    <span class="icons"><svg class="i"><use href="#i-signal"/></svg><svg class="i"><use href="#i-wifi"/></svg><svg class="i" style="width:26px"><use href="#i-battery"/></svg></span>
+  </div>
+  <a class="icon-btn glass" style="position:absolute;top:60px;right:16px;z-index:6"><svg class="i"><use href="#i-x"/></svg></a>
+
+  <main class="screen">
+    <div class="gradient-card success-top">
+      <div class="check-circle"><svg class="i xl" style="stroke-width:2.6"><use href="#i-check"/></svg></div>
+      <div class="title-lg white" style="margin-top:6px">Rezervasiya təsdiqləndi!</div>
+      <div class="meta" style="font-size:14px">Planla, yola çıx, xatirələr topla!</div>
+    </div>
+
+    <div class="px" style="margin-top:-36px;position:relative;z-index:2;padding-bottom:28px">
+      <div class="card pad ticket" style="padding:18px 18px 16px">
+        <div class="between">
+          <div>
+            <h3 class="h3" style="font-size:18px">Quba Qəçrəşi</h3>
+            <div class="meta">Rüstəm Q. ilə · <span class="brown semi">Local Expert</span></div>
+          </div>
+          <span class="avatar sm"><img src="../assets/avatar-rustem.jpg" alt=""></span>
+        </div>
+        <div class="divider" style="margin:12px 0 6px"></div>
+        <div class="kv"><span>Tarix</span><b>27 iyun, Cümə</b></div>
+        <div class="kv"><span>Vaxt</span><b>09:00</b></div>
+        <div class="kv"><span>Görüş yeri</span><b style="text-align:right;max-width:60%">Quba mərkəz, Heydər Əliyev parkı</b></div>
+        <div class="kv"><span>Nəfər</span><b>2 böyük</b></div>
+        <div class="kv"><span>Ödənilib</span><b class="green">145 AZN</b></div>
+        <div class="divider" style="margin:6px 0 16px;background:none;border-top:1.5px dashed var(--line)"></div>
+        <div class="col center" style="align-items:center;gap:10px">
+          <div class="qr"></div>
+          <div class="caption" style="font-size:12px">Bron kodu: <b class="green" style="font-family:var(--font-display);font-size:14px;letter-spacing:.04em">GZ-27A4K9</b></div>
+          <a class="btn btn-xs btn-soft"><svg class="i xs"><use href="#i-copy"/></svg> Kopyala</a>
+        </div>
+      </div>
+
+      <div class="notice mt-12" style="background:#DDF3EF;color:#147E6E;align-items:center">
+        <svg class="i sm" style="flex:none"><use href="#i-sparkle"/></svg>
+        <span><b>+50 XP</b> hesabına əlavə olundu 🎉</span>
+      </div>
+
+      <div class="col gap-10 mt-16">
+        <a class="btn btn-primary btn-block"><svg class="i sm"><use href="#i-calendar"/></svg> Planıma əlavə et</a>
+        <a class="btn btn-outline btn-block"><svg class="i sm"><use href="#i-share"/></svg> Dostlarla paylaş</a>
+        <a class="btn btn-ghost btn-block" style="height:44px;font-weight:500">Ana səhifəyə qayıt</a>
+      </div>
+    </div>
+  </main>
+
+  <div class="home-indicator"></div>
+</div></div>
+</body>
+</html>

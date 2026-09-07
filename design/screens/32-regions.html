@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="az">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GEZGIN — 32 Regionlar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../gezgin.css">
+<script src="../icons.js" defer></script>
+<style>
+  .map .tag { position:absolute; transform:translate(-50%,0); font-size:11px; font-weight:600; color:var(--ink); background:rgba(255,255,255,.9); padding:1px 7px; border-radius:6px; white-space:nowrap; box-shadow:0 1px 2px rgba(0,0,0,.12); }
+  .map-dot.off { background:#C9C3B8; }
+  .map-dot.md { width:28px; height:28px; }
+  .map-dot.md .i { width:14px; height:14px; }
+  .legend { position:absolute; left:10px; bottom:10px; display:flex; flex-direction:column; gap:4px; }
+  .legend .pill { background:var(--paper); color:var(--ink-2); box-shadow:var(--shadow-sm); }
+  .legend .dot { width:9px; height:9px; border-radius:50%; background:var(--green-900); display:inline-block; }
+  .legend .dot.off { background:#C9C3B8; }
+</style>
+</head>
+<body class="canvas">
+<div class="device"><div class="phone">
+
+  <div class="statusbar">
+    <span>9:41</span>
+    <span class="icons"><svg class="i"><use href="#i-signal"/></svg><svg class="i"><use href="#i-wifi"/></svg><svg class="i" style="width:26px"><use href="#i-battery"/></svg></span>
+  </div>
+  <div class="topbar">
+    <a class="icon-btn"><svg class="i"><use href="#i-back"/></svg></a>
+    <div class="ttl">Regionlar</div>
+    <a class="icon-btn"><svg class="i"><use href="#i-list"/></svg></a>
+  </div>
+
+  <main class="screen">
+    <div class="content" style="padding-top:0">
+
+      <div class="card pad">
+        <div class="between"><h2 class="h2">32 / 50 region</h2><span class="pill teal"><svg class="i"><use href="#i-trend"/></svg>64%</span></div>
+        <div class="progress mt-12"><div class="bar" style="width:64%"></div></div>
+        <div class="caption mt-8">Azərbaycanın 18 regionu qalıb</div>
+      </div>
+
+      <div class="map h320 mt-16">
+        <span class="map-dot md" style="left:70%;top:12%"><svg class="i"><use href="#i-check"/></svg></span>
+        <span class="map-dot md" style="left:64%;top:22%"><svg class="i"><use href="#i-check"/></svg></span>
+        <span class="tag" style="left:64%;top:27%">Quba</span>
+        <span class="map-dot md" style="left:34%;top:20%"><svg class="i"><use href="#i-check"/></svg></span>
+        <span class="tag" style="left:34%;top:25%">Şəki</span>
+        <span class="map-dot md" style="left:46%;top:30%"><svg class="i"><use href="#i-check"/></svg></span>
+        <span class="map-dot md" style="left:55%;top:38%"><svg class="i"><use href="#i-check"/></svg></span>
+        <span class="map-dot md off" style="left:66%;top:47%"><svg class="i"><use href="#i-pin"/></svg></span>
+        <span class="map-dot md" style="left:86%;top:50%"><svg class="i"><use href="#i-check"/></svg></span>
+        <span class="tag" style="left:86%;top:55%">Bakı</span>
+        <span class="map-dot md off" style="left:20%;top:40%"><svg class="i"><use href="#i-pin"/></svg></span>
+        <span class="tag" style="left:20%;top:45%">Gəncə</span>
+        <span class="map-dot md off" style="left:14%;top:54%"><svg class="i"><use href="#i-pin"/></svg></span>
+        <span class="map-dot md off" style="left:15%;top:66%"><svg class="i"><use href="#i-pin"/></svg></span>
+        <span class="tag" style="left:15%;top:71%">Naxçıvan</span>
+        <span class="map-dot md off" style="left:74%;top:76%"><svg class="i"><use href="#i-pin"/></svg></span>
+        <span class="tag" style="left:74%;top:81%">Lənkəran</span>
+        <span class="map-dot md off" style="left:70%;top:91%"><svg class="i"><use href="#i-pin"/></svg></span>
+        <span class="map-ctl" style="right:10px;top:10px"><svg class="i sm"><use href="#i-layers"/></svg></span>
+        <span class="map-ctl" style="right:10px;top:52px"><svg class="i sm"><use href="#i-navigation"/></svg></span>
+        <div class="legend">
+          <span class="pill"><span class="dot"></span>Kəşf edilib · 32</span>
+          <span class="pill"><span class="dot off"></span>Qalıb · 18</span>
+        </div>
+      </div>
+
+      <div class="tabs spread mt-16" style="margin-left:calc(-1 * var(--pad));margin-right:calc(-1 * var(--pad))">
+        <a class="tab active">Kəşf edilib</a><a class="tab">Qalıb</a>
+      </div>
+
+      <div class="col gap-10 mt-16">
+        <a class="row-card">
+          <div class="thumb"><img src="../assets/place-xinaliq.jpg" alt=""></div>
+          <div class="flex-1">
+            <div class="between"><div class="h3">Quba</div><span class="pill teal">100%</span></div>
+            <div class="meta">12 məkan · 4 marşrut</div>
+            <div class="caption mt-4">Son ziyarət: 12 iyun</div>
+            <div class="progress thin mt-8"><div class="bar teal" style="width:100%"></div></div>
+          </div>
+        </a>
+        <a class="row-card">
+          <div class="thumb"><img src="../assets/card-lake.jpg" alt=""></div>
+          <div class="flex-1">
+            <div class="between"><div class="h3">Qəbələ</div><span class="pill teal">80%</span></div>
+            <div class="meta">8 məkan · 2 marşrut</div>
+            <div class="caption mt-4">Son ziyarət: 3 may</div>
+            <div class="progress thin mt-8"><div class="bar" style="width:80%"></div></div>
+          </div>
+        </a>
+        <a class="row-card">
+          <div class="thumb"><img src="../assets/place-lahic.jpg" alt=""></div>
+          <div class="flex-1">
+            <div class="between"><div class="h3">İsmayıllı</div><span class="pill teal">60%</span></div>
+            <div class="meta">6 məkan · 1 marşrut</div>
+            <div class="caption mt-4">Son ziyarət: 21 aprel</div>
+            <div class="progress thin mt-8"><div class="bar" style="width:60%"></div></div>
+          </div>
+        </a>
+        <a class="row-card">
+          <div class="thumb"><img src="../assets/thumb-shahdag-center.jpg" alt=""></div>
+          <div class="flex-1">
+            <div class="between"><div class="h3">Qusar</div><span class="pill teal">40%</span></div>
+            <div class="meta">4 məkan · 1 marşrut</div>
+            <div class="caption mt-4">Son ziyarət: 14 fevral</div>
+            <div class="progress thin mt-8"><div class="bar" style="width:40%"></div></div>
+          </div>
+        </a>
+        <a class="row-card">
+          <div class="thumb"><img src="../assets/thumb-icherisheher.jpg" alt=""></div>
+          <div class="flex-1">
+            <div class="between"><div class="h3">Bakı</div><span class="pill teal">90%</span></div>
+            <div class="meta">15 məkan · 3 marşrut</div>
+            <div class="caption mt-4">Son ziyarət: 20 iyun</div>
+            <div class="progress thin mt-8"><div class="bar" style="width:90%"></div></div>
+          </div>
+        </a>
+      </div>
+
+    </div>
+  </main>
+
+  <nav class="tabbar">
+    <a class="tab-item"><svg class="i"><use href="#i-pin"/></svg>Discover</a>
+    <a class="tab-item"><svg class="i nofill"><use href="#i-search"/></svg>Explore</a>
+    <div class="tab-plus"><a class="fab"><svg class="i lg"><use href="#i-plus"/></svg></a></div>
+    <a class="tab-item"><svg class="i"><use href="#i-map"/></svg>Trips</a>
+    <a class="tab-item active"><svg class="i"><use href="#i-user"/></svg>Profile</a>
+  </nav>
+  <div class="home-indicator"></div>
+</div></div>
+</body>
+</html>

@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="az">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GEZGIN — 23 Planım</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../gezgin.css">
+<script src="../icons.js" defer></script>
+<style>
+  .tl .row-card { padding: 8px 10px; gap: 10px; }
+  .tl .row-card .thumb { width: 44px; height: 44px; border-radius: 10px; }
+  .tl .row-card .thumb.ic { display: grid; place-items: center; background: var(--green-100); color: var(--green-900); }
+  .tl .row-card .h3 { font-size: 14px; }
+  .tl.active .row-card { border-color: var(--green-900); background: var(--green-050); }
+  .tl .time { font-size: 11px; font-weight: 600; color: var(--muted); margin-bottom: 4px; }
+</style>
+</head>
+<body class="canvas">
+<div class="device"><div class="phone">
+
+  <div class="statusbar">
+    <span>9:41</span>
+    <span class="icons"><svg class="i"><use href="#i-signal"/></svg><svg class="i"><use href="#i-wifi"/></svg><svg class="i" style="width:26px"><use href="#i-battery"/></svg></span>
+  </div>
+  <div class="topbar" style="padding:0 20px;height:60px">
+    <h1 class="title-xl">Planım</h1>
+    <a class="icon-btn soft"><svg class="i"><use href="#i-plus"/></svg></a>
+  </div>
+
+  <main class="screen">
+    <div class="tabs">
+      <a class="tab active">Marşrut</a><a class="tab">Tədbirlər</a><a class="tab">Qeydlər</a>
+    </div>
+    <div class="content" style="padding-top:16px">
+
+      <div class="card pad">
+        <div class="between"><h2 class="h2">Quba – Qusar turu</h2><span class="pill teal"><svg class="i"><use href="#i-check-circle"/></svg>Aktiv</span></div>
+        <div class="meta mt-4"><svg class="i xs"><use href="#i-calendar"/></svg> 12 – 14 iyun · 3 gün / 2 gecə · 2 nəfər</div>
+        <div class="progress thin mt-12"><div class="bar teal" style="width:33%"></div></div>
+        <div class="between mt-8 caption"><span>1-ci gün · <b class="green">3/8 məkan</b></span><span>33%</span></div>
+      </div>
+
+      <div class="map h180 mt-12">
+        <svg class="route" viewBox="0 0 350 180" preserveAspectRatio="none"><path d="M60 118 C95 90 120 70 150 62 S215 50 240 58 S290 90 300 108" fill="none" stroke="var(--green-900)" stroke-width="2.5" stroke-dasharray="6 6" stroke-linecap="round"/></svg>
+        <span class="pin" style="left:17%;top:70%"><svg class="i"><use href="#i-pin-solid"/></svg><span class="lbl">Quba</span></span>
+        <span class="pin brown" style="left:43%;top:40%"><svg class="i"><use href="#i-pin-solid"/></svg><span class="lbl">Qəçrəş</span></span>
+        <span class="pin" style="left:69%;top:36%"><svg class="i"><use href="#i-pin-solid"/></svg><span class="lbl">Qusar</span></span>
+        <span class="pin" style="left:86%;top:64%"><svg class="i"><use href="#i-pin-solid"/></svg><span class="lbl">Xınalıq</span></span>
+        <span class="map-ctl" style="right:10px;bottom:10px"><svg class="i sm"><use href="#i-navigation"/></svg></span>
+      </div>
+
+      <div class="between mt-20 mb-12"><h3 class="h3">Gün 1 · 12 iyun</h3><span class="caption">3 məkan · 24 km</span></div>
+      <div class="timeline">
+        <div class="tl done">
+          <div class="time">09:00</div>
+          <a class="row-card">
+            <div class="thumb ic"><svg class="i"><use href="#i-landmark"/></svg></div>
+            <div class="flex-1"><div class="h3">Quba gəzintisi</div><div class="meta row gap-4"><svg class="i xs teal"><use href="#i-check"/></svg> Tamamlandı · Quba şəhəri</div></div>
+            <svg class="i sm muted"><use href="#i-chev-right"/></svg>
+          </a>
+        </div>
+        <div class="tl done">
+          <div class="time">12:30</div>
+          <a class="row-card">
+            <div class="thumb"><img src="../assets/exp-kend-metbexi.jpg" alt=""></div>
+            <div class="flex-1"><div class="h3">Nahar — Kənd mətbəxi</div><div class="meta row gap-4"><svg class="i xs teal"><use href="#i-check"/></svg> Tamamlandı · Təcrübə</div></div>
+            <svg class="i sm muted"><use href="#i-chev-right"/></svg>
+          </a>
+        </div>
+        <div class="tl active">
+          <div class="time" style="color:var(--green-900)">15:00 · İndi</div>
+          <a class="row-card">
+            <div class="thumb"><img src="../assets/thumb-quba-forest.jpg" alt=""></div>
+            <div class="flex-1"><div class="h3">Qəçrəş meşəsi</div><div class="meta">Təbiət · 12 km · 25 dəq</div></div>
+            <svg class="i sm" style="color:var(--green-900)"><use href="#i-navigation"/></svg>
+          </a>
+        </div>
+      </div>
+
+      <div class="between mt-20 mb-12"><h3 class="h3">Gün 2 · 13 iyun</h3><span class="caption">2 məkan · 30 km</span></div>
+      <div class="timeline">
+        <div class="tl">
+          <div class="time">10:00</div>
+          <a class="row-card">
+            <div class="thumb"><img src="../assets/card-walker.jpg" alt=""></div>
+            <div class="flex-1"><div class="h3">Laza kəndi</div><div class="meta">Qusar · Dağ kəndi</div></div>
+            <svg class="i sm muted"><use href="#i-chev-right"/></svg>
+          </a>
+        </div>
+        <div class="tl">
+          <div class="time">14:00</div>
+          <a class="row-card">
+            <div class="thumb"><img src="../assets/valley-vertical.jpg" alt=""></div>
+            <div class="flex-1"><div class="h3">Şəlalə</div><div class="meta">Laza · 1.5 saat yürüş</div></div>
+            <svg class="i sm muted"><use href="#i-chev-right"/></svg>
+          </a>
+        </div>
+      </div>
+
+      <div class="between mt-20 mb-12"><h3 class="h3">Gün 3 · 14 iyun</h3><span class="caption">1 məkan · 18 km</span></div>
+      <div class="timeline">
+        <div class="tl">
+          <div class="time">09:30</div>
+          <a class="row-card">
+            <div class="thumb"><img src="../assets/place-xinaliq.jpg" alt=""></div>
+            <div class="flex-1"><div class="h3">Xınalıq kəndi</div><div class="meta">Quba · 2140 m</div></div>
+            <svg class="i sm muted"><use href="#i-chev-right"/></svg>
+          </a>
+        </div>
+      </div>
+
+      <a class="plan-card mt-16"><svg class="i"><use href="#i-plus"/></svg> Məkan və ya təcrübə əlavə et</a>
+
+    </div>
+  </main>
+
+  <a class="fab float"><svg class="i lg"><use href="#i-plus"/></svg></a>
+
+  <nav class="tabbar">
+    <a class="tab-item"><svg class="i"><use href="#i-pin"/></svg>Discover</a>
+    <a class="tab-item"><svg class="i nofill"><use href="#i-search"/></svg>Explore</a>
+    <div class="tab-plus"><a class="fab"><svg class="i lg"><use href="#i-plus"/></svg></a></div>
+    <a class="tab-item active"><svg class="i nofill"><use href="#i-map"/></svg>Trips</a>
+    <a class="tab-item"><svg class="i"><use href="#i-user"/></svg>Profile</a>
+  </nav>
+  <div class="home-indicator"></div>
+</div></div>
+</body>
+</html>

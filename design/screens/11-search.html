@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="az">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GEZGIN — 11 Axtarış</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../gezgin.css">
+<script src="../icons.js" defer></script>
+<style>
+  .search.focus { border-color: var(--green-900); box-shadow: 0 0 0 3px rgba(15,61,58,.12); color: var(--ink); }
+  .search.focus input { color: var(--ink); font-weight: 500; }
+  .result .h3 { margin-top: 2px; }
+  .result .pill { height: 20px; font-size: 10px; padding: 0 8px; }
+</style>
+</head>
+<body class="canvas">
+<div class="device"><div class="phone">
+
+  <div class="statusbar">
+    <span>9:41</span>
+    <span class="icons"><svg class="i"><use href="#i-signal"/></svg><svg class="i"><use href="#i-wifi"/></svg><svg class="i" style="width:26px"><use href="#i-battery"/></svg></span>
+  </div>
+
+  <main class="screen">
+    <div class="content">
+
+      <div class="row gap-12">
+        <div class="search focus flex-1">
+          <svg class="i"><use href="#i-search"/></svg>
+          <input value="Quba">
+          <svg class="i sm" style="color:var(--muted);background:var(--cream-2);border-radius:50%;padding:2px;width:20px;height:20px"><use href="#i-x"/></svg>
+        </div>
+        <a class="green semi" style="font-size:15px;white-space:nowrap">Ləğv et</a>
+      </div>
+
+      <div class="chips mt-12">
+        <a class="chip active">Hamısı</a>
+        <a class="chip">Yerlər</a>
+        <a class="chip">Marşrutlar</a>
+        <a class="chip">Təcrübələr</a>
+        <a class="chip">Gezginlər</a>
+      </div>
+
+      <section class="section" style="margin-top:16px">
+        <div class="section-head"><h2 class="h2">Son axtarışlar</h2><a class="link muted" style="color:var(--muted)">Təmizlə</a></div>
+        <div class="row wrap gap-8">
+          <a class="chip soft"><svg class="i sm"><use href="#i-clock"/></svg>Xınalıq</a>
+          <a class="chip soft"><svg class="i sm"><use href="#i-clock"/></svg>Lahıc</a>
+          <a class="chip soft"><svg class="i sm"><use href="#i-clock"/></svg>Şahdağ</a>
+          <a class="chip soft"><svg class="i sm"><use href="#i-clock"/></svg>Qəbələ festival</a>
+        </div>
+      </section>
+
+      <section class="section" style="margin-top:18px">
+        <div class="section-head"><h2 class="h2">Nəticələr · 24</h2><a class="link">Filtr <svg class="i xs"><use href="#i-sliders"/></svg></a></div>
+        <div class="col gap-10">
+
+          <a class="row-card result">
+            <div class="thumb"><img src="../assets/thumb-quba-forest.jpg" alt=""></div>
+            <div class="flex-1">
+              <span class="pill">Yer</span>
+              <div class="h3 ellipsis">Quba meşə pikniki</div>
+              <div class="meta">Təbiət · Quba · <span class="rating"><svg class="i"><use href="#i-star"/></svg>4.8 <span class="cnt">(128)</span></span> · 5 km</div>
+            </div>
+          </a>
+
+          <a class="row-card result">
+            <div class="thumb"><img src="../assets/route-quba-qusar.jpg" alt=""></div>
+            <div class="flex-1">
+              <span class="pill brown">Marşrut</span>
+              <div class="h3 ellipsis">Quba – Dağlar turu</div>
+              <div class="meta">3 gün / 2 gecə · 72 km · <span class="rating"><svg class="i"><use href="#i-star"/></svg>4.9</span></div>
+            </div>
+          </a>
+
+          <a class="row-card result">
+            <div class="thumb"><img src="../assets/exp-kend-metbexi.jpg" alt=""></div>
+            <div class="flex-1">
+              <span class="pill teal">Təcrübə</span>
+              <div class="h3 ellipsis">Kənd mətbəxi masterklassı</div>
+              <div class="meta">Quba · <b class="green">60 AZN</b> / nəfər · <span class="rating"><svg class="i"><use href="#i-star"/></svg>4.9</span></div>
+            </div>
+          </a>
+
+          <a class="row-card result">
+            <div class="thumb" style="border-radius:50%"><img src="../assets/avatar-rustem.jpg" alt=""></div>
+            <div class="flex-1">
+              <span class="pill brown"><svg class="i"><use href="#i-badge-check"/></svg>Local Expert</span>
+              <div class="h3 ellipsis">Rüstəm Q.</div>
+              <div class="meta">Quba · <span class="rating"><svg class="i"><use href="#i-star"/></svg>5.0</span> · 36 təcrübə</div>
+            </div>
+          </a>
+
+          <a class="row-card result">
+            <div class="thumb"><img src="../assets/exp-dag-yurushu.jpg" alt=""></div>
+            <div class="flex-1">
+              <span class="pill teal">Təcrübə</span>
+              <div class="h3 ellipsis">Qudyalçay hiking turu</div>
+              <div class="meta">5 saat · <b class="green">35 AZN</b> / nəfər · <span class="rating"><svg class="i"><use href="#i-star"/></svg>4.8</span></div>
+            </div>
+          </a>
+
+          <a class="row-card result">
+            <div class="thumb"><img src="../assets/place-xinaliq.jpg" alt=""></div>
+            <div class="flex-1">
+              <span class="pill">Yer</span>
+              <div class="h3 ellipsis">Xınalıq kəndi</div>
+              <div class="meta">Kənd · Quba · <span class="rating"><svg class="i"><use href="#i-star"/></svg>4.9 <span class="cnt">(1,248)</span></span> · 57 km</div>
+            </div>
+          </a>
+
+        </div>
+        <a class="btn btn-soft btn-sm btn-block mt-12">Daha çox nəticə göstər (18) <svg class="i sm"><use href="#i-chev-down"/></svg></a>
+      </section>
+
+      <section class="section">
+        <div class="section-head"><h2 class="h2">Populyar axtarışlar</h2></div>
+        <div class="row wrap gap-8">
+          <a class="chip"><svg class="i sm" style="color:var(--brown-700)"><use href="#i-trend"/></svg>Göygöl</a>
+          <a class="chip"><svg class="i sm" style="color:var(--brown-700)"><use href="#i-trend"/></svg>İçərişəhər</a>
+          <a class="chip"><svg class="i sm" style="color:var(--brown-700)"><use href="#i-trend"/></svg>Atəşgah</a>
+          <a class="chip"><svg class="i sm" style="color:var(--brown-700)"><use href="#i-trend"/></svg>Lənkəran</a>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <nav class="tabbar">
+    <a class="tab-item"><svg class="i"><use href="#i-pin"/></svg>Discover</a>
+    <a class="tab-item active"><svg class="i nofill"><use href="#i-search"/></svg>Explore</a>
+    <div class="tab-plus"><a class="fab"><svg class="i lg"><use href="#i-plus"/></svg></a></div>
+    <a class="tab-item"><svg class="i"><use href="#i-map"/></svg>Trips</a>
+    <a class="tab-item"><svg class="i"><use href="#i-user"/></svg>Profile</a>
+  </nav>
+  <div class="home-indicator"></div>
+</div></div>
+</body>
+</html>

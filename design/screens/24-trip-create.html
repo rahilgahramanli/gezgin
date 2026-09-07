@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="az">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GEZGIN — 24 Yeni səyahət</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../gezgin.css">
+<script src="../icons.js" defer></script>
+<style>
+  .option-card .ic { width: 40px; height: 40px; border-radius: 12px; background: var(--green-100); color: var(--green-900); display: grid; place-items: center; flex: none; }
+  .option-card b { display: block; font-size: 15px; }
+  .option-card .meta { margin-top: 2px; }
+</style>
+</head>
+<body class="canvas">
+<div class="device"><div class="phone">
+
+  <div class="statusbar">
+    <span>9:41</span>
+    <span class="icons"><svg class="i"><use href="#i-signal"/></svg><svg class="i"><use href="#i-wifi"/></svg><svg class="i" style="width:26px"><use href="#i-battery"/></svg></span>
+  </div>
+  <div class="topbar">
+    <a class="icon-btn"><svg class="i"><use href="#i-x"/></svg></a>
+    <div class="ttl">Yeni səyahət</div>
+    <span></span>
+  </div>
+
+  <main class="screen" style="padding-bottom:100px">
+    <div class="content" style="padding-top:0">
+
+      <div class="photo-card h180">
+        <img src="../assets/card-balloons.jpg" alt="">
+        <div class="ov" style="align-items:center;justify-content:center;background:rgba(10,20,20,.25)">
+          <span class="pill glass" style="height:34px;padding:0 14px;font-size:13px"><svg class="i sm"><use href="#i-camera"/></svg> Cover şəkli dəyiş</span>
+        </div>
+      </div>
+
+      <div class="col gap-16 mt-20">
+        <div class="field">
+          <label>Səyahət adı</label>
+          <div class="input focus"><svg class="i sm"><use href="#i-edit"/></svg><input value="Qəbələ yay səyahəti"></div>
+        </div>
+        <div class="field">
+          <label>Tarixlər</label>
+          <div class="row gap-10">
+            <div class="input flex-1"><svg class="i sm"><use href="#i-calendar"/></svg><input value="5 iyul"></div>
+            <span class="muted">—</span>
+            <div class="input flex-1"><svg class="i sm"><use href="#i-calendar"/></svg><input value="8 iyul"></div>
+          </div>
+        </div>
+        <div class="field">
+          <label>Region</label>
+          <div class="chips" style="padding-top:0">
+            <a class="chip">Quba</a>
+            <a class="chip active">Qəbələ</a>
+            <a class="chip">Şəki</a>
+            <a class="chip">Gəncə</a>
+            <a class="chip">Lənkəran</a>
+          </div>
+        </div>
+        <div class="between">
+          <div><label class="small semi" style="color:var(--ink-2)">Nəfər sayı</label><div class="caption">Sən və 1 yoldaş</div></div>
+          <div class="stepper"><button>−</button><b style="min-width:16px;text-align:center">2</b><button>+</button></div>
+        </div>
+      </div>
+
+      <section class="section">
+        <div class="section-head"><h2 class="h2">Necə başlayaq?</h2></div>
+        <div class="col gap-10">
+          <a class="option-card selected">
+            <span class="ic"><svg class="i"><use href="#i-route"/></svg></span>
+            <div class="flex-1"><b>Hazır marşrutdan başla</b><div class="meta">Tövsiyə olunan marşrutu kopyala və dəyiş</div></div>
+            <span class="radio on"></span>
+          </a>
+          <div class="hscroll" style="padding-top:0;padding-bottom:0">
+            <a class="photo-card" style="width:160px;height:110px">
+              <img src="../assets/route-quba-qusar.jpg" alt="">
+              <div class="ov" style="padding:10px"><div class="h3" style="font-size:14px">Quba – Dağlar turu</div><div class="meta" style="font-size:11px">3 gün · 8 məkan</div></div>
+              <span class="pill glass top-right" style="height:20px;font-size:10px"><svg class="i"><use href="#i-check"/></svg>Seçildi</span>
+            </a>
+            <a class="photo-card" style="width:160px;height:110px">
+              <img src="../assets/card-street.jpg" alt="">
+              <div class="ov" style="padding:10px"><div class="h3" style="font-size:14px">Qəbələ – Şəki turu</div><div class="meta" style="font-size:11px">4 gün · 10 məkan</div></div>
+            </a>
+          </div>
+          <a class="option-card">
+            <span class="ic"><svg class="i"><use href="#i-edit"/></svg></span>
+            <div class="flex-1"><b>Sıfırdan qur</b><div class="meta">Məkanları özün seç</div></div>
+            <span class="radio"></span>
+          </a>
+          <a class="option-card">
+            <span class="ic" style="background:var(--brown-100);color:var(--brown-700)"><svg class="i"><use href="#i-sparkle"/></svg></span>
+            <div class="flex-1"><div class="row gap-6"><b>Gezgin AI ilə planla</b><span class="pill gold">PRO</span></div><div class="meta">Maraqlarına görə avtomatik plan</div></div>
+            <span class="radio"></span>
+          </a>
+        </div>
+      </section>
+
+      <div class="card pad mt-16 between">
+        <div class="row gap-10"><svg class="i green"><use href="#i-download"/></svg><div><b class="small semi">Offline xəritəni yüklə</b><div class="caption">Qəbələ regionu · 180 MB</div></div></div>
+        <span class="toggle on"></span>
+      </div>
+
+    </div>
+  </main>
+
+  <div class="bottom-cta">
+    <a class="btn btn-primary btn-block">Səyahəti yarat · +350 XP</a>
+  </div>
+  <div class="home-indicator"></div>
+</div></div>
+</body>
+</html>

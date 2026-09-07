@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="az">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GEZGIN — 31 Liderlər cədvəli</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../gezgin.css">
+<script src="../icons.js" defer></script>
+<style>
+  .podium { display:flex; align-items:flex-end; gap:10px; }
+  .pod { flex:1; display:flex; flex-direction:column; align-items:center; gap:6px; }
+  .pod .av { position:relative; }
+  .pod .av .medal { position:absolute; left:50%; bottom:-10px; transform:translateX(-50%); border:2px solid var(--paper); }
+  .pod .nm { font-size:13px; font-weight:600; margin-top:8px; }
+  .pod .pts { font-family:var(--font-display); font-weight:700; color:var(--green-900); font-size:15px; }
+  .pod .base { width:100%; border-radius:14px 14px 0 0; background:var(--paper); border:1px solid var(--line); border-bottom:0; display:grid; place-items:center; font-family:var(--font-display); font-weight:700; color:var(--muted); font-size:20px; }
+  .pod.first .base { background:var(--green-100); color:var(--green-900); border-color:transparent; }
+  .lb-row .name { font-size:14px; font-weight:600; }
+  .lb-row .sub { font-size:11px; color:var(--muted); margin-top:1px; }
+  .segment.box .seg { white-space:nowrap; padding:0 6px; font-size:13px; }
+</style>
+</head>
+<body class="canvas">
+<div class="device"><div class="phone">
+
+  <div class="statusbar">
+    <span>9:41</span>
+    <span class="icons"><svg class="i"><use href="#i-signal"/></svg><svg class="i"><use href="#i-wifi"/></svg><svg class="i" style="width:26px"><use href="#i-battery"/></svg></span>
+  </div>
+  <div class="topbar">
+    <a class="icon-btn"><svg class="i"><use href="#i-back"/></svg></a>
+    <div class="ttl">Liderlər cədvəli</div>
+    <a class="icon-btn"><svg class="i"><use href="#i-sliders"/></svg></a>
+  </div>
+
+  <main class="screen">
+    <div class="content" style="padding-top:0">
+
+      <div class="segment box">
+        <a class="seg active">Həftəlik</a><a class="seg">Aylıq</a><a class="seg">Bütün zamanlar</a>
+      </div>
+      <div class="chips mt-12">
+        <a class="chip active"><svg class="i sm"><use href="#i-flag"/></svg>Azərbaycan</a>
+        <a class="chip"><svg class="i sm"><use href="#i-pin"/></svg>Quba</a>
+        <a class="chip"><svg class="i sm"><use href="#i-users"/></svg>Dostlarım</a>
+      </div>
+
+      <div class="podium mt-20" style="padding:0 6px">
+        <div class="pod">
+          <div class="av"><span class="avatar lg ring" style="width:60px;height:60px"><img src="../assets/avatar-leriman.jpg" alt=""></span><span class="medal s">2</span></div>
+          <div class="nm">Leriman</div>
+          <div class="pts">3,420</div>
+          <div class="base" style="height:56px">2</div>
+        </div>
+        <div class="pod first">
+          <div class="av"><svg class="i lg" style="position:absolute;left:50%;top:-30px;transform:translateX(-50%);color:#D9A03A;fill:#F4C868"><use href="#i-crown"/></svg><span class="avatar ring" style="width:78px;height:78px"><img src="../assets/avatar-tural.jpg" alt=""></span><span class="medal g">1</span></div>
+          <div class="nm" style="font-size:14px">Tural</div>
+          <div class="pts" style="font-size:17px">3,980</div>
+          <div class="base" style="height:80px">1</div>
+        </div>
+        <div class="pod">
+          <div class="av"><span class="avatar lg ring" style="width:60px;height:60px"><img src="../assets/avatar-gulnar.jpg" alt=""></span><span class="medal b">3</span></div>
+          <div class="nm">Gülnar</div>
+          <div class="pts">3,110</div>
+          <div class="base" style="height:40px">3</div>
+        </div>
+      </div>
+
+      <div class="col gap-8" style="margin-top:-1px;padding-top:10px;border-top:1px solid var(--line)">
+        <div class="lb-row">
+          <span class="rank">4</span>
+          <span class="avatar sm"><img src="../assets/avatar-lale.jpg" alt=""></span>
+          <div class="flex-1"><div class="name">Lalə</div><div class="sub">Level 14 · Bakı</div></div>
+          <div class="center"><div class="pts">2,980</div><div class="caption">XP</div></div>
+        </div>
+        <div class="lb-row">
+          <span class="rank">5</span>
+          <span class="avatar sm"><img src="../assets/avatar-rustem.jpg" alt=""></span>
+          <div class="flex-1"><div class="row gap-6"><span class="name">Rüstəm Q.</span><span class="pill brown" style="height:20px;padding:0 8px"><svg class="i"><use href="#i-badge-check"/></svg>Local Expert</span></div><div class="sub">Level 13 · Quba</div></div>
+          <div class="center"><div class="pts">2,760</div><div class="caption">XP</div></div>
+        </div>
+        <div class="center caption" style="padding:2px 0;letter-spacing:.2em">• • •</div>
+        <div class="lb-row me">
+          <span class="rank green">14</span>
+          <span class="avatar sm ring"><img src="../assets/avatar-sen.jpg" alt="" style="object-position:top"></span>
+          <div class="flex-1"><div class="row gap-6"><span class="name">Aysel M. <span class="muted" style="font-weight:500">(Sən)</span></span><span class="pill teal" style="height:20px;padding:0 8px"><svg class="i"><use href="#i-arrow-up"/></svg>3</span></div><div class="sub">Level 12 · Quba</div></div>
+          <div class="center"><div class="pts">2,450</div><div class="caption">XP</div></div>
+        </div>
+        <div class="lb-row">
+          <span class="rank">15</span>
+          <span class="avatar sm"><img src="../assets/avatar-leriman.jpg" alt=""></span>
+          <div class="flex-1"><div class="name">Kamran</div><div class="sub">Level 12 · Gəncə</div></div>
+          <div class="center"><div class="pts">2,410</div><div class="caption">XP</div></div>
+        </div>
+        <div class="lb-row">
+          <span class="rank">16</span>
+          <span class="avatar sm"><img src="../assets/avatar-gulnar.jpg" alt=""></span>
+          <div class="flex-1"><div class="name">Nigar</div><div class="sub">Level 11 · Şəki</div></div>
+          <div class="center"><div class="pts">2,380</div><div class="caption">XP</div></div>
+        </div>
+      </div>
+
+      <div class="notice mt-16" style="align-items:center">
+        <svg class="i"><use href="#i-trophy"/></svg>
+        <span class="flex-1 semi">Top 10-a girmək üçün 310 XP lazımdır</span>
+        <svg class="i sm"><use href="#i-chev-right"/></svg>
+      </div>
+
+    </div>
+  </main>
+
+  <nav class="tabbar">
+    <a class="tab-item"><svg class="i"><use href="#i-pin"/></svg>Discover</a>
+    <a class="tab-item"><svg class="i nofill"><use href="#i-search"/></svg>Explore</a>
+    <div class="tab-plus"><a class="fab"><svg class="i lg"><use href="#i-plus"/></svg></a></div>
+    <a class="tab-item"><svg class="i"><use href="#i-map"/></svg>Trips</a>
+    <a class="tab-item active"><svg class="i"><use href="#i-user"/></svg>Profile</a>
+  </nav>
+  <div class="home-indicator"></div>
+</div></div>
+</body>
+</html>

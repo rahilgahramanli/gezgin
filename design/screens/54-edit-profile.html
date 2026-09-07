@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="az">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GEZGIN — 54 Profili redaktə et</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../gezgin.css">
+<script src="../icons.js" defer></script>
+<style>
+  .input .val { flex: 1; min-width: 0; color: var(--ink); }
+  .textarea.filled { color: var(--ink); position: relative; padding-bottom: 26px; }
+  .textarea .cnt { position: absolute; right: 12px; bottom: 8px; }
+  .av-cam { position: absolute; right: 0; bottom: 4px; width: 30px; height: 30px; border-radius: 50%; background: var(--green-900); color: #fff; display: grid; place-items: center; border: 2px solid #fff; }
+  .chips.wrap { flex-wrap: wrap; overflow: visible; }
+</style>
+</head>
+<body class="canvas">
+<div class="device"><div class="phone">
+
+  <div class="statusbar">
+    <span>9:41</span>
+    <span class="icons"><svg class="i"><use href="#i-signal"/></svg><svg class="i"><use href="#i-wifi"/></svg><svg class="i" style="width:26px"><use href="#i-battery"/></svg></span>
+  </div>
+  <div class="topbar">
+    <a class="icon-btn"><svg class="i"><use href="#i-x"/></svg></a>
+    <div class="ttl">Profili redaktə et</div>
+    <a class="green semi" style="font-size:15px;padding:0 4px">Saxla</a>
+  </div>
+
+  <main class="screen">
+    <div class="content" style="padding-top:0">
+      <div class="photo-card" style="height:120px">
+        <img src="../assets/card-lake.jpg" alt="">
+        <span class="pill glass" style="position:absolute;right:10px;bottom:10px;height:28px"><svg class="i"><use href="#i-camera"/></svg> Cover dəyiş</span>
+      </div>
+      <div style="position:relative;width:96px;margin:-40px 0 0 8px">
+        <span class="avatar xl border"><img src="../assets/avatar-sen.jpg" alt="" style="object-position:top"></span>
+        <span class="av-cam"><svg class="i sm"><use href="#i-camera"/></svg></span>
+      </div>
+
+      <div class="col" style="gap:14px;margin-top:14px">
+        <div class="field">
+          <label>Ad Soyad</label>
+          <div class="input"><svg class="i sm"><use href="#i-user"/></svg><span class="val">Aysel Məmmədova</span></div>
+        </div>
+        <div class="field">
+          <label>İstifadəçi adı</label>
+          <div class="input"><svg class="i sm"><use href="#i-at"/></svg><span class="val">aysel.go</span><svg class="i sm teal" style="color:var(--teal-400)"><use href="#i-check-circle"/></svg></div>
+          <span class="caption">gezgin.app/aysel.go</span>
+        </div>
+        <div class="field">
+          <label>Haqqında</label>
+          <div class="textarea filled" style="min-height:88px">Dağları və yerli mətbəxi sevirəm 🏔️ Level 12 · Kəşf edən<span class="caption cnt">52 / 150</span></div>
+        </div>
+        <div class="field">
+          <label>Şəhər</label>
+          <div class="input"><svg class="i sm"><use href="#i-pin"/></svg><span class="val">Quba, Azərbaycan</span><svg class="i sm"><use href="#i-chev-down"/></svg></div>
+        </div>
+        <div class="field">
+          <label>Doğum tarixi</label>
+          <div class="input"><svg class="i sm"><use href="#i-calendar"/></svg><span class="val">12.03.1996</span></div>
+        </div>
+        <div class="field">
+          <label>Cins</label>
+          <div class="segment box"><a class="seg active">Qadın</a><a class="seg">Kişi</a><a class="seg">Digər</a></div>
+        </div>
+
+        <div class="field">
+          <div class="between"><label>Maraqlar</label><a class="link green semi" style="font-size:13px">Redaktə</a></div>
+          <div class="chips wrap" style="margin:0;padding:0">
+            <a class="chip active"><svg class="i xs"><use href="#i-tree"/></svg>Təbiət</a>
+            <a class="chip active"><svg class="i xs"><use href="#i-tent"/></svg>Macəra</a>
+            <a class="chip active"><svg class="i xs"><use href="#i-utensils"/></svg>Qastronomiya</a>
+            <a class="chip"><svg class="i xs"><use href="#i-landmark"/></svg>Tarix</a>
+            <a class="chip"><svg class="i xs"><use href="#i-camera"/></svg>Foto</a>
+            <a class="chip"><svg class="i xs"><use href="#i-sparkle"/></svg>Festival</a>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Sosial</label>
+          <div class="input"><svg class="i sm"><use href="#i-at"/></svg><span class="val">@aysel.go</span><span class="caption">Instagram</span></div>
+          <div class="input"><svg class="i sm"><use href="#i-globe"/></svg><span class="val">aysel.travel</span><span class="caption">Vebsayt</span></div>
+        </div>
+
+        <div class="list card" style="padding:0 14px">
+          <div class="item">
+            <span class="ic"><svg class="i"><use href="#i-eye"/></svg></span>
+            <div class="txt"><b>Profil hamıya açıqdır</b><span>Səyahətlərini hər kəs görə bilər</span></div>
+            <span class="toggle on"></span>
+          </div>
+        </div>
+      </div>
+
+      <a class="btn btn-danger btn-block btn-sm" style="margin:24px 0 16px"><svg class="i sm"><use href="#i-trash"/></svg> Hesabı sil</a>
+    </div>
+  </main>
+
+  <div class="home-indicator"></div>
+</div></div>
+</body>
+</html>

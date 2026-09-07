@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="az">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GEZGIN — 43 Paylaş paneli</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../gezgin.css">
+<script src="../icons.js" defer></script>
+<style>
+  .post.flat { background: transparent; border: 0; box-shadow: none; border-radius: 0; }
+  .post.flat .post-head, .post.flat .post-actions { padding-left: 20px; padding-right: 20px; }
+  .sheet .story { gap: 6px; width: 62px; }
+  .sheet .story .avatar { width: 56px; height: 56px; box-shadow: none; }
+  .sheet .story .more { display: grid; place-items: center; color: var(--ink-2); }
+  .acts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .acts a { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px; }
+  .acts .ic { width: 52px; height: 52px; border-radius: 50%; background: var(--cream-2); color: var(--ink); display: grid; place-items: center; }
+  .acts .caption { color: var(--ink-2); line-height: 1.3; }
+</style>
+</head>
+<body class="canvas">
+<div class="device"><div class="phone">
+
+  <div class="statusbar">
+    <span>9:41</span>
+    <span class="icons"><svg class="i"><use href="#i-signal"/></svg><svg class="i"><use href="#i-wifi"/></svg><svg class="i" style="width:26px"><use href="#i-battery"/></svg></span>
+  </div>
+  <div class="topbar">
+    <a class="icon-btn"><svg class="i"><use href="#i-back"/></svg></a>
+    <div class="ttl">Paylaşım</div>
+    <a class="icon-btn"><svg class="i"><use href="#i-more"/></svg></a>
+  </div>
+
+  <main class="screen">
+    <article class="post flat">
+      <div class="post-head" style="padding-top:4px">
+        <span class="avatar"><img src="../assets/avatar-sen.jpg" alt=""></span>
+        <div class="flex-1"><b>aysel.go</b><span>Quba, Azərbaycan · 2 saat əvvəl</span></div>
+        <a class="btn btn-xs btn-soft">İzlə</a>
+      </div>
+      <div class="post-img" style="height:360px">
+        <img src="../assets/post-aysel-village.jpg" alt="">
+        <span class="pill glass" style="position:absolute;left:16px;bottom:14px;height:28px"><svg class="i"><use href="#i-pin"/></svg> Xınalıq kəndi</span>
+      </div>
+      <div class="post-actions">
+        <span class="act"><svg class="i danger"><use href="#i-heart-fill"/></svg>1.2K</span>
+        <span class="act"><svg class="i"><use href="#i-comment"/></svg>56</span>
+        <span class="act"><svg class="i"><use href="#i-send"/></svg>87</span>
+        <span class="spacer"></span>
+        <svg class="i"><use href="#i-bookmark"/></svg>
+      </div>
+    </article>
+    <div class="px">
+      <p class="body clamp-2" style="font-size:14px"><b>aysel.go</b> Unudulmaz bir gün! 🏔️ Xınalıq kəndinin daş evləri, buludların üstündəki mənzərə və kənd sakinlərinin qonaqpərvərliyi — bu səyahət yaddaşımda əbədi qalacaq.</p>
+    </div>
+  </main>
+
+  <div class="scrim"></div>
+  <div class="sheet">
+    <div class="handle"></div>
+    <div class="between">
+      <h3 class="h2" style="font-size:18px">Paylaş</h3>
+      <a class="icon-btn soft" style="width:32px;height:32px"><svg class="i sm"><use href="#i-x"/></svg></a>
+    </div>
+
+    <div class="caption semi mt-16" style="color:var(--ink-2)">Sürətli göndər</div>
+    <div class="hscroll mt-8" style="gap:14px;padding-top:2px;padding-bottom:4px">
+      <a class="story"><span class="avatar"><img src="../assets/avatar-tural.jpg" alt=""></span>Tural</a>
+      <a class="story"><span class="avatar"><img src="../assets/avatar-gulnar.jpg" alt=""></span>Gülnar</a>
+      <a class="story"><span class="avatar"><img src="../assets/avatar-lale.jpg" alt=""></span>Lalə</a>
+      <a class="story"><span class="avatar"><img src="../assets/avatar-leriman.jpg" alt=""></span>Leriman</a>
+      <a class="story"><span class="avatar more"><svg class="i"><use href="#i-more"/></svg></span>Daha çox</a>
+    </div>
+
+    <div class="divider" style="margin:12px 0 14px"></div>
+
+    <div class="acts">
+      <a><span class="ic"><svg class="i"><use href="#i-copy"/></svg></span><span class="caption">Linki kopyala</span></a>
+      <a><span class="ic"><svg class="i"><use href="#i-plus"/></svg></span><span class="caption">Hekayəyə əlavə et</span></a>
+      <a><span class="ic"><svg class="i"><use href="#i-chat"/></svg></span><span class="caption">Mesajla göndər</span></a>
+      <a><span class="ic"><svg class="i"><use href="#i-external"/></svg></span><span class="caption">Digər tətbiqlər</span></a>
+    </div>
+
+    <div class="divider" style="margin:14px 0 4px"></div>
+
+    <div class="list">
+      <div class="item">
+        <span class="ic"><svg class="i"><use href="#i-route"/></svg></span>
+        <div class="txt"><b>Marşruta bağla</b></div>
+        <svg class="i chev"><use href="#i-chev-right"/></svg>
+      </div>
+      <div class="item">
+        <span class="ic red"><svg class="i"><use href="#i-flag"/></svg></span>
+        <div class="txt"><b class="danger">Şikayət et</b></div>
+      </div>
+    </div>
+
+    <a class="btn btn-soft btn-block mt-8">Ləğv et</a>
+  </div>
+
+  <div class="home-indicator"></div>
+</div></div>
+</body>
+</html>

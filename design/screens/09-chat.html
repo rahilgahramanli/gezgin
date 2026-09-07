@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="az">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GEZGIN — 09 Söhbət</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../gezgin.css">
+<script src="../icons.js" defer></script>
+<style>
+  .thread { display: flex; flex-direction: column; gap: 6px; min-height: 100%; justify-content: flex-end; padding: 4px var(--pad) 98px; }
+  .thread .bubble { padding: 8px 12px; }
+  .thread .exp-card .body { padding: 10px 12px; }
+  .online { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--success); margin-right: 4px; vertical-align: middle; }
+</style>
+</head>
+<body class="canvas">
+<div class="device"><div class="phone">
+
+  <div class="statusbar">
+    <span>9:41</span>
+    <span class="icons"><svg class="i"><use href="#i-signal"/></svg><svg class="i"><use href="#i-wifi"/></svg><svg class="i" style="width:26px"><use href="#i-battery"/></svg></span>
+  </div>
+  <div class="topbar" style="border-bottom:1px solid var(--line);background:var(--cream)">
+    <a class="icon-btn"><svg class="i"><use href="#i-back"/></svg></a>
+    <div class="ttl" style="display:flex;align-items:center;justify-content:center;gap:10px;text-align:left">
+      <span class="avatar sm"><img src="../assets/avatar-rustem.jpg" alt=""></span>
+      <span><span style="display:block;font-size:16px;line-height:1.2">Rüstəm Q.</span><span class="caption" style="font-family:var(--font-body);font-weight:500"><span class="online"></span>Local Expert · onlayn</span></span>
+    </div>
+    <div class="row">
+      <a class="icon-btn"><svg class="i"><use href="#i-phone"/></svg></a>
+      <a class="icon-btn" style="width:32px"><svg class="i"><use href="#i-more-v"/></svg></a>
+    </div>
+  </div>
+
+  <main class="screen">
+    <div class="thread">
+      <div class="center caption" style="margin-bottom:2px"><span class="pill gray" style="height:22px">Bu gün</span></div>
+
+      <div class="bubble">Salam Aysel! Xınalıq turu üçün maraqlandığınızı gördüm 🙂<span class="time">09:41</span></div>
+      <div class="bubble me">Salam! Bəli, şənbə günü üçün mümkündürmü?<span class="time">09:43</span></div>
+      <div class="bubble">Əlbəttə. Səhər 9-da Quba mərkəzdən başlayırıq, axşam 6-da geri qayıdırıq.<span class="time">09:44</span></div>
+
+      <div class="exp-card" style="width:240px">
+        <div class="img" style="height:80px"><img src="../assets/exp-dag-yurushu.jpg" alt=""><span class="pill glass" style="position:absolute;left:8px;top:8px"><svg class="i"><use href="#i-badge-check"/></svg>Local Expert</span></div>
+        <div class="body">
+          <div class="h3">Xınalıq kəndi turu</div>
+          <div class="meta mt-4">1 gün · Quba · <span class="rating"><svg class="i"><use href="#i-star"/></svg>4.9</span></div>
+          <div class="between mt-8"><span class="price">60 AZN <span class="muted" style="font-weight:400">/ nəfər</span></span><a class="btn btn-xs btn-primary" style="box-shadow:none">Bron et</a></div>
+        </div>
+      </div>
+
+      <div class="bubble me">Əla, 2 nəfər üçün bron edirəm 👍<span class="time">09:50</span></div>
+      <div class="bubble">Sabah saat 9-da Quba mərkəzdə görüşərik 👍<span class="time">10:24</span></div>
+    </div>
+  </main>
+
+  <div class="bottom-cta" style="gap:10px;padding-top:10px">
+    <a class="icon-btn soft"><svg class="i"><use href="#i-plus"/></svg></a>
+    <div class="search plain flex-1" style="height:46px;padding-right:12px"><input placeholder="Mesaj yaz..."><svg class="i"><use href="#i-mic"/></svg></div>
+    <a class="fab" style="width:44px;height:44px;box-shadow:none"><svg class="i"><use href="#i-send"/></svg></a>
+  </div>
+  <div class="home-indicator"></div>
+</div></div>
+</body>
+</html>

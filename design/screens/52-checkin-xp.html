@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="az">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GEZGIN — 52 Check-in / XP</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../gezgin.css">
+<script src="../icons.js" defer></script>
+<style>
+  .pin.passed { filter: grayscale(1); opacity: .7; }
+  .pin.active .lbl { background: var(--green-900); color: #fff; }
+  .nav-panel { position: absolute; top: 60px; left: 16px; right: 16px; z-index: 12; }
+  .modal { position: absolute; left: 24px; right: 24px; top: 50%; transform: translateY(-50%); padding: 24px; border-radius: 24px; z-index: 20; text-align: center; box-shadow: var(--shadow-lg); }
+  .check-big { width: 84px; height: 84px; border-radius: 50%; background: var(--green-900); color: #fff; display: grid; place-items: center; margin: 0 auto; box-shadow: 0 0 0 10px rgba(15,61,58,.12), 0 0 0 22px rgba(15,61,58,.06); }
+  .cf { position: absolute; z-index: 18; border-radius: 2px; }
+  .cf.dot { border-radius: 50%; }
+</style>
+</head>
+<body class="canvas">
+<div class="device"><div class="phone">
+
+  <div class="map full">
+    <svg class="route" viewBox="0 0 390 844" preserveAspectRatio="none">
+      <path d="M60 480 C 85 455, 110 435, 135 410 S 190 365, 215 345 S 280 260, 300 200" stroke="var(--green-900)" stroke-width="3" stroke-dasharray="6 6" fill="none" stroke-linecap="round"/>
+    </svg>
+    <span class="pin passed" style="left:60px;top:480px"><svg class="i"><use href="#i-pin-solid"/></svg><span class="lbl">Quba</span></span>
+    <span class="pin passed" style="left:135px;top:410px"><svg class="i"><use href="#i-pin-solid"/></svg><span class="lbl">Laza</span></span>
+    <span class="pin active" style="left:215px;top:345px"><svg class="i"><use href="#i-pin-solid"/></svg><span class="lbl">Qəçrəş</span></span>
+    <span class="pin brown" style="left:300px;top:200px"><svg class="i"><use href="#i-pin-solid"/></svg><span class="lbl">Xınalıq</span></span>
+    <span class="me-dot" style="left:213px;top:347px"></span>
+  </div>
+
+  <div class="statusbar overlay">
+    <span>9:41</span>
+    <span class="icons"><svg class="i"><use href="#i-signal"/></svg><svg class="i"><use href="#i-wifi"/></svg><svg class="i" style="width:26px"><use href="#i-battery"/></svg></span>
+  </div>
+
+  <div class="card pad nav-panel">
+    <div class="row gap-10">
+      <a class="icon-btn soft"><svg class="i"><use href="#i-x"/></svg></a>
+      <div class="flex-1">
+        <h3 class="h3 ellipsis">Quba – Dağlar turu</h3>
+        <div class="meta">1-ci gün · 3/8 məkan · 14:52</div>
+        <div class="progress thin mt-8"><div class="bar" style="width:37%"></div></div>
+      </div>
+      <a class="icon-btn"><svg class="i"><use href="#i-more-v"/></svg></a>
+    </div>
+  </div>
+
+  <div class="scrim"></div>
+
+  <!-- konfetti -->
+  <span class="cf dot" style="left:30px;top:140px;width:10px;height:10px;background:var(--teal-400)"></span>
+  <span class="cf" style="left:352px;top:128px;width:8px;height:14px;background:var(--star);transform:rotate(28deg)"></span>
+  <span class="cf" style="left:12px;top:300px;width:7px;height:12px;background:var(--brown-500);transform:rotate(-20deg)"></span>
+  <span class="cf dot" style="left:372px;top:330px;width:8px;height:8px;background:var(--star)"></span>
+  <span class="cf" style="left:8px;top:520px;width:9px;height:9px;background:var(--green-700);transform:rotate(45deg)"></span>
+  <span class="cf dot" style="left:368px;top:560px;width:10px;height:10px;background:var(--teal-400)"></span>
+  <span class="cf" style="left:60px;top:745px;width:8px;height:14px;background:var(--star);transform:rotate(-35deg)"></span>
+  <span class="cf" style="left:300px;top:760px;width:7px;height:7px;background:var(--brown-500);transform:rotate(15deg)"></span>
+  <span class="cf dot" style="left:200px;top:100px;width:7px;height:7px;background:var(--green-700)"></span>
+  <span class="cf" style="left:130px;top:775px;width:6px;height:12px;background:var(--teal-400);transform:rotate(60deg)"></span>
+
+  <div class="card modal">
+    <div class="check-big"><svg class="i xl" style="stroke-width:2.4"><use href="#i-check"/></svg></div>
+    <div class="title-lg mt-20" style="margin-top:22px">Qəçrəş meşəsinə xoş gəldin!</div>
+    <div class="meta mt-4">Check-in uğurlu · 14:52 · 3 / 8 məkan</div>
+    <div class="divider"></div>
+    <div class="row gap-8" style="justify-content:center">
+      <span class="title-xl green">+600 XP</span>
+      <span class="pill teal"><svg class="i"><use href="#i-arrow-up"/></svg>+25 Score</span>
+    </div>
+    <div class="progress mt-12"><div class="bar teal" style="width:100%"></div></div>
+    <div class="between caption mt-4"><span>Level 12</span><span>850 / 850 XP</span></div>
+
+    <div class="gradient-card mt-16" style="padding:14px;text-align:left">
+      <div class="row gap-10">
+        <span class="badge-hex gold" style="width:44px;height:44px;border-radius:12px"><svg class="i"><use href="#i-trophy"/></svg></span>
+        <div><b class="white" style="font-family:var(--font-display);font-size:15px;display:block">Level 13 — Kəşfçi!</b><span class="caption" style="color:rgba(255,255,255,.8)">Yeni imkanlar açıldı</span></div>
+      </div>
+    </div>
+
+    <div class="row gap-10 mt-12" style="background:var(--green-050);border-radius:14px;padding:10px;text-align:left">
+      <span class="badge-hex green" style="width:40px;height:40px;border-radius:12px"><svg class="i"><use href="#i-mountain-flag"/></svg></span>
+      <div class="small"><b>Yeni badge:</b> İlk Zirvə<div class="caption">10 məkan kəşf edildi</div></div>
+    </div>
+
+    <a class="btn btn-primary btn-block mt-16"><svg class="i sm"><use href="#i-camera"/></svg> Foto paylaş · +300 XP</a>
+    <a class="btn btn-ghost btn-block" style="height:44px">Marşruta davam et</a>
+  </div>
+
+  <div class="home-indicator"></div>
+</div></div>
+</body>
+</html>

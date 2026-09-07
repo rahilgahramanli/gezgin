@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="az">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GEZGIN — 45 Filtr paneli</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../gezgin.css">
+<script src="../icons.js" defer></script>
+<style>
+  .sheet.tall { max-height: 78%; display: flex; flex-direction: column; padding-bottom: 0; }
+  .sheet.tall .body-scroll { flex: 1; overflow-y: auto; scrollbar-width: none; margin: 0 -20px; padding: 0 20px; }
+  .sheet.tall .body-scroll::-webkit-scrollbar { display: none; }
+  .sheet.tall .foot { flex: none; padding: 12px 0 34px; background: var(--paper); }
+  .lbl-cap { font-size: 11px; font-weight: 600; letter-spacing: .08em; color: var(--muted); margin: 18px 0 10px; }
+  .chips.wrap { flex-wrap: wrap; margin: 0; padding: 0; overflow: visible; }
+  .chip .i.star { fill: var(--star); stroke: var(--star); }
+  .slider { position: relative; padding: 8px 0; }
+  .slider .thumb { position: absolute; left: 45%; top: 50%; transform: translate(-50%,-50%); width: 22px; height: 22px; border-radius: 50%; background: #fff; border: 2px solid var(--green-900); box-shadow: 0 2px 8px rgba(24,39,38,.25); }
+</style>
+</head>
+<body class="canvas">
+<div class="device"><div class="phone">
+
+  <div class="statusbar">
+    <span>9:41</span>
+    <span class="icons"><svg class="i"><use href="#i-signal"/></svg><svg class="i"><use href="#i-wifi"/></svg><svg class="i" style="width:26px"><use href="#i-battery"/></svg></span>
+  </div>
+  <div class="topbar">
+    <a class="icon-btn"><svg class="i"><use href="#i-back"/></svg></a>
+    <div class="ttl">Yerlər</div>
+    <a class="icon-btn"><svg class="i"><use href="#i-layers"/></svg></a>
+  </div>
+
+  <main class="screen">
+    <div class="content" style="padding-top:0">
+      <div class="search plain">
+        <svg class="i"><use href="#i-search"/></svg>
+        <input placeholder="Axtar (restoran, qala, muzey...)">
+        <svg class="i" style="color:var(--green-900)"><use href="#i-sliders"/></svg>
+      </div>
+      <div class="chips mt-12">
+        <a class="chip active">Hamısı</a>
+        <a class="chip"><svg class="i sm"><use href="#i-camera"/></svg>Görməli yerlər</a>
+        <a class="chip"><svg class="i sm"><use href="#i-utensils"/></svg>Restoranlar</a>
+        <a class="chip"><svg class="i sm"><use href="#i-tree"/></svg>Təbiət</a>
+        <a class="chip"><svg class="i sm"><use href="#i-bed"/></svg>Otel</a>
+      </div>
+      <div class="map h280 mt-12">
+        <span class="map-dot" style="left:22%;top:28%"><svg class="i"><use href="#i-camera"/></svg></span>
+        <span class="map-dot" style="left:70%;top:22%"><svg class="i"><use href="#i-camera"/></svg></span>
+        <span class="map-dot" style="left:82%;top:50%"><svg class="i"><use href="#i-landmark"/></svg></span>
+        <span class="map-dot brown" style="left:36%;top:66%"><svg class="i"><use href="#i-utensils"/></svg></span>
+        <span class="map-dot brown" style="left:64%;top:78%"><svg class="i"><use href="#i-utensils"/></svg></span>
+        <span class="me-dot" style="left:50%;top:50%"></span>
+        <span class="map-ctl" style="right:10px;bottom:10px"><svg class="i sm"><use href="#i-location"/></svg></span>
+        <span class="pill" style="position:absolute;left:10px;bottom:10px;background:var(--paper);box-shadow:var(--shadow-sm);height:28px;font-size:12px"><svg class="i" style="color:var(--brown-700)"><use href="#i-pin"/></svg> Quba, 24 yer</span>
+      </div>
+      <section class="section" style="margin-top:18px">
+        <div class="section-head"><h2 class="h2">Yaxınlıqdakı yerlər</h2><a class="link">Hamısına bax <svg class="i xs"><use href="#i-chev-right"/></svg></a></div>
+        <div class="col gap-10">
+          <a class="row-card">
+            <div class="thumb"><img src="../assets/thumb-quba-forest.jpg" alt=""></div>
+            <div class="flex-1">
+              <div class="h3 ellipsis">Quba meşə pikniki</div>
+              <div class="meta">Təbiət • Quba</div>
+              <div class="rating mt-8"><svg class="i"><use href="#i-star"/></svg>4.8 <span class="cnt">(128)</span></div>
+            </div>
+            <div class="small semi green" style="white-space:nowrap;display:flex;align-items:center;gap:3px"><svg class="i xs"><use href="#i-navigation"/></svg>5 km</div>
+          </a>
+          <a class="row-card">
+            <div class="thumb"><img src="../assets/thumb-icherisheher.jpg" alt=""></div>
+            <div class="flex-1">
+              <div class="h3 ellipsis">İçərişəhər</div>
+              <div class="meta">Tarixi yer • Bakı</div>
+              <div class="rating mt-8"><svg class="i"><use href="#i-star"/></svg>4.9 <span class="cnt">(256)</span></div>
+            </div>
+            <div class="small semi green" style="white-space:nowrap;display:flex;align-items:center;gap:3px"><svg class="i xs"><use href="#i-navigation"/></svg>12 km</div>
+          </a>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <nav class="tabbar">
+    <a class="tab-item"><svg class="i"><use href="#i-pin"/></svg>Discover</a>
+    <a class="tab-item active"><svg class="i nofill"><use href="#i-search"/></svg>Explore</a>
+    <div class="tab-plus"><a class="fab"><svg class="i lg"><use href="#i-plus"/></svg></a></div>
+    <a class="tab-item"><svg class="i"><use href="#i-map"/></svg>Trips</a>
+    <a class="tab-item"><svg class="i"><use href="#i-user"/></svg>Profile</a>
+  </nav>
+
+  <div class="scrim"></div>
+  <div class="sheet tall">
+    <div class="handle" style="flex:none"></div>
+    <div class="between" style="flex:none"><h3 class="h2">Filtrlər</h3><a class="small semi brown">Sıfırla</a></div>
+
+    <div class="body-scroll">
+      <div class="lbl-cap">KATEQORİYA</div>
+      <div class="chips wrap">
+        <a class="chip">Hamısı</a>
+        <a class="chip active"><svg class="i sm"><use href="#i-tree"/></svg>Təbiət</a>
+        <a class="chip"><svg class="i sm"><use href="#i-landmark"/></svg>Tarix</a>
+        <a class="chip active"><svg class="i sm"><use href="#i-sparkle"/></svg>Mədəniyyət</a>
+        <a class="chip"><svg class="i sm"><use href="#i-utensils"/></svg>Qastronomiya</a>
+        <a class="chip"><svg class="i sm"><use href="#i-bed"/></svg>Otel</a>
+        <a class="chip"><svg class="i sm"><use href="#i-image"/></svg>Muzey</a>
+      </div>
+
+      <div class="lbl-cap">MƏSAFƏ</div>
+      <div class="between"><span class="small" style="color:var(--ink-2)">Yaxınlıqda</span><b class="small semi green">25 km-ə qədər</b></div>
+      <div class="slider mt-8">
+        <div class="progress"><div class="bar" style="width:45%"></div></div>
+        <span class="thumb"></span>
+      </div>
+      <div class="between caption"><span>1 km</span><span>100 km</span></div>
+
+      <div class="lbl-cap">REYTİNQ</div>
+      <div class="chips wrap">
+        <a class="chip">Hamısı</a>
+        <a class="chip"><svg class="i xs star"><use href="#i-star"/></svg>4.0+</a>
+        <a class="chip active"><svg class="i xs star"><use href="#i-star"/></svg>4.5+</a>
+        <a class="chip"><svg class="i xs star"><use href="#i-star"/></svg>4.8+</a>
+      </div>
+
+      <div class="lbl-cap">QİYMƏT</div>
+      <div class="segment box">
+        <a class="seg">Pulsuz</a><a class="seg active">₼</a><a class="seg">₼₼</a><a class="seg">₼₼₼</a>
+      </div>
+
+      <div class="lbl-cap">ƏLAVƏ</div>
+      <div class="list" style="margin-top:-6px">
+        <div class="item"><span class="ic"><svg class="i"><use href="#i-clock"/></svg></span><div class="txt"><b>Yalnız hazırda açıq olanlar</b></div><span class="toggle on"></span></div>
+        <div class="item"><span class="ic"><svg class="i"><use href="#i-wifi-off"/></svg></span><div class="txt"><b>Offline mövcuddur</b></div><span class="toggle"></span></div>
+        <div class="item"><span class="ic"><svg class="i"><use href="#i-badge-check"/></svg></span><div class="txt"><b>Local Expert təklifi ilə</b></div><span class="toggle on"></span></div>
+      </div>
+    </div>
+
+    <div class="foot">
+      <a class="btn btn-primary btn-block">24 nəticəni göstər</a>
+    </div>
+  </div>
+  <div class="home-indicator"></div>
+</div></div>
+</body>
+</html>

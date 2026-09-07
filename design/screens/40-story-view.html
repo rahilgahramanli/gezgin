@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="az">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GEZGIN — 40 Hekayə baxışı</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../gezgin.css">
+<script src="../icons.js" defer></script>
+<style>
+  .story-bars { display: flex; gap: 4px; }
+  .story-bars span { flex: 1; height: 3px; border-radius: 2px; background: rgba(255,255,255,.35); overflow: hidden; }
+  .story-bars span i { display: block; height: 100%; background: #fff; border-radius: 2px; }
+  .reply { background: rgba(255,255,255,.18); border-color: rgba(255,255,255,.35); color: #fff; box-shadow: none; backdrop-filter: blur(10px); }
+  .reply input { color: #fff; }
+  .reply input::placeholder { color: rgba(255,255,255,.8); }
+  .side-btn { width: 44px; height: 44px; }
+</style>
+</head>
+<body class="canvas">
+<div class="device"><div class="phone">
+
+  <div class="blur-bg">
+    <img src="../assets/woman-rock.jpg" alt="" style="object-position:center">
+    <div class="shade" style="background:linear-gradient(180deg,rgba(0,0,0,.55),rgba(0,0,0,0) 22%,rgba(0,0,0,0) 65%,rgba(0,0,0,.7))"></div>
+  </div>
+
+  <div class="statusbar light overlay">
+    <span>9:41</span>
+    <span class="icons"><svg class="i"><use href="#i-signal"/></svg><svg class="i"><use href="#i-wifi"/></svg><svg class="i" style="width:26px"><use href="#i-battery"/></svg></span>
+  </div>
+
+  <div style="position:absolute;top:58px;left:12px;right:12px;z-index:5;color:#fff">
+    <div class="story-bars">
+      <span><i style="width:100%"></i></span>
+      <span><i style="width:60%"></i></span>
+      <span></span>
+      <span></span>
+    </div>
+    <div class="row gap-10 mt-12" style="padding-left:4px">
+      <span class="avatar sm" style="box-shadow:0 0 0 2px rgba(255,255,255,.8)"><img src="../assets/avatar-tural.jpg" alt=""></span>
+      <b style="font-size:15px">Tural</b>
+      <span class="caption" style="color:rgba(255,255,255,.8)">2 saat əvvəl</span>
+      <span class="flex-1"></span>
+      <a class="icon-btn" style="color:#fff"><svg class="i"><use href="#i-more"/></svg></a>
+      <a class="icon-btn" style="color:#fff"><svg class="i"><use href="#i-x"/></svg></a>
+    </div>
+  </div>
+
+  <div class="col" style="position:absolute;right:16px;bottom:124px;gap:14px;z-index:5">
+    <a class="icon-btn glass side-btn"><svg class="i"><use href="#i-heart"/></svg></a>
+    <a class="icon-btn glass side-btn"><svg class="i"><use href="#i-send"/></svg></a>
+    <a class="icon-btn glass side-btn"><svg class="i"><use href="#i-bookmark"/></svg></a>
+  </div>
+
+  <div style="position:absolute;left:20px;right:84px;bottom:112px;z-index:5;color:#fff">
+    <span class="pill glass" style="height:28px"><svg class="i"><use href="#i-pin"/></svg> Şahdağ, Qusar</span>
+    <div style="font-family:var(--font-display);font-size:22px;font-weight:600;line-height:1.25;margin-top:10px;text-shadow:0 2px 12px rgba(0,0,0,.5)">Zirvədə gün doğuşu ☀️</div>
+  </div>
+
+  <div style="position:absolute;left:16px;right:16px;bottom:36px;z-index:5">
+    <div class="search reply">
+      <input placeholder="Cavab yaz...">
+      <svg class="i" style="color:#fff"><use href="#i-send"/></svg>
+    </div>
+  </div>
+
+  <div class="home-indicator light"></div>
+</div></div>
+</body>
+</html>

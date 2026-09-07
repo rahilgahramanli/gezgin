@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="az">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GEZGIN — Mobil ekran dizaynları</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root { --green:#0F3D3A; --brown:#7A4A28; --cream:#F7F4EE; --ink:#182726; --muted:#6B7776; --line:#E7E2D9; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:#EDE8DF; color:var(--ink); font-family:Inter, system-ui, sans-serif; -webkit-font-smoothing:antialiased; }
+  header { padding:40px 40px 24px; display:flex; align-items:flex-end; justify-content:space-between; gap:24px; flex-wrap:wrap; }
+  header h1 { font-family:Lexend, Inter, sans-serif; font-weight:700; font-size:34px; letter-spacing:-.02em; color:var(--green); }
+  header h1 span { color:var(--brown); }
+  header p { color:var(--muted); margin-top:6px; font-size:15px; max-width:720px; line-height:1.5; }
+  .legend { display:flex; gap:8px; flex-wrap:wrap; }
+  .legend a { font-size:13px; font-weight:500; padding:8px 14px; border-radius:999px; background:#fff; border:1px solid var(--line); color:var(--ink); text-decoration:none; }
+  .legend a:hover { border-color:var(--green); color:var(--green); }
+  section { padding:8px 40px 32px; }
+  section h2 { font-family:Lexend, Inter, sans-serif; font-size:20px; font-weight:600; color:var(--green); margin:16px 0 4px; display:flex; align-items:center; gap:10px; }
+  section h2 small { font-size:12px; font-weight:500; color:var(--muted); background:#fff; border:1px solid var(--line); padding:3px 10px; border-radius:999px; }
+  section p.desc { color:var(--muted); font-size:14px; margin-bottom:18px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(249px, 1fr)); gap:28px 22px; }
+  .shot { text-decoration:none; color:inherit; }
+  .shot .frame { width:249px; height:521px; overflow:hidden; border-radius:35px; background:#101414; box-shadow:0 18px 40px rgba(0,0,0,.22); position:relative; }
+  .shot .frame iframe { width:470px; height:940px; border:0; transform:scale(.6); transform-origin:0 0; position:absolute; left:-10px; top:-19px; pointer-events:none; background:transparent; }
+  .shot .cap { margin-top:12px; display:flex; align-items:baseline; gap:8px; }
+  .shot .cap .n { font-family:Lexend, Inter, sans-serif; font-weight:700; color:var(--brown); font-size:13px; }
+  .shot .cap b { font-weight:600; font-size:14px; }
+  .shot .cap span { color:var(--muted); font-size:12px; display:block; margin-top:2px; }
+  .shot:hover .frame { outline:3px solid var(--green); outline-offset:3px; }
+  footer { padding:24px 40px 48px; color:var(--muted); font-size:13px; }
+  code { background:#fff; padding:2px 6px; border-radius:6px; border:1px solid var(--line); font-size:12px; }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>GEZGIN<span>.app</span> — mobil ekran dizaynları</h1>
+    <p>Prezentasiyadakı vizual dil əsasında hazırlanmış 56 ekran (390×844, iOS). Hər ekrana klikləyəndə tam ölçüdə açılır. Dizayn sistemi: <code>gezgin.css</code>, ikonlar: <code>icons.js</code>, plan: <code>../PLAN.md</code>.</p>
+  </div>
+  <nav class="legend">
+    <a href="#a">A · Giriş</a><a href="#b">B · Discover</a><a href="#c">C · Explore</a><a href="#d">D · Trips</a><a href="#e">E · Paylaş</a><a href="#f">F · Profil</a>
+  </nav>
+</header>
+
+<section id="a">
+  <h2>A. Giriş və onboarding <small>7 ekran</small></h2>
+  <p class="desc">Açılış → Daxil ol / Qeydiyyat → OTP → Maraqlar → Profil</p>
+  <div class="grid">
+    <a class="shot" href="screens/01-splash.html" target="_blank"><div class="frame"><iframe src="screens/01-splash.html" loading="lazy"></iframe></div><div class="cap"><span class="n">01</span><div><b>Açılış</b><span>Loqo, Qeydiyyat / Daxil ol / Qonaq</span></div></div></a>
+    <a class="shot" href="screens/02-login.html" target="_blank"><div class="frame"><iframe src="screens/02-login.html" loading="lazy"></iframe></div><div class="cap"><span class="n">02</span><div><b>Daxil ol</b><span>E-mail, şifrə, Google / Apple</span></div></div></a>
+    <a class="shot" href="screens/03-register.html" target="_blank"><div class="frame"><iframe src="screens/03-register.html" loading="lazy"></iframe></div><div class="cap"><span class="n">03</span><div><b>Qeydiyyat</b><span>Hesab yarat</span></div></div></a>
+    <a class="shot" href="screens/04-onboarding-interests.html" target="_blank"><div class="frame"><iframe src="screens/04-onboarding-interests.html" loading="lazy"></iframe></div><div class="cap"><span class="n">04</span><div><b>Profilini tamamla 2/3</b><span>Maraqlar və ev regionu</span></div></div></a>
+    <a class="shot" href="screens/37-forgot-password.html" target="_blank"><div class="frame"><iframe src="screens/37-forgot-password.html" loading="lazy"></iframe></div><div class="cap"><span class="n">37</span><div><b>Şifrəni bərpa et</b><span>E-mail / telefon ilə kod</span></div></div></a>
+    <a class="shot" href="screens/38-otp-verify.html" target="_blank"><div class="frame"><iframe src="screens/38-otp-verify.html" loading="lazy"></iframe></div><div class="cap"><span class="n">38</span><div><b>Təsdiq kodu</b><span>6 rəqəmli OTP</span></div></div></a>
+    <a class="shot" href="screens/39-onboarding-profile.html" target="_blank"><div class="frame"><iframe src="screens/39-onboarding-profile.html" loading="lazy"></iframe></div><div class="cap"><span class="n">39</span><div><b>Profilini tamamla 3/3</b><span>Foto, bio, icazələr</span></div></div></a>
+  </div>
+</section>
+
+<section id="b">
+  <h2>B. Discover — sosial lent <small>9 ekran</small></h2>
+  <p class="desc">Hekayələr, paylaşımlar, bildirişlər və mesajlaşma</p>
+  <div class="grid">
+    <a class="shot" href="screens/05-discover.html" target="_blank"><div class="frame"><iframe src="screens/05-discover.html" loading="lazy"></iframe></div><div class="cap"><span class="n">05</span><div><b>Discover — For You</b><span>Hekayələr, post kartı</span></div></div></a>
+    <a class="shot" href="screens/06-post-detail.html" target="_blank"><div class="frame"><iframe src="screens/06-post-detail.html" loading="lazy"></iframe></div><div class="cap"><span class="n">06</span><div><b>Paylaşım detalı</b><span>Şərhlər, məkan etiketi</span></div></div></a>
+    <a class="shot" href="screens/07-notifications.html" target="_blank"><div class="frame"><iframe src="screens/07-notifications.html" loading="lazy"></iframe></div><div class="cap"><span class="n">07</span><div><b>Bildirişlər / Sizin üçün</b><span>Təkliflər, tədbirlər, fəaliyyət</span></div></div></a>
+    <a class="shot" href="screens/08-messages.html" target="_blank"><div class="frame"><iframe src="screens/08-messages.html" loading="lazy"></iframe></div><div class="cap"><span class="n">08</span><div><b>Mesajlar</b><span>Söhbət siyahısı</span></div></div></a>
+    <a class="shot" href="screens/09-chat.html" target="_blank"><div class="frame"><iframe src="screens/09-chat.html" loading="lazy"></iframe></div><div class="cap"><span class="n">09</span><div><b>Söhbət</b><span>Local Expert ilə yazışma</span></div></div></a>
+    <a class="shot" href="screens/40-story-view.html" target="_blank"><div class="frame"><iframe src="screens/40-story-view.html" loading="lazy"></iframe></div><div class="cap"><span class="n">40</span><div><b>Hekayə</b><span>Tam ekran, cavab yaz</span></div></div></a>
+    <a class="shot" href="screens/41-user-profile.html" target="_blank"><div class="frame"><iframe src="screens/41-user-profile.html" loading="lazy"></iframe></div><div class="cap"><span class="n">41</span><div><b>Gezgin profili</b><span>Başqa istifadəçi — İzlə / Mesaj</span></div></div></a>
+    <a class="shot" href="screens/42-followers.html" target="_blank"><div class="frame"><iframe src="screens/42-followers.html" loading="lazy"></iframe></div><div class="cap"><span class="n">42</span><div><b>İzləyicilər</b><span>İzləyici / İzləyir siyahısı</span></div></div></a>
+    <a class="shot" href="screens/43-share-sheet.html" target="_blank"><div class="frame"><iframe src="screens/43-share-sheet.html" loading="lazy"></iframe></div><div class="cap"><span class="n">43</span><div><b>Paylaş paneli</b><span>Overlay — sürətli göndər, link</span></div></div></a>
+  </div>
+</section>
+
+<section id="c">
+  <h2>C. Explore — kəşf et <small>19 ekran</small></h2>
+  <p class="desc">Yerlər, marşrutlar, təcrübələr, tədbirlər, rezervasiya və ekosistem profilləri</p>
+  <div class="grid">
+    <a class="shot" href="screens/10-explore.html" target="_blank"><div class="frame"><iframe src="screens/10-explore.html" loading="lazy"></iframe></div><div class="cap"><span class="n">10</span><div><b>Kəşf et</b><span>Kateqoriyalar, populyar məkanlar</span></div></div></a>
+    <a class="shot" href="screens/11-search.html" target="_blank"><div class="frame"><iframe src="screens/11-search.html" loading="lazy"></iframe></div><div class="cap"><span class="n">11</span><div><b>Axtarış</b><span>Nəticələr və son axtarışlar</span></div></div></a>
+    <a class="shot" href="screens/12-places.html" target="_blank"><div class="frame"><iframe src="screens/12-places.html" loading="lazy"></iframe></div><div class="cap"><span class="n">12</span><div><b>Yerlər + xəritə</b><span>Filtr, pinlər, yaxınlıqdakılar</span></div></div></a>
+    <a class="shot" href="screens/13-place-detail.html" target="_blank"><div class="frame"><iframe src="screens/13-place-detail.html" loading="lazy"></iframe></div><div class="cap"><span class="n">13</span><div><b>Məkan detalı</b><span>Xınalıq kəndi</span></div></div></a>
+    <a class="shot" href="screens/14-routes.html" target="_blank"><div class="frame"><iframe src="screens/14-routes.html" loading="lazy"></iframe></div><div class="cap"><span class="n">14</span><div><b>Marşrutlar</b><span>Sənin və tövsiyə olunan</span></div></div></a>
+    <a class="shot" href="screens/15-route-detail.html" target="_blank"><div class="frame"><iframe src="screens/15-route-detail.html" loading="lazy"></iframe></div><div class="cap"><span class="n">15</span><div><b>Marşrut detalı</b><span>Quba – Dağlar turu</span></div></div></a>
+    <a class="shot" href="screens/16-experiences.html" target="_blank"><div class="frame"><iframe src="screens/16-experiences.html" loading="lazy"></iframe></div><div class="cap"><span class="n">16</span><div><b>Təcrübələr</b><span>Qiymətli kartlar</span></div></div></a>
+    <a class="shot" href="screens/17-experience-detail.html" target="_blank"><div class="frame"><iframe src="screens/17-experience-detail.html" loading="lazy"></iframe></div><div class="cap"><span class="n">17</span><div><b>Təcrübə detalı</b><span>Local Expert qazancı, XP</span></div></div></a>
+    <a class="shot" href="screens/18-booking.html" target="_blank"><div class="frame"><iframe src="screens/18-booking.html" loading="lazy"></iframe></div><div class="cap"><span class="n">18</span><div><b>Rezervasiya</b><span>Tarix, nəfər, ödəniş</span></div></div></a>
+    <a class="shot" href="screens/19-booking-success.html" target="_blank"><div class="frame"><iframe src="screens/19-booking-success.html" loading="lazy"></iframe></div><div class="cap"><span class="n">19</span><div><b>Təsdiq</b><span>Bilet və QR kod</span></div></div></a>
+    <a class="shot" href="screens/20-events.html" target="_blank"><div class="frame"><iframe src="screens/20-events.html" loading="lazy"></iframe></div><div class="cap"><span class="n">20</span><div><b>Tədbirlər</b><span>Festival, konsert, yerli</span></div></div></a>
+    <a class="shot" href="screens/21-local-expert-profile.html" target="_blank"><div class="frame"><iframe src="screens/21-local-expert-profile.html" loading="lazy"></iframe></div><div class="cap"><span class="n">21</span><div><b>Local Expert profili</b><span>Rüstəm Q.</span></div></div></a>
+    <a class="shot" href="screens/22-business-profile.html" target="_blank"><div class="frame"><iframe src="screens/22-business-profile.html" loading="lazy"></iframe></div><div class="cap"><span class="n">22</span><div><b>Business profili</b><span>Gabala Resort & Spa</span></div></div></a>
+    <a class="shot" href="screens/44-event-detail.html" target="_blank"><div class="frame"><iframe src="screens/44-event-detail.html" loading="lazy"></iframe></div><div class="cap"><span class="n">44</span><div><b>Tədbir detalı</b><span>İvanovka Festivalı</span></div></div></a>
+    <a class="shot" href="screens/45-filter-sheet.html" target="_blank"><div class="frame"><iframe src="screens/45-filter-sheet.html" loading="lazy"></iframe></div><div class="cap"><span class="n">45</span><div><b>Filtr paneli</b><span>Overlay — kateqoriya, məsafə, reytinq</span></div></div></a>
+    <a class="shot" href="screens/46-photo-gallery.html" target="_blank"><div class="frame"><iframe src="screens/46-photo-gallery.html" loading="lazy"></iframe></div><div class="cap"><span class="n">46</span><div><b>Fotolar</b><span>Məkanın foto qalereyası</span></div></div></a>
+    <a class="shot" href="screens/47-reviews-all.html" target="_blank"><div class="frame"><iframe src="screens/47-reviews-all.html" loading="lazy"></iframe></div><div class="cap"><span class="n">47</span><div><b>Bütün rəylər</b><span>Reytinq bölgüsü, filtrlər</span></div></div></a>
+    <a class="shot" href="screens/48-add-to-plan.html" target="_blank"><div class="frame"><iframe src="screens/48-add-to-plan.html" loading="lazy"></iframe></div><div class="cap"><span class="n">48</span><div><b>Plana əlavə et</b><span>Overlay — səyahət və gün seçimi</span></div></div></a>
+    <a class="shot" href="screens/49-hotel-booking.html" target="_blank"><div class="frame"><iframe src="screens/49-hotel-booking.html" loading="lazy"></iframe></div><div class="cap"><span class="n">49</span><div><b>Otel rezervasiyası</b><span>Tarix, otaq, əlavələr, ödəniş</span></div></div></a>
+  </div>
+</section>
+
+<section id="d">
+  <h2>D. Trips — Planım <small>6 ekran</small></h2>
+  <p class="desc">Səyahət planı, yeni səyahət, marşrut qurucu, aktiv marşrut və check-in, offline xəritələr</p>
+  <div class="grid">
+    <a class="shot" href="screens/23-trips.html" target="_blank"><div class="frame"><iframe src="screens/23-trips.html" loading="lazy"></iframe></div><div class="cap"><span class="n">23</span><div><b>Planım</b><span>Aktiv səyahət, gün-gün plan</span></div></div></a>
+    <a class="shot" href="screens/24-trip-create.html" target="_blank"><div class="frame"><iframe src="screens/24-trip-create.html" loading="lazy"></iframe></div><div class="cap"><span class="n">24</span><div><b>Yeni səyahət</b><span>Tarix, region, başlanğıc</span></div></div></a>
+    <a class="shot" href="screens/25-offline-maps.html" target="_blank"><div class="frame"><iframe src="screens/25-offline-maps.html" loading="lazy"></iframe></div><div class="cap"><span class="n">25</span><div><b>Offline xəritələr</b><span>Region paketləri</span></div></div></a>
+    <a class="shot" href="screens/50-route-builder.html" target="_blank"><div class="frame"><iframe src="screens/50-route-builder.html" loading="lazy"></iframe></div><div class="cap"><span class="n">50</span><div><b>Marşrut qurucu</b><span>Dayanacaqlar, günlər, +350 XP</span></div></div></a>
+    <a class="shot" href="screens/51-active-route.html" target="_blank"><div class="frame"><iframe src="screens/51-active-route.html" loading="lazy"></iframe></div><div class="cap"><span class="n">51</span><div><b>Aktiv marşrut</b><span>Naviqasiya, növbəti dayanacaq, check-in</span></div></div></a>
+    <a class="shot" href="screens/52-checkin-xp.html" target="_blank"><div class="frame"><iframe src="screens/52-checkin-xp.html" loading="lazy"></iframe></div><div class="cap"><span class="n">52</span><div><b>Check-in / XP</b><span>Modal — +600 XP, level-up, badge</span></div></div></a>
+  </div>
+</section>
+
+<section id="e">
+  <h2>E. Paylaş <small>2 ekran</small></h2>
+  <p class="desc">Mərkəzi "+" düyməsindən açılan axınlar</p>
+  <div class="grid">
+    <a class="shot" href="screens/26-create-post.html" target="_blank"><div class="frame"><iframe src="screens/26-create-post.html" loading="lazy"></iframe></div><div class="cap"><span class="n">26</span><div><b>Paylaş</b><span>Foto / Video / Marşrut / Yerləşmə</span></div></div></a>
+    <a class="shot" href="screens/27-write-review.html" target="_blank"><div class="frame"><iframe src="screens/27-write-review.html" loading="lazy"></iframe></div><div class="cap"><span class="n">27</span><div><b>Rəy yaz</b><span>Ulduz, mətn, foto, +400 XP</span></div></div></a>
+  </div>
+</section>
+
+<section id="f">
+  <h2>F. Profil və gamification <small>13 ekran</small></h2>
+  <p class="desc">Gezgin Score, nailiyyətlər, liderlər, regionlar, tənzimləmələr, PRO, Local Expert paneli</p>
+  <div class="grid">
+    <a class="shot" href="screens/28-profile.html" target="_blank"><div class="frame"><iframe src="screens/28-profile.html" loading="lazy"></iframe></div><div class="cap"><span class="n">28</span><div><b>Profil</b><span>Level, Score, statistika</span></div></div></a>
+    <a class="shot" href="screens/29-gezgin-score.html" target="_blank"><div class="frame"><iframe src="screens/29-gezgin-score.html" loading="lazy"></iframe></div><div class="cap"><span class="n">29</span><div><b>Gezgin Score</b><span>Xal qazanma yolları</span></div></div></a>
+    <a class="shot" href="screens/30-badges.html" target="_blank"><div class="frame"><iframe src="screens/30-badges.html" loading="lazy"></iframe></div><div class="cap"><span class="n">30</span><div><b>Nailiyyətlər</b><span>Level yolu və badge-lər</span></div></div></a>
+    <a class="shot" href="screens/31-leaderboard.html" target="_blank"><div class="frame"><iframe src="screens/31-leaderboard.html" loading="lazy"></iframe></div><div class="cap"><span class="n">31</span><div><b>Liderlər</b><span>Həftəlik / aylıq</span></div></div></a>
+    <a class="shot" href="screens/32-regions.html" target="_blank"><div class="frame"><iframe src="screens/32-regions.html" loading="lazy"></iframe></div><div class="cap"><span class="n">32</span><div><b>Regionlar</b><span>32 / 50 kəşf edilib</span></div></div></a>
+    <a class="shot" href="screens/33-saved.html" target="_blank"><div class="frame"><iframe src="screens/33-saved.html" loading="lazy"></iframe></div><div class="cap"><span class="n">33</span><div><b>Want to go</b><span>Saxlanılanlar</span></div></div></a>
+    <a class="shot" href="screens/34-settings.html" target="_blank"><div class="frame"><iframe src="screens/34-settings.html" loading="lazy"></iframe></div><div class="cap"><span class="n">34</span><div><b>Tənzimləmələr</b><span>Hesab, dil, bildirişlər</span></div></div></a>
+    <a class="shot" href="screens/35-pro.html" target="_blank"><div class="frame"><iframe src="screens/35-pro.html" loading="lazy"></iframe></div><div class="cap"><span class="n">35</span><div><b>Gezgin PRO</b><span>Abunəlik planları</span></div></div></a>
+    <a class="shot" href="screens/36-expert-dashboard.html" target="_blank"><div class="frame"><iframe src="screens/36-expert-dashboard.html" loading="lazy"></iframe></div><div class="cap"><span class="n">36</span><div><b>Local Expert paneli</b><span>Qazanc, rezervasiyalar</span></div></div></a>
+    <a class="shot" href="screens/53-my-bookings.html" target="_blank"><div class="frame"><iframe src="screens/53-my-bookings.html" loading="lazy"></iframe></div><div class="cap"><span class="n">53</span><div><b>Rezervasiyalarım</b><span>Biletlər, ödəniş, rəy yaz</span></div></div></a>
+    <a class="shot" href="screens/54-edit-profile.html" target="_blank"><div class="frame"><iframe src="screens/54-edit-profile.html" loading="lazy"></iframe></div><div class="cap"><span class="n">54</span><div><b>Profili redaktə et</b><span>Cover, avatar, bio, maraqlar</span></div></div></a>
+    <a class="shot" href="screens/55-become-expert.html" target="_blank"><div class="frame"><iframe src="screens/55-become-expert.html" loading="lazy"></iframe></div><div class="cap"><span class="n">55</span><div><b>Local Expert ol</b><span>Müraciət formu</span></div></div></a>
+    <a class="shot" href="screens/56-expert-create-experience.html" target="_blank"><div class="frame"><iframe src="screens/56-expert-create-experience.html" loading="lazy"></iframe></div><div class="cap"><span class="n">56</span><div><b>Təcrübə yarat</b><span>Expert — qiymət 80/20, daxil olanlar</span></div></div></a>
+  </div>
+</section>
+
+<footer>GEZGIN.app · Faza 0 — dizayn. Development mərhələsi bu ekranlar və <code>PLAN.md</code> əsasında aparılacaq.</footer>
+</body>
+</html>

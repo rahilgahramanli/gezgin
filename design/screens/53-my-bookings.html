@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="az">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GEZGIN — 53 Rezervasiyalarım</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../gezgin.css">
+<script src="../icons.js" defer></script>
+<style>
+  .ticket { overflow: hidden; position: relative; }
+  .ticket .top { display: flex; gap: 12px; padding: 14px; }
+  .ticket .thumb { width: 64px; height: 64px; border-radius: 12px; overflow: hidden; flex: none; background: var(--cream-2); }
+  .ticket .thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .ticket .cut { position: relative; margin: 0 14px; border-top: 1.5px dashed var(--line); }
+  .ticket .cut::before, .ticket .cut::after { content: ""; position: absolute; top: -10px; width: 18px; height: 18px; border-radius: 50%; background: var(--cream); border: 1px solid var(--line); }
+  .ticket .cut::before { left: -24px; } .ticket .cut::after { right: -24px; }
+  .ticket .foot { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; background: var(--green-050); }
+  .ticket .foot.brown { background: var(--brown-100); }
+  .ticket .foot.gray { background: var(--cream-2); }
+  .segment.box .seg { padding: 0 8px; font-size: 13px; white-space: nowrap; }
+</style>
+</head>
+<body class="canvas">
+<div class="device"><div class="phone">
+
+  <div class="statusbar">
+    <span>9:41</span>
+    <span class="icons"><svg class="i"><use href="#i-signal"/></svg><svg class="i"><use href="#i-wifi"/></svg><svg class="i" style="width:26px"><use href="#i-battery"/></svg></span>
+  </div>
+  <div class="topbar">
+    <a class="icon-btn"><svg class="i"><use href="#i-back"/></svg></a>
+    <div class="ttl">Rezervasiyalarım</div>
+    <a class="icon-btn"><svg class="i"><use href="#i-sliders"/></svg></a>
+  </div>
+
+  <main class="screen">
+    <div class="content" style="padding-top:0">
+      <div class="segment box">
+        <a class="seg active">Gələcək (2)</a><a class="seg">Keçmiş (3)</a><a class="seg">Ləğv edilmiş</a>
+      </div>
+
+      <div class="col gap-12 mt-16">
+        <div class="card ticket">
+          <div class="top">
+            <div class="thumb"><img src="../assets/exp-dag-yurushu.jpg" alt=""></div>
+            <div class="flex-1">
+              <div class="between" style="align-items:flex-start"><b class="small semi" style="font-size:15px">Quba Qəçrəşi</b><span class="pill teal"><svg class="i"><use href="#i-check"/></svg>Təsdiqlənib</span></div>
+              <div class="meta mt-4">Rüstəm Q. · <span class="brown semi">Local Expert</span></div>
+              <div class="meta row gap-4 mt-4"><svg class="i xs"><use href="#i-calendar"/></svg> 27 iyun, Cümə · 09:00 · 2 nəfər</div>
+            </div>
+          </div>
+          <div class="cut"></div>
+          <div class="foot">
+            <span class="caption" style="font-size:12px">Bron kodu <b class="green" style="font-family:var(--font-display);letter-spacing:.04em">GZ-27A4K9</b></span>
+            <a class="btn btn-xs btn-primary"><svg class="i xs"><use href="#i-ticket"/></svg> Bileti aç</a>
+          </div>
+        </div>
+
+        <div class="card ticket">
+          <div class="top">
+            <div class="thumb"><img src="../assets/business-gabala.jpg" alt=""></div>
+            <div class="flex-1">
+              <div class="between" style="align-items:flex-start"><b class="small semi" style="font-size:15px">Gabala Resort &amp; Spa</b><span class="pill gold"><svg class="i"><use href="#i-clock"/></svg>Ödəniş gözlənilir</span></div>
+              <div class="meta mt-4">Standart otaq · 2 nəfər</div>
+              <div class="meta row gap-4 mt-4"><svg class="i xs"><use href="#i-calendar"/></svg> 5 – 7 iyul · 2 gecə</div>
+            </div>
+          </div>
+          <div class="cut"></div>
+          <div class="foot brown">
+            <span class="caption" style="font-size:12px;color:var(--brown-700)">Ödəniş müddəti: <b>24 saat</b></span>
+            <a class="btn btn-xs btn-brown">Ödə · 300 AZN</a>
+          </div>
+        </div>
+      </div>
+
+      <section class="section">
+        <div class="section-head"><h2 class="h2">Yaxın keçmiş</h2><a class="link">Hamısı <svg class="i xs"><use href="#i-chev-right"/></svg></a></div>
+        <div class="card ticket" style="opacity:.85">
+          <div class="top">
+            <div class="thumb"><img src="../assets/exp-shahdag-horse.jpg" alt=""></div>
+            <div class="flex-1">
+              <div class="between" style="align-items:flex-start"><b class="small semi" style="font-size:15px">Şahdağ macəra turu</b><span class="pill gray">Tamamlandı</span></div>
+              <div class="meta mt-4">Rüstəm Q. · Local Expert</div>
+              <div class="meta row gap-4 mt-4"><svg class="i xs"><use href="#i-calendar"/></svg> 12 may · 2 nəfər · 178 AZN</div>
+            </div>
+          </div>
+          <div class="cut"></div>
+          <div class="foot gray">
+            <span class="caption" style="font-size:12px">Rəy yazılmayıb</span>
+            <a class="btn btn-xs btn-outline">Rəy yaz · <span class="xp" style="font-size:13px">+400 XP</span></a>
+          </div>
+        </div>
+      </section>
+
+      <div class="notice mt-16" style="align-items:center">
+        <svg class="i sm" style="flex:none"><use href="#i-coins"/></svg>
+        <span>Bu il: <b>584 AZN</b> · 3 rezervasiya · <b>+1,240 XP</b> qazanıldı</span>
+      </div>
+    </div>
+  </main>
+
+  <nav class="tabbar">
+    <a class="tab-item"><svg class="i"><use href="#i-pin"/></svg>Discover</a>
+    <a class="tab-item"><svg class="i nofill"><use href="#i-search"/></svg>Explore</a>
+    <div class="tab-plus"><a class="fab"><svg class="i lg"><use href="#i-plus"/></svg></a></div>
+    <a class="tab-item"><svg class="i"><use href="#i-map"/></svg>Trips</a>
+    <a class="tab-item active"><svg class="i"><use href="#i-user"/></svg>Profile</a>
+  </nav>
+  <div class="home-indicator"></div>
+</div></div>
+</body>
+</html>

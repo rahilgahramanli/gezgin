@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="az">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GEZGIN — 56 Yeni təcrübə</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../gezgin.css">
+<script src="../icons.js" defer></script>
+<style>
+  .steps { display: flex; gap: 6px; }
+  .steps span { flex: 1; height: 4px; border-radius: 2px; background: var(--line); }
+  .steps span.on { background: var(--brown-700); }
+  .chips.wrap { flex-wrap: wrap; overflow: visible; margin: 0; padding: 0; }
+  .lbl-cap { font-size: 11px; font-weight: 700; letter-spacing: .06em; color: var(--muted); }
+  .input .val { flex: 1; min-width: 0; color: var(--ink); }
+  .textarea.filled { color: var(--ink); }
+  .stepper b { min-width: 20px; text-align: center; font-family: var(--font-display); }
+  .field label { font-size: 13px; }
+</style>
+</head>
+<body class="canvas">
+<div class="device"><div class="phone">
+
+  <div class="statusbar">
+    <span>9:41</span>
+    <span class="icons"><svg class="i"><use href="#i-signal"/></svg><svg class="i"><use href="#i-wifi"/></svg><svg class="i" style="width:26px"><use href="#i-battery"/></svg></span>
+  </div>
+  <div class="topbar">
+    <a class="icon-btn"><svg class="i"><use href="#i-x"/></svg></a>
+    <div class="ttl">Yeni təcrübə</div>
+    <a class="muted semi" style="font-size:15px;padding:0 4px">Qaralama</a>
+  </div>
+
+  <main class="screen" style="padding-bottom:96px">
+    <div class="content" style="padding-top:0">
+      <div class="steps" style="margin-top:8px"><span class="on"></span><span class="on"></span><span></span><span></span></div>
+      <div class="between caption mt-8"><span class="brown semi">Addım 2 / 4</span><span>Detallar</span></div>
+
+      <div class="col" style="gap:16px;margin-top:18px">
+        <div class="col gap-8">
+          <label class="small semi" style="color:var(--ink-2);font-size:13px">Fotolar</label>
+          <div class="hscroll" style="padding-top:2px;padding-bottom:4px">
+            <div class="photo-card" style="width:96px;height:96px;border-radius:14px">
+              <img src="../assets/exp-kend-metbexi.jpg" alt="">
+              <span class="pill solid brown top-left" style="height:20px;padding:0 8px;font-size:10px;top:6px;left:6px">Əsas</span>
+            </div>
+            <div class="photo-card" style="width:96px;height:96px;border-radius:14px"><img src="../assets/thumb-quba-forest.jpg" alt=""></div>
+            <div class="plan-card" style="width:96px;height:96px;flex-direction:column;justify-content:center;gap:6px;padding:8px;font-size:12px;color:var(--green-900);font-weight:600"><svg class="i"><use href="#i-camera"/></svg>Əlavə et</div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Ad</label>
+          <div class="input focus" style="border-color:var(--brown-700);box-shadow:0 0 0 3px rgba(122,74,40,.12)"><span class="val">Kənd mətbəxi masterklassı</span></div>
+        </div>
+
+        <div class="col gap-8">
+          <span class="lbl-cap">KATEQORİYA</span>
+          <div class="chips wrap">
+            <a class="chip active brown"><svg class="i xs"><use href="#i-utensils"/></svg>Qastronomiya</a><a class="chip">Mədəniyyət</a><a class="chip">Macəra</a><a class="chip">Sənətkarlıq</a>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Təsvir</label>
+          <div class="textarea filled" style="min-height:92px">Yerli ailənin evində ənənəvi Quba mətbəxi: dolma, qutab, təndir çörəyi. Nahar daxildir.</div>
+        </div>
+
+        <div class="field">
+          <label>Müddət</label>
+          <div class="segment box"><a class="seg">2 saat</a><a class="seg active" style="color:var(--brown-700)">Yarım gün</a><a class="seg">1 gün</a></div>
+        </div>
+
+        <div class="between">
+          <label class="small semi" style="color:var(--ink-2);font-size:13px">Qrup ölçüsü (maks)</label>
+          <span class="stepper"><button style="font-size:18px">−</button><b>8</b><button><svg class="i sm"><use href="#i-plus"/></svg></button></span>
+        </div>
+
+        <div class="field">
+          <label>Qiymət</label>
+          <div class="input"><svg class="i sm"><use href="#i-coins"/></svg><b class="val" style="font-size:18px;font-family:var(--font-display)">60</b><span class="muted small">AZN / nəfər</span></div>
+          <div class="card" style="padding:10px 12px;background:var(--brown-100);border:0;box-shadow:none">
+            <div class="between small" style="color:var(--brown-700)"><span>Sən alırsan <b>48 AZN</b> (80%)</span><span>Platforma 12 AZN</span></div>
+            <div class="progress thin mt-8" style="background:rgba(122,74,40,.15)"><div class="bar brown" style="width:80%"></div></div>
+          </div>
+        </div>
+
+        <div class="col gap-8">
+          <span class="lbl-cap">QİYMƏTƏ DAXİLDİR</span>
+          <div class="chips wrap">
+            <a class="chip active brown"><svg class="i xs"><use href="#i-check"/></svg>Bələdçi</a>
+            <a class="chip active brown"><svg class="i xs"><use href="#i-check"/></svg>Yerli nahar</a>
+            <a class="chip"><svg class="i xs"><use href="#i-plus"/></svg>Nəqliyyat</a>
+            <a class="chip"><svg class="i xs"><use href="#i-plus"/></svg>Sığorta</a>
+            <a class="chip"><svg class="i xs"><use href="#i-plus"/></svg>Materiallar</a>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Görüş yeri</label>
+          <div class="input"><svg class="i sm"><use href="#i-pin"/></svg><span class="val">Quba mərkəz, Heydər Əliyev parkı</span></div>
+          <div class="map" style="height:120px">
+            <span class="pin brown" style="left:50%;top:58%"><svg class="i"><use href="#i-pin-solid"/></svg><span class="lbl">Görüş yeri</span></span>
+            <span class="map-ctl" style="right:8px;bottom:8px;width:30px;height:30px"><svg class="i xs"><use href="#i-location"/></svg></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div class="bottom-cta">
+    <a class="btn btn-outline flex-1"><svg class="i sm"><use href="#i-arrow-left"/></svg> Geri</a>
+    <a class="btn btn-brown flex-1">Davam et <svg class="i sm"><use href="#i-arrow-right"/></svg></a>
+  </div>
+  <div class="home-indicator"></div>
+</div></div>
+</body>
+</html>

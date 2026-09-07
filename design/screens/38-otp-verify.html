@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="az">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GEZGIN — 38 Təsdiq kodu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../gezgin.css">
+<script src="../icons.js" defer></script>
+<style>
+  .otp { display: grid; grid-template-columns: repeat(6, 48px); justify-content: space-between; }
+  .otp .input { height: 56px; padding: 0; justify-content: center; border-radius: 12px; font-family: var(--font-display); font-weight: 700; font-size: 22px; }
+  .otp .cursor { width: 2px; height: 24px; border-radius: 1px; background: var(--green-900); animation: blink 1s step-end infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+  .numpad { flex: none; background: var(--cream-2); border-top: 1px solid var(--line); padding: 8px 6px 28px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; position: relative; z-index: 5; }
+  .numpad a { height: 44px; border-radius: 10px; background: var(--paper); display: grid; place-items: center; font-family: var(--font-display); font-size: 20px; font-weight: 500; color: var(--ink); box-shadow: 0 1px 0 rgba(24,39,38,.14); }
+  .numpad a.key-del { background: transparent; box-shadow: none; }
+</style>
+</head>
+<body class="canvas">
+<div class="device"><div class="phone">
+
+  <div class="statusbar">
+    <span>9:41</span>
+    <span class="icons"><svg class="i"><use href="#i-signal"/></svg><svg class="i"><use href="#i-wifi"/></svg><svg class="i" style="width:26px"><use href="#i-battery"/></svg></span>
+  </div>
+  <div class="topbar">
+    <a class="icon-btn"><svg class="i"><use href="#i-back"/></svg></a>
+    <div class="ttl">Təsdiq</div>
+  </div>
+
+  <main class="screen" style="display:flex;flex-direction:column">
+    <div class="content" style="flex:1;display:flex;flex-direction:column;padding-bottom:16px">
+      <h1 class="title-lg mt-8">Kodu daxil et</h1>
+      <p class="meta mt-8" style="font-size:14px"><b style="color:var(--ink)">aysel@gezgin.app</b> ünvanına 6 rəqəmli kod göndərdik.</p>
+
+      <div class="otp mt-24">
+        <div class="input">4</div>
+        <div class="input">8</div>
+        <div class="input">2</div>
+        <div class="input">7</div>
+        <div class="input focus"><span class="cursor"></span></div>
+        <div class="input"></div>
+      </div>
+
+      <div class="between mt-16" style="font-size:13px;color:var(--muted)">
+        <span>Yenidən göndər · <b class="green">00:42</b></span>
+        <a class="green semi">Kod gəlmədi?</a>
+      </div>
+
+      <a class="btn btn-primary btn-block mt-24">Təsdiqlə</a>
+      <a class="btn btn-ghost btn-block mt-8">E-maili dəyiş</a>
+    </div>
+  </main>
+
+  <div class="numpad">
+    <a>1</a><a>2</a><a>3</a>
+    <a>4</a><a>5</a><a>6</a>
+    <a>7</a><a>8</a><a>9</a>
+    <span></span><a>0</a><a class="key-del"><svg class="i"><use href="#i-arrow-left"/></svg></a>
+  </div>
+  <div class="home-indicator"></div>
+</div></div>
+</body>
+</html>

@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="az">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GEZGIN — 50 Marşrut qurucu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../gezgin.css">
+<script src="../icons.js" defer></script>
+<style>
+  .map-dot.num { width: 30px; height: 30px; font-family: var(--font-display); font-weight: 700; font-size: 13px; }
+  .map-lbl { position: absolute; transform: translate(-50%, 0); font-size: 12px; font-weight: 600; color: var(--ink); background: rgba(255,255,255,.85); padding: 1px 6px; border-radius: 6px; white-space: nowrap; }
+  .stop { padding: 10px; display: flex; align-items: center; gap: 10px; }
+  .stop .num { width: 26px; height: 26px; border-radius: 50%; background: var(--green-900); color: #fff; font-family: var(--font-display); font-weight: 700; font-size: 13px; display: grid; place-items: center; flex: none; }
+  .stop .thumb { width: 44px; height: 44px; border-radius: 10px; overflow: hidden; flex: none; }
+  .stop .thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .stop b { display: block; font-size: 14px; font-weight: 600; }
+  .stop span.meta { font-size: 12px; }
+  .stop .icon-btn { width: 32px; height: 32px; color: var(--muted); }
+  .leg { display: flex; align-items: center; justify-content: center; gap: 4px; font-size: 11px; color: var(--muted); padding: 4px 0; }
+  .tabs .tab.add { color: var(--green-900); font-weight: 600; }
+</style>
+</head>
+<body class="canvas">
+<div class="device"><div class="phone">
+
+  <div class="statusbar">
+    <span>9:41</span>
+    <span class="icons"><svg class="i"><use href="#i-signal"/></svg><svg class="i"><use href="#i-wifi"/></svg><svg class="i" style="width:26px"><use href="#i-battery"/></svg></span>
+  </div>
+  <div class="topbar">
+    <a class="icon-btn"><svg class="i"><use href="#i-x"/></svg></a>
+    <div class="ttl">Marşrut qur</div>
+    <a class="green semi" style="font-size:15px;padding:0 4px">Saxla</a>
+  </div>
+
+  <main class="screen" style="padding-bottom:96px">
+    <div class="content" style="padding-top:0">
+
+      <div class="input focus"><svg class="i" style="color:var(--green-900)"><use href="#i-edit"/></svg><input value="Quba həftəsonu marşrutu"></div>
+
+      <div class="map mt-12" style="height:200px">
+        <svg class="route" viewBox="0 0 350 200" preserveAspectRatio="none">
+          <path d="M62 150 C 100 135, 130 120, 172 98 S 250 60, 290 48" stroke="var(--green-900)" stroke-width="3" stroke-dasharray="6 6" fill="none" stroke-linecap="round"/>
+        </svg>
+        <span class="map-dot num" style="left:17.7%;top:75%">1</span>
+        <span class="map-lbl" style="left:17.7%;top:85%">Quba</span>
+        <span class="map-dot num" style="left:49%;top:49%">2</span>
+        <span class="map-lbl" style="left:49%;top:59%">Nohurgöl</span>
+        <span class="map-dot num brown" style="left:83%;top:24%">3</span>
+        <span class="map-lbl" style="left:83%;top:34%">Qəçrəş</span>
+        <span class="map-ctl" style="right:10px;bottom:10px"><svg class="i sm"><use href="#i-location"/></svg></span>
+      </div>
+
+      <div class="grid-3 mt-12">
+        <div class="stat-card"><div class="n green">48 km</div><div class="l">Məsafə</div></div>
+        <div class="stat-card"><div class="n green">2 gün</div><div class="l">Müddət</div></div>
+        <div class="stat-card"><div class="n green">5</div><div class="l">Məkan</div></div>
+      </div>
+
+      <div class="tabs spread mt-16" style="margin-left:-20px;margin-right:-20px">
+        <a class="tab active">1-ci gün</a><a class="tab">2-ci gün</a><a class="tab add">+ Gün</a>
+      </div>
+
+      <div class="col mt-12">
+        <div class="card stop">
+          <svg class="i sm muted"><use href="#i-list"/></svg>
+          <span class="num">1</span>
+          <div class="thumb"><img src="../assets/thumb-quba-forest.jpg" alt=""></div>
+          <div class="flex-1"><b>Quba şəhəri</b><span class="meta">09:00 · 2 saat · Tarix</span></div>
+          <a class="icon-btn"><svg class="i sm"><use href="#i-x"/></svg></a>
+        </div>
+        <div class="leg"><svg class="i xs"><use href="#i-car"/></svg> 18 km · 25 dəq</div>
+        <div class="card stop">
+          <svg class="i sm muted"><use href="#i-list"/></svg>
+          <span class="num">2</span>
+          <div class="thumb"><img src="../assets/card-lake.jpg" alt=""></div>
+          <div class="flex-1"><b>Nohurgöl</b><span class="meta">11:30 · 1.5 saat · Təbiət</span></div>
+          <a class="icon-btn"><svg class="i sm"><use href="#i-x"/></svg></a>
+        </div>
+        <div class="leg"><svg class="i xs"><use href="#i-car"/></svg> 12 km · 20 dəq</div>
+        <div class="card stop">
+          <svg class="i sm muted"><use href="#i-list"/></svg>
+          <span class="num">3</span>
+          <div class="thumb"><img src="../assets/route-quba-qusar.jpg" alt=""></div>
+          <div class="flex-1"><b>Qəçrəş meşəsi</b><span class="meta">15:00 · piknik</span></div>
+          <a class="icon-btn"><svg class="i sm"><use href="#i-x"/></svg></a>
+        </div>
+        <a class="plan-card mt-8"><svg class="i green"><use href="#i-plus"/></svg> Məkan əlavə et — axtar və ya xəritədən seç</a>
+      </div>
+
+      <div class="list mt-8">
+        <div class="item"><span class="ic"><svg class="i"><use href="#i-globe"/></svg></span><div class="txt"><b>İctimai paylaş</b><span>Başqaları görə bilsin</span></div><span class="toggle on"></span></div>
+        <div class="item"><span class="ic"><svg class="i"><use href="#i-badge-check"/></svg></span><div class="txt"><b>Local Expert ilə birləşdir</b><span>Rüstəm Q. bələdçilik etsin</span></div><span class="toggle"></span></div>
+      </div>
+
+    </div>
+  </main>
+
+  <div class="bottom-cta">
+    <a class="btn btn-primary btn-block"><svg class="i sm"><use href="#i-check"/></svg> Marşrutu yadda saxla · +350 XP</a>
+  </div>
+  <div class="home-indicator"></div>
+</div></div>
+</body>
+</html>
