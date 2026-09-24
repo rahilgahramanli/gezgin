@@ -4,6 +4,7 @@ import {
   XP_RULES, gezginScore, levelForXp, levelProgress, tierForLevel, type ScoreInput,
 } from '@gezgin/shared';
 import { PrismaService } from '@/common/prisma/prisma.service';
+import { NotificationsService } from '@/modules/community/notifications.service';
 
 export interface EarnedBadge {
   slug: string;
@@ -40,7 +41,10 @@ export interface XpResult {
 export class XpService {
   private readonly logger = new Logger(XpService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notifications: NotificationsService,
+  ) {}
 
   /** Sui-istifadəyə qarşı: bəzi hərəkətlərin gündəlik limiti var. */
   private async isDailyCapReached(userId: bigint, action: XpAction): Promise<boolean> {
@@ -195,6 +199,24 @@ export class XpService {
 
     if (levelAfter > before.level) {
       this.logger.log(`İstifadəçi ${userId} → Level ${levelAfter} (${progress.tier.nameAz})`);
+      await this.notifications.notify({
+        userId,
+        type: 'level_up',
+        title: `Yeni səviyyə: Level ${levelAfter} · ${progress.tier.nameAz}`,
+        body: `+${xpGained} XP`,
+        targetType: 'level',
+        deepLink: 'gezgin://score',
+      });
+    }
+    for (const badge of newBadges) {
+      await this.notifications.notify({
+        userId,
+        type: 'badge_earned',
+        title: `Yeni badge: ${badge.name} 🎉`,
+        body: badge.description,
+        targetType: 'badge',
+        deepLink: 'gezgin://badges',
+      });
     }
 
     return {

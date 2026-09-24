@@ -246,7 +246,16 @@ export class PlacesService {
   }
 
   /** Ekran 13 — məkan detalı. */
-  async detail(slug: string, lang: Lang) {
+  /** Baxan istifadəçi bu obyekti saxlayıbmı — detal ekranındakı düymə üçün. */
+  private async isSaved(viewerId: bigint | undefined, type: 'place', targetId: bigint): Promise<boolean> {
+    if (viewerId === undefined) return false;
+    const count = await this.prisma.savedItem.count({
+      where: { userId: viewerId, targetType: type, targetId },
+    });
+    return count > 0;
+  }
+
+  async detail(slug: string, lang: Lang, viewerId?: bigint) {
     const place = await this.prisma.place.findFirst({
       where: { slug, deletedAt: null },
       include: {
@@ -287,6 +296,8 @@ export class PlacesService {
       rating: Number(place.ratingAvg),
       ratingCount: place.ratingCount,
       reviewCount,
+      // Ekran 13 "saxla" düyməsi vəziyyəti göstərməlidir, əks halda yalnız saxlaya bilir
+      isSaved: await this.isSaved(viewerId, 'place', place.id),
       checkinCount: place._count.checkins,
       photoCount: place._count.photos,
       isFeatured: place.isFeatured,

@@ -27,6 +27,12 @@ import { OfflineModule } from './modules/offline/offline.module';
 import { PaymentsModule } from './modules/payments/payments.module';
 import { BookingsModule } from './modules/bookings/bookings.module';
 import { BusinessesModule } from './modules/businesses/businesses.module';
+import { CommunityModule } from './modules/community/community.module';
+import { PostsModule } from './modules/posts/posts.module';
+import { UsersModule } from './modules/users/users.module';
+import { StoriesModule } from './modules/stories/stories.module';
+import { ChatModule } from './modules/chat/chat.module';
+import { AdminModule } from './modules/admin/admin.module';
 
 @Module({
   imports: [
@@ -55,6 +61,13 @@ import { BusinessesModule } from './modules/businesses/businesses.module';
     PaymentsModule,
     BookingsModule,
     BusinessesModule,
+    // Sprint 7 — sosial lent
+    CommunityModule,
+    PostsModule,
+    UsersModule,
+    StoriesModule,
+    ChatModule,
+    AdminModule,
   ],
   providers: [
     // Sıra vacibdir: əvvəl limit, sonra autentifikasiya, sonra rol.

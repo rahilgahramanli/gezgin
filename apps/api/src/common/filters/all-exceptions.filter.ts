@@ -32,10 +32,6 @@ export class AllExceptionsFilter implements ExceptionFilter {
   private readonly logger = new Logger(AllExceptionsFilter.name);
 
   catch(exception: unknown, host: ArgumentsHost): void {
-    const ctx = host.switchToHttp();
-    const res = ctx.getResponse<Response>();
-    const req = ctx.getRequest<Request>();
-
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
     let code: string = ERROR_CODES.INTERNAL;
     let message = 'Gözlənilməz xəta baş verdi';
@@ -58,8 +54,28 @@ export class AllExceptionsFilter implements ExceptionFilter {
       message = exception.message;
     }
 
+    // WebSocket (çat) kontekstində HTTP cavab obyekti yoxdur — `res.status()`
+    // çağırışı ikinci xəta atıb bağlantını qırardı. Xəta müştəriyə Nest-in
+    // öz konvensiyası ilə `exception` hadisəsi kimi gedir.
+    if (host.getType() !== 'http') {
+      if (status >= 500) {
+        this.logger.error(`WS → ${status} ${code}`, exception instanceof Error ? exception.stack : undefined);
+      }
+      const client = host.switchToWs().getClient<{ emit?: (event: string, payload: unknown) => void }>();
+      client.emit?.('exception', { statusCode: status, code, message, ...(details !== undefined ? { details } : {}) });
+      return;
+    }
+
+    const ctx = host.switchToHttp();
+    const res = ctx.getResponse<Response>();
+    const req = ctx.getRequest<Request>();
+
     if (status >= 500) {
       this.logger.error(`${req.method} ${req.url} → ${status} ${code}`, exception instanceof Error ? exception.stack : undefined);
+    } else if (status === HttpStatus.BAD_REQUEST && details !== undefined) {
+      // Hansı sahənin validasiyanı keçmədiyi loqda görünsün — əks halda
+      // mobil tərəfdə yalnız "Validasiya xətası" görünür və səbəb itir.
+      this.logger.warn(`${req.method} ${req.url} → 400 ${JSON.stringify(details)}`);
     }
 
     const body: ErrorBody = {

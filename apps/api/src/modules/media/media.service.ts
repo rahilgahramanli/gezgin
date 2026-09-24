@@ -108,6 +108,30 @@ export class MediaService {
     };
   }
 
+  /**
+   * Paylaşım, hekayə və rəy üçün: media istifadəçiyə aid olmalı və yükləməsi
+   * tamamlanmalıdır. Sıra çağıranın verdiyi kimi saxlanılır (karuseldə vacibdir).
+   */
+  async ownedReady(userId: bigint, publicIds: string[]) {
+    if (!publicIds.length) return [];
+    const rows = await this.prisma.mediaAsset.findMany({
+      where: { publicId: { in: publicIds }, ownerId: userId, status: 'ready', deletedAt: null },
+      select: { id: true, publicId: true, type: true, storageKey: true },
+    });
+    const byId = new Map(rows.map((r) => [r.publicId, r]));
+    const missing = publicIds.filter((id) => !byId.has(id));
+    if (missing.length) {
+      throw new BadRequestException({
+        code: ERROR_CODES.VALIDATION_FAILED,
+        message: `Media tapılmadı və ya yüklənməyib: ${missing.join(', ')}`,
+      });
+    }
+    return publicIds.flatMap((id) => {
+      const row = byId.get(id);
+      return row ? [row] : [];
+    });
+  }
+
   async remove(userId: bigint, publicId: string) {
     const media = await this.prisma.mediaAsset.findUnique({ where: { publicId } });
     if (!media) throw new NotFoundException({ code: ERROR_CODES.NOT_FOUND, message: 'Media tapılmadı' });

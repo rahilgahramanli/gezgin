@@ -272,6 +272,10 @@ export class SavedService {
 
   async save(userId: bigint, dto: SaveItemDto, lang: Lang) {
     const target = await this.resolve(dto.type, dto.target, lang);
+    const existedBefore =
+      (await this.prisma.savedItem.count({
+        where: { userId, targetType: dto.type, targetId: target.id },
+      })) > 0;
 
     const saved = await this.prisma.savedItem.upsert({
       where: { userId_targetType_targetId: { userId, targetType: dto.type, targetId: target.id } },
@@ -296,11 +300,16 @@ export class SavedService {
       });
     }
 
-    // Sayğac — ekran 13-də "saxlanılıb" göstəricisi
-    if (dto.type === 'place') {
-      await this.prisma.place.update({ where: { id: target.id }, data: { saveCount: { increment: 1 } } });
-    } else if (dto.type === 'route') {
-      await this.prisma.route.update({ where: { id: target.id }, data: { saveCount: { increment: 1 } } });
+    // Sayğac — ekran 13-də "saxlanılıb" göstəricisi.
+    // Yalnız yeni sətir yarananda artır: upsert təkrar çağırılsa sayğac şişərdi.
+    if (!existedBefore) {
+      if (dto.type === 'place') {
+        await this.prisma.place.update({ where: { id: target.id }, data: { saveCount: { increment: 1 } } });
+      } else if (dto.type === 'route') {
+        await this.prisma.route.update({ where: { id: target.id }, data: { saveCount: { increment: 1 } } });
+      } else if (dto.type === 'post') {
+        await this.prisma.post.update({ where: { id: target.id }, data: { saveCount: { increment: 1 } } });
+      }
     }
 
     return { saved: true, savedId: Number(saved.id) };
@@ -319,6 +328,8 @@ export class SavedService {
       await this.prisma.place.update({ where: { id: resolved.id }, data: { saveCount: { decrement: 1 } } });
     } else if (type === 'route') {
       await this.prisma.route.update({ where: { id: resolved.id }, data: { saveCount: { decrement: 1 } } });
+    } else if (type === 'post') {
+      await this.prisma.post.update({ where: { id: resolved.id }, data: { saveCount: { decrement: 1 } } });
     }
 
     // Kolleksiya sayğaclarını düzəldirik

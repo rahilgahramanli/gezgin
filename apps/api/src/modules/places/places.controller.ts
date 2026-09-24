@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Headers, Param, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Headers, Param, Post, Query, Req, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Public } from '@/common/decorators/public.decorator';
 import { CurrentUser, type AuthUser } from '@/common/decorators/current-user.decorator';
@@ -38,8 +38,12 @@ export class PlacesController {
 
   @Public() @Get(':slug')
   @ApiOperation({ summary: 'Məkan detalı — ekran 13' })
-  detail(@Param('slug') slug: string, @Headers('accept-language') lang?: string) {
-    return this.places.detail(slug, parseLang(lang));
+  detail(
+    @Param('slug') slug: string,
+    @Headers('accept-language') lang?: string,
+    @Req() req?: { user?: AuthUser },
+  ) {
+    return this.places.detail(slug, parseLang(lang), req?.user?.id);
   }
 
   @Public() @Get(':slug/photos')

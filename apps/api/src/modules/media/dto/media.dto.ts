@@ -6,7 +6,7 @@ import { MEDIA } from '@gezgin/shared';
 export class PresignDto {
   @ApiProperty({ enum: [...MEDIA.imageMime, ...MEDIA.videoMime] })
   @IsString()
-  @IsIn([...MEDIA.imageMime, ...MEDIA.videoMime], { message: 'Bu fayl növü dəstəklənmir' })
+  @IsIn([...MEDIA.imageMime, ...MEDIA.videoMime], { message: 'Bu fayl növü dəstəklənmir: $value' })
   contentType!: string;
 
   @ApiProperty({ description: 'Baytla — limit yoxlanılır', example: 2_400_000 })

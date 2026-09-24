@@ -12,7 +12,9 @@ import { join } from 'node:path';
 import { parse } from 'csv-parse/sync';
 import { PrismaClient, Prisma } from '@prisma/client';
 import { ulid } from 'ulid';
+import * as argon2 from 'argon2';
 import { LEVEL_XP, TIERS, tierForLevel, XP_RULES } from '@gezgin/shared';
+import { extractHashtags } from '../src/modules/posts/hashtags';
 
 const prisma = new PrismaClient();
 const SEED_DIR = join(__dirname, '..', '..', '..', 'seed');
@@ -291,6 +293,43 @@ async function seedUsers(regions: Map<string, bigint>): Promise<Map<string, bigi
   }
   console.log(`  ✓ users: ${map.size} (${rows.filter((r) => r.role === 'local_expert').length} Local Expert)`);
   return map;
+}
+
+/**
+ * Dev admini — admin panelinin girişi (apps/admin).
+ * Şifrə `ADMIN_SEED_PASSWORD` ilə verilir; produksiyada bu funksiya işləmir.
+ */
+async function seedAdmin(): Promise<void> {
+  if (process.env.NODE_ENV === 'production') {
+    console.log('  ⏭  admin: produksiyada yaradılmır');
+    return;
+  }
+
+  const username = process.env.ADMIN_SEED_USERNAME ?? 'admin.demo';
+  const password = process.env.ADMIN_SEED_PASSWORD ?? 'Sifre12345';
+  const passwordHash = await argon2.hash(password, {
+    type: argon2.argon2id,
+    memoryCost: 19456,
+    timeCost: 2,
+    parallelism: 1,
+  });
+
+  await prisma.user.upsert({
+    where: { username },
+    update: { role: 'admin', status: 'active', passwordHash },
+    create: {
+      publicId: ulid(),
+      username,
+      email: `${username.replace(/\./g, '-')}@gezgin.app`,
+      fullName: 'GEZGIN Admin',
+      role: 'admin',
+      passwordHash,
+      emailVerifiedAt: new Date(),
+      settings: { create: {} },
+      notificationPrefs: { create: {} },
+    },
+  });
+  console.log(`  ✓ admin: @${username} (panel girişi)`);
 }
 
 async function seedRoutes(regions: Map<string, bigint>, places: Map<string, bigint>): Promise<Map<string, bigint>> {
@@ -616,6 +655,172 @@ async function seedSubscriptionPlans(): Promise<void> {
   console.log(`  ✓ subscription_plans: ${plans.length}`);
 }
 
+// ─────────────────────── sosial (Sprint 7) ───────────────────────
+
+async function seedFollows(users: Map<string, bigint>): Promise<number> {
+  let count = 0;
+  for (const r of read('12-follows.csv')) {
+    const followerId = users.get(r.follower);
+    const followingId = users.get(r.following);
+    if (!followerId || !followingId || followerId === followingId) {
+      console.warn(`  ⚠  follow: @${r.follower} → @${r.following} tapılmadı — keçilir`);
+      continue;
+    }
+    await prisma.follow.upsert({
+      where: { followerId_followingId: { followerId, followingId } },
+      update: {},
+      create: { followerId, followingId },
+    });
+    count++;
+  }
+  console.log(`  ✓ follows: ${count}`);
+  return count;
+}
+
+/**
+ * Paylaşımların slug-ı yoxdur — idempotentlik üçün (müəllif, mətn) cütü açardır.
+ * `ref` sütunu yalnız şərh CSV-sinin paylaşıma istinad etməsi üçündür.
+ */
+async function seedPosts(users: Map<string, bigint>): Promise<Map<string, bigint>> {
+  const refs = new Map<string, bigint>();
+  for (const r of read('11-posts.csv')) {
+    const userId = users.get(r.username);
+    if (!userId) {
+      console.warn(`  ⚠  post: @${r.username} tapılmadı — keçilir`);
+      continue;
+    }
+    const place = str(r.place_slug)
+      ? await prisma.place.findUnique({ where: { slug: r.place_slug }, select: { id: true, lat: true, lng: true } })
+      : null;
+    const route = str(r.route_slug)
+      ? await prisma.route.findUnique({ where: { slug: r.route_slug }, select: { id: true } })
+      : null;
+    if (str(r.place_slug) && !place) console.warn(`  ⚠  post ${r.ref}: məkan ${r.place_slug} tapılmadı`);
+
+    const body = str(r.body_az);
+    const hashtags = extractHashtags(body);
+    const createdAt = new Date(Date.now() - Number(r.hours_ago || 0) * 3600_000);
+    const data = {
+      placeId: place?.id ?? null,
+      routeId: route?.id ?? null,
+      visibility: (str(r.visibility) ?? 'public') as 'public' | 'followers' | 'private',
+      body,
+      hashtags: hashtags.length ? hashtags.join('|') : null,
+      // Nearby lenti koordinatdan işləyir — məkanınkı götürülür
+      lat: place?.lat ?? null,
+      lng: place?.lng ?? null,
+      createdAt,
+      deletedAt: null,
+    };
+
+    const existing = await prisma.post.findFirst({ where: { userId, body }, select: { id: true } });
+    const post = existing
+      ? await prisma.post.update({ where: { id: existing.id }, data })
+      : await prisma.post.create({ data: { publicId: ulid(createdAt.getTime()), userId, ...data } });
+
+    await prisma.postMedia.deleteMany({ where: { postId: post.id } });
+    for (const [idx, photo] of list(r.photos).entries()) {
+      const mediaId = await mediaFor(photo);
+      if (mediaId) await prisma.postMedia.create({ data: { postId: post.id, mediaId, sortOrder: idx } });
+    }
+
+    for (const liker of list(r.likes_by)) {
+      const likerId = users.get(liker);
+      if (!likerId || likerId === userId) continue;
+      await prisma.postLike.upsert({
+        where: { postId_userId: { postId: post.id, userId: likerId } },
+        update: {},
+        create: { postId: post.id, userId: likerId, createdAt },
+      });
+    }
+    const likeCount = await prisma.postLike.count({ where: { postId: post.id } });
+    await prisma.post.update({ where: { id: post.id }, data: { likeCount } });
+
+    if (str(r.ref)) refs.set(r.ref, post.id);
+  }
+  console.log(`  ✓ posts: ${refs.size}`);
+  return refs;
+}
+
+async function seedComments(users: Map<string, bigint>, posts: Map<string, bigint>): Promise<number> {
+  let count = 0;
+  for (const r of read('13-comments.csv')) {
+    const postId = posts.get(r.post_ref);
+    const userId = users.get(r.username);
+    if (!postId || !userId) {
+      console.warn(`  ⚠  comment: ${r.post_ref} və ya @${r.username} tapılmadı — keçilir`);
+      continue;
+    }
+    const post = await prisma.post.findUniqueOrThrow({ where: { id: postId }, select: { createdAt: true } });
+    const createdAt = new Date(post.createdAt.getTime() + Number(r.minutes_after || 0) * 60_000);
+
+    // `reply_to` — həmin istifadəçinin bu paylaşımdakı kök şərhi
+    let parentId: bigint | null = null;
+    const replyTo = str(r.reply_to) ? users.get(r.reply_to) : undefined;
+    if (replyTo) {
+      const parent = await prisma.comment.findFirst({
+        where: { postId, userId: replyTo, parentId: null },
+        orderBy: { id: 'asc' },
+        select: { id: true },
+      });
+      parentId = parent?.id ?? null;
+    }
+
+    const body = r.body_az;
+    const existing = await prisma.comment.findFirst({ where: { postId, userId, body }, select: { id: true } });
+    if (existing) {
+      await prisma.comment.update({ where: { id: existing.id }, data: { parentId, createdAt, deletedAt: null } });
+    } else {
+      await prisma.comment.create({
+        data: { publicId: ulid(createdAt.getTime()), postId, userId, parentId, body, createdAt },
+      });
+    }
+    count++;
+  }
+
+  // Sayğac API-də artırılır; seed üçün birbaşa hesablanır
+  for (const postId of posts.values()) {
+    const commentCount = await prisma.comment.count({ where: { postId, deletedAt: null } });
+    await prisma.post.update({ where: { id: postId }, data: { commentCount } });
+  }
+  console.log(`  ✓ comments: ${count}`);
+  return count;
+}
+
+/**
+ * Hekayə 24 saat yaşayır. Seed hər işləyəndə vaxtı indiyə görə yeniləyir —
+ * demo üçün `pnpm db:seed` hekayələri yenidən "canlandırır".
+ */
+async function seedStories(users: Map<string, bigint>): Promise<number> {
+  let count = 0;
+  for (const r of read('14-stories.csv')) {
+    const userId = users.get(r.username);
+    const mediaId = await mediaFor(str(r.photo));
+    if (!userId || !mediaId) {
+      console.warn(`  ⚠  story: @${r.username} və ya ${r.photo} tapılmadı — keçilir`);
+      continue;
+    }
+    const place = str(r.place_slug)
+      ? await prisma.place.findUnique({ where: { slug: r.place_slug }, select: { id: true } })
+      : null;
+    const createdAt = new Date(Date.now() - Number(r.hours_ago || 0) * 3600_000);
+    const data = {
+      placeId: place?.id ?? null,
+      caption: str(r.caption),
+      createdAt,
+      expiresAt: new Date(createdAt.getTime() + 24 * 3600_000),
+      deletedAt: null,
+    };
+
+    const existing = await prisma.story.findFirst({ where: { userId, mediaId }, select: { id: true } });
+    if (existing) await prisma.story.update({ where: { id: existing.id }, data });
+    else await prisma.story.create({ data: { publicId: ulid(createdAt.getTime()), userId, mediaId, ...data } });
+    count++;
+  }
+  console.log(`  ✓ stories: ${count} (24 saat aktiv)`);
+  return count;
+}
+
 async function main(): Promise<void> {
   console.log('\n🌱 GEZGIN seed başlayır\n');
   console.log('Konfiqurasiya:');
@@ -629,11 +834,18 @@ async function main(): Promise<void> {
   const regions = await seedRegions();
   const places = await seedPlaces(regions, categories);
   const users = await seedUsers(regions);
+  await seedAdmin();
   await seedRoutes(regions, places);
   await seedExperiences(regions, places, categories, users);
   await seedEvents(regions);
   await seedBusinesses(regions);
   await seedReviews(users);
+
+  console.log('\nSosial:');
+  await seedFollows(users);
+  const posts = await seedPosts(users);
+  await seedComments(users, posts);
+  await seedStories(users);
 
   console.log('\n✅ Seed tamamlandı\n');
 }

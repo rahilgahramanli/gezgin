@@ -185,6 +185,15 @@ export class ExperiencesService {
   }
 
   /** Ekran 17 — təcrübə detalı. */
+  /** Baxan istifadəçi təcrübəni saxlayıbmı. */
+  private async isSavedByViewer(viewerId: bigint | undefined, experienceId: bigint): Promise<boolean> {
+    if (viewerId === undefined) return false;
+    const count = await this.prisma.savedItem.count({
+      where: { userId: viewerId, targetType: 'experience', targetId: experienceId },
+    });
+    return count > 0;
+  }
+
   async detail(slug: string, lang: Lang, viewerId?: bigint) {
     const exp = await this.prisma.experience.findFirst({
       where: { slug, deletedAt: null },
@@ -236,6 +245,8 @@ export class ExperiencesService {
       description: exp.descriptionAz,
       status: exp.status,
       isOwner,
+      // Ekran 17 "saxla" düyməsi vəziyyəti göstərsin
+      isSaved: await this.isSavedByViewer(viewerId, exp.id),
       duration: exp.duration,
       durationText: exp.durationText,
       maxGroup: exp.maxGroup,

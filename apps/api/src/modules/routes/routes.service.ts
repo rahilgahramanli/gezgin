@@ -202,6 +202,15 @@ export class RoutesService {
   }
 
   /** Ekran 15 — gün-gün dayanacaqlarla tam detal. */
+  /** Baxan istifadəçi marşrutu saxlayıbmı. */
+  private async isSavedByViewer(viewerId: bigint | undefined, routeId: bigint): Promise<boolean> {
+    if (viewerId === undefined) return false;
+    const count = await this.prisma.savedItem.count({
+      where: { userId: viewerId, targetType: 'route', targetId: routeId },
+    });
+    return count > 0;
+  }
+
   async detail(slug: string, lang: Lang, viewerId?: bigint) {
     const route = await this.prisma.route.findFirst({
       where: { slug, deletedAt: null },
@@ -259,6 +268,8 @@ export class RoutesService {
       visibility: route.visibility,
       isOfficial: route.visibility === 'official',
       isOwner,
+      // Ekran 15 "saxla" düyməsi vəziyyəti göstərsin
+      isSaved: await this.isSavedByViewer(viewerId, route.id),
       rating: Number(route.ratingAvg),
       ratingCount: route.ratingCount,
       copyCount: route.copyCount,

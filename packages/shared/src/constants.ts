@@ -63,3 +63,17 @@ export const BOOKING_EXTRAS = {
   'ferdi-beledci': { nameAz: 'Fərdi bələdçi', hintAz: 'Yerli bələdçi müşayiəti', priceAzn: 40 },
 } as const;
 export type BookingExtraCode = keyof typeof BOOKING_EXTRAS;
+
+/**
+ * Ekran 27 "Səyahətin necə keçdi?" çipləri. Rəyin `tags` sahəsində slug kimi
+ * saxlanılır; API yazanda bu siyahı ilə yoxlayır, mobil eyni etiketi göstərir.
+ */
+export const REVIEW_TAGS = {
+  tebiet: 'Təbiət 🌿',
+  'samimi-insanlar': 'Səmimi insanlar',
+  'yol-cetindir': 'Yol çətindir',
+  'yerli-metbex': 'Yerli mətbəx',
+  'usaqla-uygun': 'Uşaqla uyğun',
+  fotogenik: 'Fotogenik',
+} as const;
+export type ReviewTag = keyof typeof REVIEW_TAGS;

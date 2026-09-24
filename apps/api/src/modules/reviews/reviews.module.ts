@@ -1,6 +1,12 @@
 import { Module } from '@nestjs/common';
+import { MediaModule } from '@/modules/media/media.module';
 import { ReviewsController } from './reviews.controller';
 import { ReviewsService } from './reviews.service';
 
-@Module({ controllers: [ReviewsController], providers: [ReviewsService], exports: [ReviewsService] })
+@Module({
+  imports: [MediaModule],
+  controllers: [ReviewsController],
+  providers: [ReviewsService],
+  exports: [ReviewsService],
+})
 export class ReviewsModule {}
