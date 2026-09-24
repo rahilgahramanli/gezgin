@@ -83,12 +83,12 @@ describe('API kontraktı — mobil ekranların asılı olduğu sahələr', () =>
 
   t('/places/:slug detal sahələrini verir', async () => {
     const p = await call('/places/xinaliq-kendi');
-    expectKeys(p, ['slug', 'name', 'rating', 'reviewCount', 'photoCount', 'region', 'categories', 'photos'], 'placeDetail');
+    expectKeys(p, ['slug', 'name', 'rating', 'reviewCount', 'photoCount', 'region', 'categories', 'photos', 'isSaved'], 'placeDetail');
   });
 
   t('/routes/:slug gün-gün planı verir', async () => {
     const r = await call<{ itinerary: Array<{ stops: unknown[] }> }>('/routes/quba-daglar-turu');
-    expectKeys(r, ['slug', 'title', 'days', 'distanceKm', 'stopCount', 'itinerary'], 'routeDetail');
+    expectKeys(r, ['slug', 'title', 'days', 'distanceKm', 'stopCount', 'itinerary', 'isSaved'], 'routeDetail');
     expectKeys(r.itinerary[0], ['day', 'stops'], 'itineraryDay');
     expectKeys(r.itinerary[0]?.stops[0], ['stopId', 'order', 'place'], 'stop');
   });
@@ -104,9 +104,28 @@ describe('API kontraktı — mobil ekranların asılı olduğu sahələr', () =>
 
   t('/experiences/:slug qiymət bölgüsünü verir', async () => {
     const e = await call<{ pricing: unknown; gezginRewards: unknown }>('/experiences/kend-metbexi-masterklassi');
-    expectKeys(e, ['slug', 'title', 'pricing', 'gezginRewards', 'expert', 'includes'], 'experienceDetail');
+    expectKeys(e, ['slug', 'title', 'pricing', 'gezginRewards', 'expert', 'includes', 'isSaved'], 'experienceDetail');
     expectKeys(e.pricing, ['priceAzn', 'expertEarnsAzn', 'platformFeeAzn', 'expertRate'], 'pricing');
     expectKeys(e.gezginRewards, ['experienceXp', 'bookingXp', 'reviewXp'], 'rewards');
+  });
+
+  t('saxla/götür detaldakı `isSaved` ilə uyğun gəlir', async () => {
+    // Saxla düyməsi vəziyyətsiz idi: hər toxunuş POST göndərirdi, ikon heç dəyişmirdi.
+    const slug = 'xinaliq-kendi';
+    const before = await call<{ isSaved: boolean }>(`/places/${slug}`);
+    if (before.isSaved) await call(`/saved/place/${slug}`, { method: 'DELETE' });
+
+    await call('/saved', { method: 'POST', body: JSON.stringify({ type: 'place', target: slug }) });
+    const saved = await call<{ isSaved: boolean }>(`/places/${slug}`);
+    expect(saved.isSaved).toBe(true);
+
+    await call(`/saved/place/${slug}`, { method: 'DELETE' });
+    const unsaved = await call<{ isSaved: boolean }>(`/places/${slug}`);
+    expect(unsaved.isSaved).toBe(false);
+
+    if (before.isSaved) {
+      await call('/saved', { method: 'POST', body: JSON.stringify({ type: 'place', target: slug }) });
+    }
   });
 
   t('/experiences/:slug/availability slot sahələrini verir', async () => {
@@ -301,6 +320,83 @@ describe('API kontraktı — mobil ekranların asılı olduğu sahələr', () =>
       if (mine.data.length) {
         expectKeys(mine.data[0], ['slug', 'title', 'days', 'stopCount', 'visibility'], 'myRoute');
       }
+    });
+  });
+
+  /** Sprint 7 — sosial lent, hekayə, profil, çat, bildiriş. */
+  describe('sosial (ekran 05–09, 40–42)', () => {
+    t('/feed kart sahələrini verir', async () => {
+      const res = await call<{ data: Array<Record<string, unknown>> }>('/feed?limit=5');
+      expectKeys(res, ['tab', 'data', 'nextCursor'], 'feed');
+      const post = res.data[0];
+      expectKeys(
+        post,
+        ['publicId', 'body', 'hashtags', 'visibility', 'createdAt', 'author', 'media', 'place', 'route', 'location', 'counts', 'viewer'],
+        'post',
+      );
+      expectKeys(post?.author, ['username', 'fullName', 'avatarUrl', 'level', 'tier', 'isLocalExpert'], 'postAuthor');
+      expectKeys(post?.counts, ['likes', 'comments', 'shares', 'saves'], 'postCounts');
+      expectKeys(post?.viewer, ['liked', 'saved', 'followsAuthor', 'isMine'], 'postViewer');
+    });
+
+    t('Nearby hər paylaşıma məsafə əlavə edir', async () => {
+      const res = await call<{ data: Array<Record<string, unknown>> }>('/feed?tab=nearby&lat=41.1897&lng=48.0169&radiusKm=30');
+      if (!res.data.length) return;
+      expectKeys(res.data[0], ['distanceKm'], 'nearbyPost');
+    });
+
+    t('şərhlər bir səviyyəli ağacdır', async () => {
+      const feed = await call<{ data: Array<{ publicId: string; counts: { comments: number } }> }>('/feed?limit=20');
+      const withComments = feed.data.find((p) => p.counts.comments > 0);
+      if (!withComments) return;
+      const res = await call<{ data: Array<Record<string, unknown>> }>(`/posts/${withComments.publicId}/comments`);
+      expectKeys(res, ['data', 'nextCursor', 'total'], 'comments');
+      expectKeys(
+        res.data[0],
+        ['publicId', 'body', 'createdAt', 'likeCount', 'liked', 'isMine', 'canDelete', 'author', 'replies'],
+        'comment',
+      );
+    });
+
+    t('/stories dairə sahələrini verir', async () => {
+      const res = await call<{ data: unknown[] }>('/stories');
+      expectKeys(res, ['data', 'hasMine'], 'stories');
+      if (res.data.length) {
+        expectKeys(res.data[0], ['user', 'storyCount', 'hasUnseen', 'latestAt', 'coverUrl', 'isMine'], 'storyRing');
+      }
+    });
+
+    t('/users/:username profil sahələrini verir', async () => {
+      const u = await call<Record<string, unknown>>('/users/aysel.go');
+      expectKeys(
+        u,
+        ['username', 'fullName', 'avatarUrl', 'level', 'tier', 'bio', 'coverUrl', 'homeRegion', 'gezginScore', 'stats', 'viewer', 'canViewContent'],
+        'userProfile',
+      );
+      expectKeys(u.stats, ['posts', 'followers', 'following', 'routes', 'badges'], 'userStats');
+      expectKeys(u.viewer, ['isMe', 'isFollowing', 'followsYou', 'canMessage'], 'userViewer');
+    });
+
+    t('izləyici siyahısı offset səhifələmədir', async () => {
+      const res = await call<{ data: unknown[] }>('/users/aysel.go/followers');
+      expectKeys(res, ['data', 'nextOffset', 'total'], 'followers');
+      if (res.data.length) expectKeys(res.data[0], ['username', 'fullName', 'isFollowing', 'isMe'], 'followRow');
+    });
+
+    t('/notifications oxunmamış sayğacı ilə', async () => {
+      const res = await call<Record<string, unknown>>('/notifications?limit=5');
+      expectKeys(res, ['data', 'nextCursor', 'unreadCount'], 'notifications');
+    });
+
+    t('/conversations oxunmamış cəmi ilə', async () => {
+      const res = await call<Record<string, unknown>>('/conversations');
+      expectKeys(res, ['data', 'nextOffset', 'total', 'unreadTotal'], 'conversations');
+    });
+
+    t('/users/suggested səbəb göstərir', async () => {
+      const res = await call<{ data: unknown[] }>('/users/suggested');
+      expectKeys(res, ['data'], 'suggested');
+      if (res.data.length) expectKeys(res.data[0], ['username', 'fullName', 'reason', 'isFollowing'], 'suggestedUser');
     });
   });
 

@@ -34,7 +34,8 @@ function requestIosPermission(): Promise<boolean> {
   });
 }
 
-async function ensurePermission(): Promise<boolean> {
+/** Onboarding (ekran 39) mövqe almadan yalnız icazə istəyir. */
+export async function ensurePermission(): Promise<boolean> {
   if (Platform.OS === 'ios') return requestIosPermission();
   if (Platform.OS !== 'android') return true;
   const granted = await PermissionsAndroid.request(

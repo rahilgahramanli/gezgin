@@ -25,10 +25,18 @@ export function Input({ label, icon, error, secure, right, style, ...rest }: Inp
         </Text>
       ) : null}
 
-      <View style={[styles.field, focused && styles.focused, !!error && styles.errored]}>
+      <View
+        style={[
+          styles.field,
+          // Çoxsətirli sahədə sabit hündürlük mətni çərçivədən çıxarırdı
+          rest.multiline && styles.fieldMultiline,
+          focused && styles.focused,
+          !!error && styles.errored,
+        ]}
+      >
         {icon ? <Icon name={icon} size={20} color={t.colors.muted} /> : null}
         <TextInput
-          style={[styles.input, style]}
+          style={[styles.input, rest.multiline && styles.inputMultiline, style]}
           placeholderTextColor={t.colors.muted}
           secureTextEntry={hidden}
           onFocus={() => setFocused(true)}
@@ -66,6 +74,8 @@ const styles = StyleSheet.create({
     borderColor: t.colors.line,
     borderRadius: t.radius.md,
   },
+  fieldMultiline: { height: undefined, minHeight: 96, alignItems: 'flex-start', paddingVertical: t.spacing.md },
+  inputMultiline: { textAlignVertical: 'top' },
   focused: { borderColor: t.colors.green900 },
   errored: { borderColor: t.colors.danger },
   input: { flex: 1, fontSize: 15, color: t.colors.ink, padding: 0 },

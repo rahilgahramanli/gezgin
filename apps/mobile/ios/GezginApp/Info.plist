@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-	<string>GezginApp</string>
+	<string>GEZGIN</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -32,9 +32,23 @@
 		<false/>
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
+		<key>NSExceptionDomains</key>
+		<dict>
+			<key>13.60.173.66</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<true/>
+				<key>NSIncludesSubdomains</key>
+				<false/>
+			</dict>
+		</dict>
 	</dict>
+	<key>NSCameraUsageDescription</key>
+	<string>Səyahət anlarını çəkib paylaşmaq üçün kameraya ehtiyac var.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Məkanlarda check-in etmək və yaxınlıqdakı yerləri göstərmək üçün mövqeyiniz lazımdır.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Paylaşım, hekayə və rəyə foto əlavə etmək üçün qalereyaya ehtiyac var.</string>
 	<key>RCTNewArchEnabled</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>

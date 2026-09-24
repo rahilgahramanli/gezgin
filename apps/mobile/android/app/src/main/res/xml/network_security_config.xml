@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Android 9-dan etibarən şifrələnməmiş HTTP bağlıdır. Prod API hələ domen və
+  sertifikat almadığı üçün YALNIZ həmin serverə istisna verilir — qalan bütün
+  trafik HTTPS olmalıdır. Domen qoşulandan sonra bu fayl silinməlidir.
+-->
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">13.60.173.66</domain>
+    </domain-config>
+    <base-config cleartextTrafficPermitted="false" />
+</network-security-config>

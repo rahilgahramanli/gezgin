@@ -53,7 +53,11 @@ export function Button({
     <Pressable
       onPress={onPress}
       disabled={isDisabled}
+      // `accessible` olmadan iOS düyməni ayrıca element kimi elan etmir:
+      // VoiceOver "düymə" demir, mətn uşaq element kimi oxunur
+      accessible
       accessibilityRole="button"
+      accessibilityLabel={label}
       accessibilityState={{ disabled: isDisabled, busy: loading }}
       style={({ pressed }) => [
         styles.base,

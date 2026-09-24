@@ -1,9 +1,8 @@
 import { StyleSheet, View } from 'react-native';
 import {
-  Avatar, Button, Card, Loading, Photo, Pill, Progress, Screen, StatCell, Text,
+  Avatar, Button, Card, Icon, Loading, Photo, Pill, Progress, Screen, StatCell, Text, TopBar,
 } from '@/components';
 import { useMe, useMyStats } from '@/api/hooks/me';
-import { useLogout } from '@/api/hooks/auth';
 import { t } from '@/theme';
 import type { TabScreenProps } from '@/navigation/types';
 
@@ -11,7 +10,6 @@ import type { TabScreenProps } from '@/navigation/types';
 export function ProfileScreen({ navigation }: TabScreenProps<'Profile'>) {
   const me = useMe();
   const stats = useMyStats();
-  const logout = useLogout();
 
   if (me.isLoading) return <Loading label="Profil yüklənir…" />;
   if (!me.data) return null;
@@ -23,10 +21,20 @@ export function ProfileScreen({ navigation }: TabScreenProps<'Profile'>) {
       <View style={styles.cover}>
         <Photo uri={me.data.coverUrl} style={styles.coverImage} radius={0} />
         <View style={styles.coverShade} />
+        <View style={styles.coverBar}>
+          <TopBar
+            light
+            transparent
+            actions={[
+              { icon: 'edit', label: 'Profili redaktə et', onPress: () => navigation.navigate('EditProfile') },
+              { icon: 'settings', label: 'Tənzimləmələr', onPress: () => navigation.navigate('Settings') },
+            ]}
+          />
+        </View>
       </View>
 
       <View style={styles.head}>
-        <Avatar uri={me.data.avatarUrl} size={96} />
+        <Avatar uri={me.data.avatarUrl} size={96} name={me.data.fullName} />
         <Text variant="titleLg" style={styles.name}>
           {me.data.fullName}
         </Text>
@@ -64,7 +72,7 @@ export function ProfileScreen({ navigation }: TabScreenProps<'Profile'>) {
 
         {stats.data ? (
           <View style={styles.stats}>
-            <StatCell value={`${stats.data.regions}`} label="Regions" />
+            <StatCell value={`${stats.data.regions}`} label="Regions" onPress={() => navigation.navigate('Regions')} />
             <StatCell value={`${stats.data.places}`} label="Places" />
             <StatCell value={`${stats.data.experiences}`} label="Experiences" />
             <StatCell value={`${stats.data.routes}`} label="Routes" />
@@ -80,6 +88,30 @@ export function ProfileScreen({ navigation }: TabScreenProps<'Profile'>) {
           </View>
         ) : null}
 
+        {stats.data ? (
+          <View style={styles.links}>
+            <Button
+              label={`${stats.data.followers} izləyici`}
+              variant="outline"
+              size="sm"
+              onPress={() => navigation.navigate('Followers', { username: me.data!.username, tab: 'followers' })}
+              style={styles.link}
+            />
+            <Button
+              label={`${stats.data.following} izlənən`}
+              variant="outline"
+              size="sm"
+              onPress={() => navigation.navigate('Followers', { username: me.data!.username, tab: 'following' })}
+              style={styles.link}
+            />
+          </View>
+        ) : null}
+        <Button
+          label="Paylaşımlarım"
+          variant="soft"
+          onPress={() => navigation.navigate('UserProfile', { username: me.data!.username })}
+        />
+
         <View style={styles.links}>
           <Button label="Nailiyyətlər" variant="soft" onPress={() => navigation.navigate('Badges')} style={styles.link} />
           <Button label="Liderlər" variant="soft" onPress={() => navigation.navigate('Leaderboard')} style={styles.link} />
@@ -88,11 +120,10 @@ export function ProfileScreen({ navigation }: TabScreenProps<'Profile'>) {
         <Button label="Rezervasiyalarım" variant="outline" onPress={() => navigation.navigate('MyBookings')} />
 
         <Button
-          label="Çıxış"
-          variant="danger"
-          onPress={() => logout.mutate()}
-          loading={logout.isPending}
-          style={styles.logout}
+          label="Profili redaktə et"
+          variant="outline"
+          left={<Icon name="edit" size={18} color={t.colors.green900} />}
+          onPress={() => navigation.navigate('EditProfile')}
         />
       </View>
     </Screen>
@@ -100,6 +131,7 @@ export function ProfileScreen({ navigation }: TabScreenProps<'Profile'>) {
 }
 
 const styles = StyleSheet.create({
+  coverBar: { position: 'absolute', top: 0, left: 0, right: 0 },
   cover: { height: 150, backgroundColor: t.colors.green900 },
   coverImage: { width: '100%', height: 150 },
   coverShade: {

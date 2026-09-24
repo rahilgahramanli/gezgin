@@ -7,11 +7,23 @@ import type { TabScreenProps } from '@/navigation/types';
 /**
  * Tab bar-ın ortasındakı FAB.
  *
- * Dizaynda bu düymə ekran 26-ya (Paylaş) aparır, amma sosial lent Sprint 7-dədir.
- * O vaxta qədər burada hazır olan yaratma axınları toplanır ki, düymə ölü qalmasın.
+ * Dizaynda bu düymə birbaşa ekran 26-ya (Paylaş) aparır; burada paylaşımla
+ * yanaşı planlama axınları da toplanır — hamısı "yaratmaq" hərəkətidir.
  */
 export function CreateHubScreen({ navigation }: TabScreenProps<'Create'>) {
   const actions = [
+    {
+      icon: 'image' as IconName,
+      title: 'Paylaşım et',
+      hint: 'Foto və hekayəni bölüş · +300 XP',
+      onPress: () => navigation.navigate('CreatePost'),
+    },
+    {
+      icon: 'camera' as IconName,
+      title: 'Hekayə',
+      hint: '24 saat görünən an',
+      onPress: () => navigation.navigate('CreatePost', { mode: 'story' }),
+    },
     {
       icon: 'map' as IconName,
       title: 'Yeni səyahət',
@@ -25,7 +37,7 @@ export function CreateHubScreen({ navigation }: TabScreenProps<'Create'>) {
       onPress: () => navigation.navigate('RouteBuilder'),
     },
     {
-      icon: 'pinDot' as IconName,
+      icon: 'pin' as IconName,
       title: 'Check-in et',
       hint: 'Olduğun məkanı qeyd et, XP qazan',
       onPress: () => navigation.navigate('Search'),
@@ -38,7 +50,7 @@ export function CreateHubScreen({ navigation }: TabScreenProps<'Create'>) {
         Nə yaradaq?
       </Text>
       <Text variant="small" color="ink2" style={styles.sub}>
-        Paylaşım və rəy bölməsi növbəti sprintdə əlavə olunacaq.
+        Səyahətini paylaş, planla, kəşf et.
       </Text>
 
       <View style={styles.list}>

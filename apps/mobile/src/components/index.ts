@@ -10,3 +10,5 @@ export * from './Pill';
 export * from './Progress';
 export * from './Screen';
 export * from './TopBar';
+export * from './PostCard';
+export * from './Skeleton';

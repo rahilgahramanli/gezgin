@@ -19,6 +19,8 @@ let accessToken: string | null = null;
 export const setAccessToken = (token: string | null): void => {
   accessToken = token;
 };
+/** WebSocket hər (yenidən) qoşulmada ən təzə tokeni buradan oxuyur. */
+export const getAccessToken = (): string | null => accessToken;
 
 /**
  * Access token 15 dəqiqədən sonra bitir. 401 gələndə klient bir dəfə

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  GEZGIN loqosu — adaptiv ikonun ön planı.
+  108dp kətanda təhlükəsiz zona mərkəzdəki 72dp-dir; pin ona sığacaq şəkildə
+  miqyaslanıb (mənbə viewBox: 44×54, bax: components/Icon.tsx LogoMark).
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <group
+        android:translateX="28.7"
+        android:translateY="23"
+        android:scaleX="1.15"
+        android:scaleY="1.15">
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M22,2C11.5,2 3,10.5 3,21c0,13.5 19,31 19,31s19,-17.5 19,-31C41,10.5 32.5,2 22,2Z" />
+        <path
+            android:fillColor="#0F3D3A"
+            android:pathData="M12,26l6.5,-8 5,6 3.5,-4.5L34,26H12Z" />
+    </group>
+</vector>

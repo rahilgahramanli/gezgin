@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Chip, EmptyState, ExperienceCard, Loading, Screen, TopBar } from '@/components';
+import { Chip, EmptyState, ExperienceCard, ListSkeleton, Screen, TopBar } from '@/components';
 import { useCategoryList, useExperiences } from '@/api/hooks/content';
 import { t } from '@/theme';
 import type { AppScreenProps } from '@/navigation/types';
@@ -29,7 +29,7 @@ export function ExperiencesScreen({ navigation }: AppScreenProps<'Experiences'>)
 
       <View style={styles.body}>
         {experiences.isLoading ? (
-          <Loading />
+          <ListSkeleton />
         ) : !experiences.data?.data.length ? (
           <EmptyState title="Təcrübə tapılmadı" message="Başqa kateqoriya seçin." />
         ) : (

@@ -58,7 +58,7 @@ export interface ExperienceSummary {
   coverUrl: string | null;
 }
 
-const qs = (params: Record<string, unknown>): string => {
+export const qs = (params: Record<string, unknown>): string => {
   const search = new URLSearchParams();
   for (const [k, v] of Object.entries(params)) {
     if (v === undefined || v === null || v === '') continue;

@@ -7,15 +7,14 @@ apply plugin: "com.facebook.react"
  * By default you don't need to apply any configuration, just uncomment the lines you need.
  */
 react {
-    /* Folders */
-    //   The root of your project, i.e. where "package.json" lives. Default is '../..'
-    // root = file("../../")
-    //   The folder where the react-native NPM package is. Default is ../../node_modules/react-native
-    // reactNativeDir = file("../../node_modules/react-native")
-    //   The folder where the react-native Codegen package is. Default is ../../node_modules/@react-native/codegen
-    // codegenDir = file("../../node_modules/@react-native/codegen")
-    //   The cli.js file which is the React Native CLI entrypoint. Default is ../../node_modules/react-native/cli.js
-    // cliFile = file("../../node_modules/react-native/cli.js")
+    /* Folders — monorepo yolları (paketlər repo kökündədir) */
+    root = file("../../")
+    reactNativeDir = file("../../../../node_modules/react-native")
+    codegenDir = file("../../../../node_modules/@react-native/codegen")
+    cliFile = file("../../../../node_modules/react-native/cli.js")
+    // RN 0.87-də hermesc ayrıca `hermes-compiler` paketindədir və hoisted
+    // quruluşda repo kökünə düşür — plagin isə onu react-native/sdks altında axtarır.
+    hermesCommand = file("../../../../node_modules/hermes-compiler/hermesc/%OS-BIN%/hermesc").toString()
 
     /* Variants */
     //   The list of variants to that are debuggable. For those we're going to
@@ -92,15 +91,26 @@ android {
             keyAlias 'androiddebugkey'
             keyPassword 'android'
         }
+        // Şifrələr `gradle.properties`-dədir (repoya girmir). Açar yoxdursa
+        // release build debug açarına düşür — CI-də səhv imzalanmış APK çıxmasın
+        // deyə bu hal aydın şəkildə yoxlanılır.
+        release {
+            if (project.hasProperty('GEZGIN_UPLOAD_STORE_FILE')) {
+                storeFile file(GEZGIN_UPLOAD_STORE_FILE)
+                storePassword GEZGIN_UPLOAD_STORE_PASSWORD
+                keyAlias GEZGIN_UPLOAD_KEY_ALIAS
+                keyPassword GEZGIN_UPLOAD_KEY_PASSWORD
+            }
+        }
     }
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
         }
         release {
-            // Caution! In production, you need to generate your own keystore file.
-            // see https://reactnative.dev/docs/signed-apk-android.
-            signingConfig signingConfigs.debug
+            signingConfig project.hasProperty('GEZGIN_UPLOAD_STORE_FILE')
+                ? signingConfigs.release
+                : signingConfigs.debug
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
         }

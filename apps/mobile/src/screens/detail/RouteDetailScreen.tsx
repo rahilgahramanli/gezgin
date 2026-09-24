@@ -1,9 +1,10 @@
 import { StyleSheet, View } from 'react-native';
 import {
-  Avatar, Button, Card, Icon, Loading, Photo, Pill, Rating, Screen, SectionHead, StatCell, Text, TopBar,
+  Avatar, Button, Card, DetailSkeleton, Icon, Photo, Pill, Rating, Screen, SectionHead, StatCell, Text, TopBar,
 } from '@/components';
-import { useRouteDetail } from '@/api/hooks/details';
+import { useRouteDetail, useToggleSaved } from '@/api/hooks/details';
 import { DIFFICULTY_LABEL, label } from '@/lib/labels';
+import { shareItem } from '@/lib/share';
 import { t } from '@/theme';
 import type { AppScreenProps } from '@/navigation/types';
 
@@ -11,8 +12,9 @@ import type { AppScreenProps } from '@/navigation/types';
 export function RouteDetailScreen({ route, navigation }: AppScreenProps<'RouteDetail'>) {
   const { slug } = route.params;
   const detail = useRouteDetail(slug);
+  const save = useToggleSaved('route', slug);
 
-  if (detail.isLoading) return <Loading label="Marşrut yüklənir…" />;
+  if (detail.isLoading) return <DetailSkeleton />;
   if (!detail.data) return null;
   const r = detail.data;
 
@@ -32,7 +34,20 @@ export function RouteDetailScreen({ route, navigation }: AppScreenProps<'RouteDe
         <Photo uri={r.coverUrl} style={styles.heroImage} radius={0} />
         <View style={styles.heroShade} />
         <View style={styles.heroBar}>
-          <TopBar light transparent onBack={navigation.goBack} actions={[{ icon: 'share' }]} />
+          <TopBar
+            light
+            transparent
+            onBack={navigation.goBack}
+            actions={[
+              {
+                icon: 'bookmark',
+                label: r.isSaved ? 'Saxlamanı götür' : 'Saxla',
+                active: r.isSaved,
+                onPress: () => save.mutate(!r.isSaved),
+              },
+              { icon: 'share', label: 'Paylaş', onPress: () => void shareItem('route', slug, r.title) },
+            ]}
+          />
         </View>
         <View style={styles.heroText}>
           {r.isOfficial ? <Pill label="Rəsmi marşrut" tone="teal" /> : null}
@@ -54,7 +69,7 @@ export function RouteDetailScreen({ route, navigation }: AppScreenProps<'RouteDe
 
         {r.author ? (
           <Card padded style={styles.author}>
-            <Avatar uri={r.author.avatarUrl} size={40} />
+            <Avatar uri={r.author.avatarUrl} size={40} name={r.author.fullName} />
             <View style={styles.flex}>
               <Text variant="h3">{r.author.fullName}</Text>
               <Text variant="caption">@{r.author.username}</Text>

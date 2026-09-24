@@ -53,6 +53,12 @@ export const ICONS = {
   info: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18ZM12 11v5M12 8h.01',
   navigation: 'M3 11l18-8-8 18-2-8-8-2Z',
   users: 'M16 21v-1a5 5 0 0 0-5-5H6a5 5 0 0 0-5 5v1M8.5 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM22 21v-1a5 5 0 0 0-4-4.9M16 3.1a4 4 0 0 1 0 7.8',
+  // Sprint 7 — lent və çat
+  send: 'M22 2 11 13M22 2l-7 20-4-9-9-4 20-7Z',
+  image: 'M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2ZM8.5 10a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3ZM21 15l-5-5L5 21',
+  /** Üç nöqtə — `strokeWidth` 3 ilə çəkilir, əks halda nöqtələr görünmür. */
+  more: 'M5 12h.01M12 12h.01M19 12h.01',
+  reply: 'M9 14 4 9l5-5M4 9h11a5 5 0 0 1 5 5v6',
 } as const;
 
 export type IconName = keyof typeof ICONS;

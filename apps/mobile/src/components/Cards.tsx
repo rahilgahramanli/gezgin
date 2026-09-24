@@ -137,16 +137,31 @@ export function ExperienceCard({
 }
 
 /** Statistika xanası — ekran 15, 28. */
-export function StatCell({ value, label }: { value: string | number; label: string }) {
+export function StatCell({
+  value,
+  label,
+  onPress,
+}: {
+  value: string | number;
+  label: string;
+  /** Verilsə xana toxunula bilən olur — ekran 28 → 32. */
+  onPress?: () => void;
+}) {
+  const Wrapper = onPress ? Pressable : View;
   return (
-    <View style={styles.stat}>
+    <Wrapper
+      style={styles.stat}
+      onPress={onPress}
+      accessibilityRole={onPress ? 'button' : undefined}
+      accessibilityLabel={onPress ? `${label}: ${value}` : undefined}
+    >
       <Text variant="h2" color="green900">
         {value}
       </Text>
       <Text variant="caption" style={{ marginTop: 2 }}>
         {label}
       </Text>
-    </View>
+    </Wrapper>
   );
 }
 

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Button, Chip, EmptyState, Loading, Pill, Rating, RowCard, Screen, Text, TopBar } from '@/components';
+import { Button, Chip, EmptyState, ListSkeleton, Pill, Rating, RowCard, Screen, Text, TopBar } from '@/components';
 import { useRoutes } from '@/api/hooks/content';
 import { t } from '@/theme';
 import type { AppScreenProps } from '@/navigation/types';
@@ -33,7 +33,7 @@ export function RoutesScreen({ navigation }: AppScreenProps<'Routes'>) {
 
       <View style={styles.body}>
         {routes.isLoading ? (
-          <Loading />
+          <ListSkeleton />
         ) : !routes.data?.data.length ? (
           <EmptyState
             title="Marşrut tapılmadı"

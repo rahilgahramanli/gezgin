@@ -3,10 +3,12 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { Button, Icon, Loading, Pill, Screen, Text, TopBar } from '@/components';
 import { useCategoryList } from '@/api/hooks/content';
 import { useSetInterests } from '@/api/hooks/me';
+import { alertError } from '@/lib/errors';
 import { t } from '@/theme';
+import type { AuthScreenProps } from '@/navigation/types';
 
 /** Ekran 04 — maraqların seçimi. Onboarding-in son addımı. */
-export function InterestsScreen() {
+export function InterestsScreen({ navigation }: AuthScreenProps<'Interests'>) {
   const [selected, setSelected] = useState<string[]>([]);
   const categories = useCategoryList();
   const save = useSetInterests();
@@ -24,13 +26,18 @@ export function InterestsScreen() {
           label={selected.length ? `Davam et (${selected.length} seçildi)` : 'Ən azı 1 maraq seç'}
           disabled={selected.length === 0}
           loading={save.isPending}
-          onPress={() => save.mutate(selected)}
+          onPress={() =>
+            save.mutate(selected, {
+              onSuccess: () => navigation.navigate('ProfileSetup'),
+              onError: (error) => alertError(error, 'Maraqlar yadda saxlanılmadı'),
+            })
+          }
         />
       }
     >
       <TopBar />
       <View style={styles.body}>
-        <Pill label="Addım 2 / 2" tone="green" />
+        <Pill label="Addım 2 / 3" tone="green" />
         <Text variant="titleXl" style={styles.title}>
           Səni nə maraqlandırır?
         </Text>

@@ -1,6 +1,9 @@
-pluginManagement { includeBuild("../node_modules/@react-native/gradle-plugin") }
+// Monorepo: pnpm `node-linker=hoisted` ilə paketlər repo kökündəki
+// node_modules-dadır, ona görə RN-in standart `../node_modules` yolları
+// bir səviyyə yuxarı göstərilir.
+pluginManagement { includeBuild("../../../node_modules/@react-native/gradle-plugin") }
 plugins { id("com.facebook.react.settings") }
 extensions.configure(com.facebook.react.ReactSettingsExtension){ ex -> ex.autolinkLibrariesFromCommand() }
 rootProject.name = 'GezginApp'
 include ':app'
-includeBuild('../node_modules/@react-native/gradle-plugin')
+includeBuild('../../../node_modules/@react-native/gradle-plugin')

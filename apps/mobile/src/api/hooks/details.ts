@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/client';
+import { alertError } from '@/lib/errors';
 
 /** Ekran 13 — məkan detalı. */
 export interface PlaceDetail {
@@ -21,6 +22,8 @@ export interface PlaceDetail {
   region: { slug: string; name: string };
   categories: Array<{ slug: string; name: string; icon: string | null }>;
   photos: Array<{ url: string | null; blurhash: string | null }>;
+  /** Cari istifadəçi saxlayıb? Qonaq üçün həmişə false. */
+  isSaved: boolean;
 }
 
 /** Ekran 15 — marşrut detalı. */
@@ -54,6 +57,7 @@ export interface RouteDetail {
       place: { slug: string; name: string; lat: number; lng: number; rating: number; coverUrl: string | null };
     }>;
   }>;
+  isSaved: boolean;
 }
 
 /** Ekran 17 — təcrübə detalı. */
@@ -89,6 +93,7 @@ export interface ExperienceDetail {
     languages: string[];
   };
   nextAvailable: { startAt: string; seatsLeft: number } | null;
+  isSaved: boolean;
 }
 
 export const usePlaceDetail = (slug: string) =>
@@ -134,15 +139,36 @@ export const useReviewSummary = (targetType: string, target: string) =>
       ),
   });
 
-/** Saxlanılanlar — bookmark düyməsi (ekran 13, 33). */
-export function useToggleSaved() {
+export type SavedType = 'place' | 'route' | 'experience';
+
+/**
+ * Saxlanılanlar — bookmark düyməsi (ekran 13, 15, 17, 33).
+ * `mutate(true)` saxlayır, `mutate(false)` götürür; detal keşi dərhal yenilənir,
+ * xəta olsa əvvəlki vəziyyət geri qaytarılır.
+ */
+export function useToggleSaved(type: SavedType, slug: string) {
   const qc = useQueryClient();
+  const key = [type, slug];
+
   return useMutation({
-    mutationFn: async ({ type, target, saved }: { type: string; target: string; saved: boolean }) =>
-      saved
-        ? api(`/saved/${type}/${target}`, { method: 'DELETE' })
-        : api('/saved', { method: 'POST', body: { type, target } }),
-    onSuccess: () => void qc.invalidateQueries({ queryKey: ['saved'] }),
+    mutationFn: (next: boolean) =>
+      next
+        ? api('/saved', { method: 'POST', body: { type, target: slug } })
+        : api(`/saved/${type}/${slug}`, { method: 'DELETE' }),
+    onMutate: async (next: boolean) => {
+      await qc.cancelQueries({ queryKey: key });
+      const previous = qc.getQueryData<{ isSaved: boolean }>(key);
+      qc.setQueryData(key, (old?: { isSaved: boolean }) => (old ? { ...old, isSaved: next } : old));
+      return { previous };
+    },
+    onError: (error, _next, context) => {
+      if (context?.previous) qc.setQueryData(key, context.previous);
+      alertError(error, 'Saxlanılmadı');
+    },
+    onSettled: () => {
+      void qc.invalidateQueries({ queryKey: key });
+      void qc.invalidateQueries({ queryKey: ['saved'] });
+    },
   });
 }
 
@@ -163,4 +189,61 @@ export const useSaved = (type?: string) =>
           priceAzn: number | null;
         }>;
       }>(`/saved${type ? `?type=${type}` : ''}`),
+  });
+
+/** Ekran 46 — məkanın bütün fotoları (rəsmi + icma). */
+export interface PlacePhotos {
+  counts: { all: number; official: number; community: number };
+  data: Array<{
+    mediaPublicId: string;
+    url: string | null;
+    blurhash: string | null;
+    width: number | null;
+    height: number | null;
+    isOfficial: boolean;
+    uploadedBy: { username: string; fullName: string; avatarUrl: string | null } | null;
+  }>;
+}
+
+export const usePlacePhotos = (slug: string, filter?: 'official' | 'community') =>
+  useQuery({
+    queryKey: ['place', slug, 'photos', filter],
+    queryFn: () => api<PlacePhotos>(`/places/${slug}/photos?limit=60${filter ? `&filter=${filter}` : ''}`),
+  });
+
+export type ReviewSort = 'newest' | 'highest' | 'lowest' | 'helpful';
+
+export interface ReviewRow {
+  publicId: string;
+  rating: number;
+  body: string | null;
+  tags?: string[];
+  createdAt: string;
+  author: { username: string; fullName: string; level: number; avatarUrl: string | null; isLocalExpert: boolean };
+}
+
+/** Ekran 47 — bütün rəylər, sıralama və səhifələmə ilə. */
+export const useAllReviews = (targetType: string, target: string, sort: ReviewSort) =>
+  useQuery({
+    queryKey: ['reviews', targetType, target, 'all', sort],
+    queryFn: () =>
+      api<{ total: number; data: ReviewRow[] }>(
+        `/reviews?targetType=${targetType}&target=${target}&sort=${sort}&limit=50`,
+      ),
+  });
+
+/** Ekran 45 — filtr panelinin seçimləri serverdən gəlir (kateqoriyalar, qiymət, məsafə). */
+export interface PlaceFilters {
+  categories: Array<{ slug: string; name: string; icon: string | null }>;
+  ratings: number[];
+  priceLevels: Array<{ level: number; label: string }>;
+  distanceKm: { min: number; max: number; default: number };
+  totalPlaces: number;
+  maxEntranceFeeAzn: number | null;
+}
+
+export const usePlaceFilters = (region?: string) =>
+  useQuery({
+    queryKey: ['places', 'filters', region],
+    queryFn: () => api<PlaceFilters>(`/places/filters${region ? `?region=${region}` : ''}`),
   });

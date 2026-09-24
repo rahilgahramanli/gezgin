@@ -5,7 +5,7 @@ import { t } from '@/theme';
 import { ExploreScreen } from '@/screens/explore/ExploreScreen';
 import { TripsScreen } from '@/screens/trips/TripsScreen';
 import { ProfileScreen } from '@/screens/profile/ProfileScreen';
-import { PlaceholderScreen } from '@/screens/PlaceholderScreen';
+import { DiscoverScreen } from '@/screens/social/DiscoverScreen';
 import { CreateHubScreen } from '@/screens/CreateHubScreen';
 import type { TabParamList } from './types';
 
@@ -31,9 +31,7 @@ function CreateButton({ focused }: { focused: boolean }) {
 export function TabNavigator() {
   return (
     <Tab.Navigator
-      // Discover (sosial lent) Sprint 7-də qurulur — o vaxta qədər tətbiq
-      // Explore ilə açılır ki, ilk ekran boş görünməsin.
-      initialRouteName="Explore"
+      initialRouteName="Discover"
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarActiveTintColor: t.colors.green900,
@@ -48,15 +46,16 @@ export function TabNavigator() {
           ),
       })}
     >
-      <Tab.Screen name="Discover" component={PlaceholderScreen} options={{ title: 'Discover' }} />
-      <Tab.Screen name="Explore" component={ExploreScreen} options={{ title: 'Explore' }} />
+      <Tab.Screen name="Discover" component={DiscoverScreen} options={{ title: 'Lent' }} />
+      <Tab.Screen name="Explore" component={ExploreScreen} options={{ title: 'Kəşf' }} />
       <Tab.Screen
         name="Create"
         component={CreateHubScreen}
-        options={{ title: '', tabBarLabel: () => null }}
+        // Etiketsiz FAB ekran oxuyucusunda sadəcə "düymə" kimi səslənirdi
+        options={{ title: '', tabBarLabel: () => null, tabBarAccessibilityLabel: 'Yarat' }}
       />
-      <Tab.Screen name="Trips" component={TripsScreen} options={{ title: 'Trips' }} />
-      <Tab.Screen name="Profile" component={ProfileScreen} options={{ title: 'Profile' }} />
+      <Tab.Screen name="Trips" component={TripsScreen} options={{ title: 'Planım' }} />
+      <Tab.Screen name="Profile" component={ProfileScreen} options={{ title: 'Profil' }} />
     </Tab.Navigator>
   );
 }

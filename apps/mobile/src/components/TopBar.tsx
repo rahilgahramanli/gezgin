@@ -8,7 +8,15 @@ export interface TopBarProps {
   title?: string;
   onBack?: () => void;
   /** Sağ tərəfdəki ikonlar — ekran 13, 15, 23. */
-  actions?: Array<{ icon: IconName; onPress?: () => void; badge?: boolean }>;
+  actions?: Array<{
+    icon: IconName;
+    onPress?: () => void;
+    badge?: boolean;
+    /** Ekran oxuyucusu üçün — ikon tək başına nə etdiyini demir. */
+    label?: string;
+    /** Saxla/bəyən kimi vəziyyəti olan düymələr üçün. */
+    active?: boolean;
+  }>;
   right?: ReactNode;
   /** Foto üzərində ağ variant — ekran 13, 17, 41. */
   light?: boolean;
@@ -22,7 +30,13 @@ export function TopBar({ title, onBack, actions, right, light, transparent }: To
     <View style={[styles.bar, transparent && styles.transparent]}>
       <View style={styles.side}>
         {onBack ? (
-          <Pressable onPress={onBack} hitSlop={10} style={[styles.iconBtn, light && styles.glass]}>
+          <Pressable
+            onPress={onBack}
+            hitSlop={10}
+            accessibilityRole="button"
+            accessibilityLabel="Geri"
+            style={[styles.iconBtn, light && styles.glass]}
+          >
             <Icon name="chevronLeft" size={22} color={tint} />
           </Pressable>
         ) : null}
@@ -43,9 +57,12 @@ export function TopBar({ title, onBack, actions, right, light, transparent }: To
             key={`${a.icon}-${i}`}
             onPress={a.onPress}
             hitSlop={10}
-            style={[styles.iconBtn, light && styles.glass]}
+            accessibilityRole="button"
+            accessibilityLabel={a.label}
+            accessibilityState={a.active === undefined ? undefined : { selected: a.active }}
+            style={({ pressed }) => [styles.iconBtn, light && styles.glass, pressed && styles.pressed]}
           >
-            <Icon name={a.icon} size={22} color={tint} />
+            <Icon name={a.icon} size={22} color={tint} filled={a.active} />
             {a.badge ? <View style={styles.dot} /> : null}
           </Pressable>
         ))}
@@ -68,6 +85,7 @@ const styles = StyleSheet.create({
   title: { flex: 1, textAlign: 'center' },
   iconBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center', borderRadius: 20 },
   glass: { backgroundColor: 'rgba(255,255,255,0.25)' },
+  pressed: { opacity: 0.55 },
   dot: {
     position: 'absolute',
     top: 8,

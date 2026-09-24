@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Brend rəngləri — packages/shared/src/theme.ts ilə eyni mənbə. -->
+    <color name="brand_green">#0F3D3A</color>
+    <color name="ic_launcher_background">#0F3D3A</color>
+</resources>

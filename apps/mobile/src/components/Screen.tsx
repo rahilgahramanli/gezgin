@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, View, type ViewStyle } from 'react-native';
 import { SafeAreaView, type Edge } from 'react-native-safe-area-context';
 import { t } from '@/theme';
+import { Icon, type IconName } from './Icon';
 import { Text } from './Text';
 
 export interface ScreenProps {
@@ -80,13 +81,21 @@ export function EmptyState({
   title,
   message,
   action,
+  icon,
 }: {
   title: string;
   message?: string;
   action?: ReactNode;
+  /** Quru mətn əvəzinə kontekst verən işarə. */
+  icon?: IconName;
 }) {
   return (
     <View style={styles.center}>
+      {icon ? (
+        <View style={styles.emptyIcon}>
+          <Icon name={icon} size={26} color={t.colors.green900} />
+        </View>
+      ) : null}
       <Text variant="h2" center>
         {title}
       </Text>
@@ -104,6 +113,10 @@ const styles = StyleSheet.create({
   safe: { flex: 1 },
   flex: { flex: 1 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: t.spacing.xxl, minHeight: 200 },
+  emptyIcon: {
+    width: 64, height: 64, borderRadius: 32, backgroundColor: t.colors.green050,
+    alignItems: 'center', justifyContent: 'center', marginBottom: t.spacing.md,
+  },
   footer: {
     padding: t.spacing.page,
     paddingBottom: 32,

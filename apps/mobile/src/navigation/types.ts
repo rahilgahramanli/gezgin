@@ -9,6 +9,7 @@ export type AuthStackParamList = {
   Register: undefined;
   ForgotPassword: undefined;
   Interests: undefined;
+  ProfileSetup: undefined;
 };
 
 /** Tab bar — ekran 05–56-da olan 5 element. */
@@ -27,7 +28,7 @@ export type AppStackParamList = {
   RouteDetail: { slug: string };
   ExperienceDetail: { slug: string };
   Search: undefined;
-  Places: { region?: string } | undefined;
+  Places: { region?: string; filter?: import('@/screens/list/FilterSheetScreen').PlaceFilterValue } | undefined;
   Map: { region?: string } | undefined;
   Routes: undefined;
   Experiences: undefined;
@@ -48,6 +49,33 @@ export type AppStackParamList = {
   Badges: undefined;
   Leaderboard: undefined;
   Checkin: { place: string; trip?: string };
+  // Sprint 7 — sosial
+  PostDetail: { publicId: string; focusComment?: boolean };
+  Notifications: undefined;
+  Messages: undefined;
+  Chat: { publicId: string };
+  /** `story` rejimi bir foto + başlıq ilə hekayə paylaşır. */
+  CreatePost: { mode?: 'post' | 'story'; place?: { slug: string; name: string } } | undefined;
+  WriteReview: {
+    targetType: 'place' | 'route' | 'experience' | 'business';
+    target: string;
+    name: string;
+    subtitle?: string;
+  };
+  StoryViewer: { username: string };
+  UserProfile: { username: string };
+  Followers: { username: string; tab?: 'followers' | 'following' };
+  // Sprint 7.5 — bitmiş sprintlərdən qalan ekranlar
+  Settings: undefined;
+  EditProfile: undefined;
+  Regions: undefined;
+  PhotoGallery: { slug: string; name: string };
+  ReviewsAll: {
+    targetType: 'place' | 'route' | 'experience' | 'business';
+    target: string;
+    name: string;
+  };
+  FilterSheet: { region?: string; value?: import('@/screens/list/FilterSheetScreen').PlaceFilterValue };
 };
 
 export type AuthScreenProps<T extends keyof AuthStackParamList> = NativeStackScreenProps<

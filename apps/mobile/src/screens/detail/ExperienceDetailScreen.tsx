@@ -1,9 +1,10 @@
 import { StyleSheet, View } from 'react-native';
 import {
-  Avatar, Button, Card, Icon, Loading, Photo, Pill, Progress, Rating, Screen, SectionHead, Text, TopBar,
+  Avatar, Button, Card, DetailSkeleton, Icon, Photo, Pill, Progress, Rating, Screen, SectionHead, Text, TopBar,
 } from '@/components';
-import { useExperienceDetail } from '@/api/hooks/details';
+import { useExperienceDetail, useToggleSaved } from '@/api/hooks/details';
 import { durationLabel } from '@/lib/labels';
+import { shareItem } from '@/lib/share';
 import { t } from '@/theme';
 import type { AppScreenProps } from '@/navigation/types';
 
@@ -11,8 +12,9 @@ import type { AppScreenProps } from '@/navigation/types';
 export function ExperienceDetailScreen({ route, navigation }: AppScreenProps<'ExperienceDetail'>) {
   const { slug } = route.params;
   const detail = useExperienceDetail(slug);
+  const save = useToggleSaved('experience', slug);
 
-  if (detail.isLoading) return <Loading label="Təcrübə yüklənir…" />;
+  if (detail.isLoading) return <DetailSkeleton />;
   if (!detail.data) return null;
   const e = detail.data;
 
@@ -37,7 +39,20 @@ export function ExperienceDetailScreen({ route, navigation }: AppScreenProps<'Ex
         <Photo uri={e.photos[0]?.url} style={styles.heroImage} radius={0} />
         <View style={styles.heroShade} />
         <View style={styles.heroBar}>
-          <TopBar light transparent onBack={navigation.goBack} actions={[{ icon: 'heart' }, { icon: 'share' }]} />
+          <TopBar
+            light
+            transparent
+            onBack={navigation.goBack}
+            actions={[
+              {
+                icon: 'heart',
+                label: e.isSaved ? 'Seçilmişlərdən çıxar' : 'Seçilmişlərə at',
+                active: e.isSaved,
+                onPress: () => save.mutate(!e.isSaved),
+              },
+              { icon: 'share', label: 'Paylaş', onPress: () => void shareItem('experience', slug, e.title) },
+            ]}
+          />
         </View>
         <View style={styles.heroText}>
           <Pill label="Lokal təcrübə" tone="brown" />
@@ -63,7 +78,7 @@ export function ExperienceDetailScreen({ route, navigation }: AppScreenProps<'Ex
         </View>
 
         <Card padded style={styles.expert}>
-          <Avatar uri={e.expert.avatarUrl} size={48} />
+          <Avatar uri={e.expert.avatarUrl} size={48} name={e.expert.fullName} />
           <View style={styles.flex}>
             <View style={styles.expertName}>
               <Text variant="h3" numberOfLines={1}>

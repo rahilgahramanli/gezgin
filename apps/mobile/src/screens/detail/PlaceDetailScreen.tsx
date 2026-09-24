@@ -1,9 +1,10 @@
 import { ScrollView, StyleSheet, View } from 'react-native';
 import {
-  Avatar, Button, Card, Icon, Loading, Photo, Pill, Rating, RowCard, Screen,
+  Avatar, Button, Card, DetailSkeleton, Icon, Photo, Pill, Rating, RowCard, Screen,
   SectionHead, Text, TopBar,
 } from '@/components';
 import { useNearbyPlaces, usePlaceDetail, useReviews, useToggleSaved } from '@/api/hooks/details';
+import { shareItem } from '@/lib/share';
 import { t } from '@/theme';
 import type { AppScreenProps } from '@/navigation/types';
 
@@ -13,9 +14,9 @@ export function PlaceDetailScreen({ route, navigation }: AppScreenProps<'PlaceDe
   const place = usePlaceDetail(slug);
   const nearby = useNearbyPlaces(slug);
   const reviews = useReviews('place', slug);
-  const save = useToggleSaved();
+  const save = useToggleSaved('place', slug);
 
-  if (place.isLoading) return <Loading label="Məkan yüklənir…" />;
+  if (place.isLoading) return <DetailSkeleton />;
   if (!place.data) return null;
   const p = place.data;
 
@@ -41,8 +42,13 @@ export function PlaceDetailScreen({ route, navigation }: AppScreenProps<'PlaceDe
             transparent
             onBack={navigation.goBack}
             actions={[
-              { icon: 'bookmark', onPress: () => save.mutate({ type: 'place', target: slug, saved: false }) },
-              { icon: 'share' },
+              {
+                icon: 'bookmark',
+                label: p.isSaved ? 'Saxlamanı götür' : 'Saxla',
+                active: p.isSaved,
+                onPress: () => save.mutate(!p.isSaved),
+              },
+              { icon: 'share', label: 'Paylaş', onPress: () => void shareItem('place', slug, p.name) },
             ]}
           />
         </View>
@@ -89,7 +95,11 @@ export function PlaceDetailScreen({ route, navigation }: AppScreenProps<'PlaceDe
 
         {p.photos.length > 1 ? (
           <View style={styles.section}>
-            <SectionHead title={`Fotolar (${p.photoCount})`} />
+            <SectionHead
+              title={`Fotolar (${p.photoCount})`}
+              actionLabel="Hamısı"
+              onAction={() => navigation.navigate('PhotoGallery', { slug, name: p.name })}
+            />
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.hscroll}>
               {p.photos.map((photo, i) => (
                 <Photo key={i} uri={photo.url} style={styles.galleryPhoto} radius={t.radius.md} />
@@ -100,12 +110,16 @@ export function PlaceDetailScreen({ route, navigation }: AppScreenProps<'PlaceDe
 
         {reviews.data?.data.length ? (
           <View style={styles.section}>
-            <SectionHead title={`Rəylər (${p.reviewCount})`} />
+            <SectionHead
+              title={`Rəylər (${p.reviewCount})`}
+              actionLabel="Hamısına bax"
+              onAction={() => navigation.navigate('ReviewsAll', { targetType: 'place', target: slug, name: p.name })}
+            />
             <View style={styles.list}>
               {reviews.data.data.slice(0, 3).map((r) => (
                 <Card key={r.publicId} padded style={styles.review}>
                   <View style={styles.reviewHead}>
-                    <Avatar uri={r.author.avatarUrl} size={36} />
+                    <Avatar uri={r.author.avatarUrl} size={36} name={r.author.fullName} />
                     <View style={styles.flex}>
                       <View style={styles.reviewAuthor}>
                         <Text variant="h3">{r.author.fullName}</Text>
@@ -122,9 +136,38 @@ export function PlaceDetailScreen({ route, navigation }: AppScreenProps<'PlaceDe
                   ) : null}
                 </Card>
               ))}
+              <Button
+                label="Rəy yaz"
+                variant="outline"
+                left={<Icon name="edit" size={18} color={t.colors.green900} />}
+                onPress={() =>
+                  navigation.navigate('WriteReview', {
+                    targetType: 'place',
+                    target: slug,
+                    name: p.name,
+                    subtitle: p.region.name,
+                  })
+                }
+              />
             </View>
           </View>
-        ) : null}
+        ) : (
+          // Rəy yoxdursa da yazmaq mümkün olmalıdır — ekran 27-yə yeganə giriş budur
+          <Card padded style={styles.review}>
+            <Text variant="h3">Hələ rəy yoxdur</Text>
+            <Text variant="small" color="ink2">
+              Burada olmusan? Təcrübəni bölüş — rəy +400 XP qazandırır.
+            </Text>
+            <Button
+              label="İlk rəyi sən yaz"
+              variant="soft"
+              size="sm"
+              onPress={() =>
+                navigation.navigate('WriteReview', { targetType: 'place', target: slug, name: p.name, subtitle: p.region.name })
+              }
+            />
+          </Card>
+        )}
 
         {nearby.data?.length ? (
           <View style={styles.section}>

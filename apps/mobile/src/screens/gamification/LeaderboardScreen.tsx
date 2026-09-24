@@ -55,7 +55,7 @@ function Row({ entry }: { entry: LeaderboardEntry }) {
       <Text variant="h3" style={[styles.rank, medal && styles.rankMedal]}>
         {entry.rank}
       </Text>
-      <Avatar uri={entry.avatarUrl} size={40} />
+      <Avatar uri={entry.avatarUrl} size={40} name={entry.fullName} />
       <View style={styles.flex}>
         <View style={styles.nameRow}>
           <Text variant="h3" numberOfLines={1} style={styles.flex}>
