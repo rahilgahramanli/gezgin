@@ -52,3 +52,22 @@ seed/photos/*
 # Mənbə prezentasiyası (56 MB) — git tarixini daimi şişirdir.
 # Lazım olsa bu sətri silin və ya Git LFS ilə əlavə edin.
 Presentation - Gezgin - Prototip).pdf
+
+# SSH açarları — heç vaxt commit olunmamalıdır
+*.pem
+*.key
+.env.production
+
+# Android release imzası — heç vaxt commit olunmamalıdır
+*.keystore
+!apps/mobile/android/app/debug.keystore
+
+# Build çıxışları — CMake keşi (Android native) və Next.js
+apps/mobile/android/app/.cxx/
+apps/admin/.next/
+apps/admin/next-env.d.ts
+*.tsbuildinfo
+
+# Python keşi
+__pycache__/
+*.pyc

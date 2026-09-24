@@ -1,0 +1,29 @@
+# Build konteksti: image-lər asılılıqları özləri quraşdırır, lokal
+# node_modules (hoisted simlinklərlə) kopyalanarsa build sınır.
+node_modules
+**/node_modules
+.git
+.github
+.turbo
+
+# Mobil tətbiq image-lərə girmir
+apps/mobile/ios
+apps/mobile/android
+apps/mobile/e2e
+
+# Build çıxışları
+**/dist
+**/.next
+**/build
+
+# Sirlər və lokal fayllar
+*.pem
+*.key
+.env
+.env.*
+!.env.example
+
+# Sənədlər və ağır mənbələr
+*.pdf
+design/assets
+seed/photos

@@ -7,7 +7,7 @@ on:
 
 jobs:
   api:
-    name: API — lint, typecheck, test
+    name: API — typecheck, test, build
     runs-on: ubuntu-latest
 
     services:
@@ -55,6 +55,37 @@ jobs:
       - run: pnpm --filter @gezgin/api typecheck
       - run: pnpm --filter @gezgin/api test
       - run: pnpm --filter @gezgin/api build
+
+  mobile:
+    name: Mobil — typecheck və testlər
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 9.15.9 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm }
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @gezgin/shared build
+      - run: pnpm --filter @gezgin/mobile typecheck
+      # Kontrakt testləri canlı API tələb edir — API işləmirsə özləri atlanılır
+      - run: pnpm --filter @gezgin/mobile test
+
+  admin:
+    name: Admin panel — typecheck və build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 9.15.9 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm }
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @gezgin/shared build
+      - run: pnpm --filter @gezgin/admin typecheck
+      - run: pnpm --filter @gezgin/admin build
 
   docker:
     name: Docker image qurulur
