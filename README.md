@@ -7,6 +7,9 @@
 |---|---|
 | [PLAN.md](PLAN.md) | Məhsul planı — konsepsiya, rollar, 56 ekranın inventarı |
 | [TECH-PLAN.md](TECH-PLAN.md) | Texniki plan — stack, API inventarı, data modeli, 12 sprint |
+| [AUDIT.md](AUDIT.md) | Məhsul auditi — ekran əhatəsi, buraxılış blokerləri, admin panel planı |
+| [DEPLOY.md](DEPLOY.md) | Serverə deploy — 13.60.173.66, Docker Compose, nginx, media yolu |
+| [QA.md](QA.md) | Test hesabları, test kartları, nəyi test etmək, məlum problemlər |
 | [design/index.html](design/index.html) | 56 mobil ekranın HTML dizaynı (brauzerdə açın) |
 | [seed/README.md](seed/README.md) | Mock kontentin CSV şablonları və doldurma qaydaları |
 
@@ -162,15 +165,15 @@ API `http://localhost:3100` ünvanında işləməlidir. Android emulyatorunda ho
 | Axın | Ekranlar |
 |---|---|
 | Giriş | Açılış (01) · Daxil ol (02) · Qeydiyyat (03) · Şifrə bərpası + OTP (37/38) · Maraqlar (04) |
-| Tablar | Kəşf et (10) · Planım (23) · Profil (28) |
+| Tablar | Discover (05) · Kəşf et (10) · Planım (23) · Profil (28) |
 | Detal | Məkan (13) · Marşrut (15) · Təcrübə (17) · Səyahət detalı (23) |
 | Planlaşdırma | Yarat (FAB) · Yeni səyahət (24) · Plana əlavə et (48) · Marşrut qurucu (50) · Dayanacaq seçimi |
 | Siyahı | Axtarış (11) · Yerlər (12) · Xəritə (12) · Marşrutlar (14) · Təcrübələr (16) · Want to go (33) |
 | Gamification | Gezgin Score (29) · Nailiyyətlər (30) · Liderlər (31) · Check-in (51/52) |
 | Rezervasiya | Bron (18) · Otel rezervasiyası (49) · Təsdiq və bilet (19) · Rezervasiyalarım (53) · Business profili (22) |
+| Sosial | Paylaşım detalı (06) · Bildirişlər (07) · Mesajlar (08) · Çat (09) · Paylaş / Hekayə (26) · Rəy yaz (27) · Hekayə baxışı (40) · Gezgin profili (41) · İzləyicilər (42) · Paylaş paneli (43) |
 
-Discover tabı (sosial lent) Sprint 7-dədir — o vaxta qədər tətbiq **Explore** ilə açılır.
-Ortadakı FAB isə ekran 26-nın (Paylaş) yerinə hazır yaratma axınlarını toplayan hub göstərir.
+Tətbiq **Discover** lenti ilə açılır. Ortadakı FAB paylaşım, hekayə və planlama axınlarını toplayan hub göstərir.
 
 ### Xəritə və mövqe
 
@@ -190,9 +193,102 @@ yoxlamanı ötürür; axın işləyir, sadəcə məkanda olma təsdiqlənmir.
 > (`skipPermissionRequests: true`). Əks halda 8 saniyəlik GPS taymauti istifadəçi
 > dialoqa cavab verərkən yanır və check-in mövqesiz keçir.
 
+### Sosial lent və canlı çat
+
+**Səhifələmə.** Zamanla artan siyahılar (lent, şərhlər, mesajlar, bildirişlər)
+cursor-la gedir — yeni paylaşım gələndə offset kimi təkrar və ya itən sətir
+yaranmır. Lent `(createdAt, id)` keyset-i ilə sıralanır, çünki seed
+paylaşımlarının vaxtı keçmişə çəkilib. İzləyici siyahıları offset-lədir
+(`follows` cədvəlində publicId yoxdur).
+
+**Görünürlük.** `public` / `followers` / `private` və qapalı hesab qaydası
+lentdə də, tək paylaşımda da eyni `where` şərti ilə tətbiq olunur — görmək
+icazəsi yoxdursa 404 (mövcudluq açıqlanmır). Bloklama hər iki istiqamətdə
+gizlədir: lent, profil, şərh, hekayə, çat.
+
+**WebSocket** — `/ws` namespace-i (socket.io). Token handshake-də gəlir; mesaj
+**HTTP ilə göndərilir** və bazaya yazıldıqdan sonra socket ilə çatdırılır —
+socket qopsa da mesaj itmir. `src/realtime/RealtimeBridge.tsx` hadisələri
+(`message.new`, `notification.new`, `conversation.updated`, `message.read`)
+React Query keşinə tökür; ekranlar ayrıca abunə olmur. Vaxtı bitmiş tokenlə
+server bağlantını atır və socket.io özü qoşulmur — `src/realtime/socket.ts`
+tokeni təzələyib əl ilə qoşulur (ardıcıl 3 rəddən sonra dayanır).
+
+**Bildirişlər** bəyənmə, şərh, cavab, izləmə, level və yeni badge-dən yaranır.
+"Bəyən → geri al → bəyən" 24 saat ərzində təkrar bildiriş yaratmır.
+
+**Foto yükləmə** — `src/api/upload.ts`: `POST /media/presign` → `PUT` birbaşa
+MinIO/S3-ə → `POST /media/:id/complete`. iOS picker şəkli JPEG-ə çevirir
+(`assetRepresentationMode: 'compatible'`, HEIC yox), amma MIME-ı kanonik
+qaytarmır: **`image/jpg`** verir, server isə `image/jpeg` gözləyir. `contentTypeOf()`
+onu normallaşdırır (tanınmasa fayl uzantısından çıxarır) — bu olmadan hər foto
+yükləməsi `400 VALIDATION_FAILED` alırdı. Dev-də presign ünvanı
+`localhost:9010`-dur — iOS simulyatoru çatır, **Android emulyatoru üçün**
+`S3_PUBLIC_URL` və endpoint `10.0.2.2` olmalıdır.
+
+**Rəy yazma** eyni obyektə ikinci dəfə 409 qaytarır (`details.publicId` ilə) —
+ekran 27 avtomatik redaktə rejiminə keçir. Silinmiş rəy yenidən yazılanda
+dirçəlir, XP təkrar verilmir. Obyektin reytinq aqreqatı hər yazmada yenidən
+hesablanır (əvvəl bunu yalnız seed edirdi).
+
+**Bilinən məhdudiyyətlər:** paylaşımda məkan/marşrut seçimi müştəri tərəfində
+süzülür (onlarla obyekt üçün kifayətdir, yüzlərlə olanda `/search`-ə keçmək
+lazımdır); video MVP-də yoxdur; push bildiriş Sprint 9-dadır.
+
 ### Token yeniləməsi
 
 Access token 15 dəqiqəlikdir. `src/api/client.ts` 401 (`TOKEN_EXPIRED`) alanda avtomatik `/auth/refresh` çağırır və sorğunu bir dəfə təkrarlayır; paralel 401-lər tək refresh sorğusunu paylaşır. Refresh token **rotasiya olunur**, ona görə yeni cüt mütləq yaddaşa yazılır — köhnəsi təkrar göndərilsə, server bütün sessiya ailəsini ləğv edir (`TOKEN_REUSED`).
+
+### Admin paneli (`apps/admin`)
+
+Moderasiya və istifadəçi idarəsi — Next.js 15, eyni API-nin `/admin/*` endpointləri.
+
+```bash
+pnpm --filter @gezgin/admin dev        # http://localhost:3200
+```
+
+Giriş: seed `admin.demo` hesabı yaradır (şifrə `ADMIN_SEED_PASSWORD`, defolt `Sifre12345`;
+produksiyada yaradılmır). Token yalnız **httpOnly cookie**-dədir, brauzer JS-i ona toxuna bilmir;
+hər sorğu server tərəfdə gedir və `@Roles('admin')` ilə ikinci dəfə yoxlanılır.
+
+| Səhifə | Nə edir |
+|---|---|
+| Panel | Açıq şikayətlər, **24 saatlıq SLA** göstəricisi, istifadəçi/paylaşım sayğacları |
+| Şikayətlər | Növbə — kontent önizləməsi, yaşı, açıq/həll olunmuş/rədd edilmiş |
+| Şikayət detalı | Tam kontent, müəllifin keçmişi → rədd et / kontenti sil / hesabı dayandır |
+| İstifadəçilər | Axtarış, hesab kartı, dayandır/bərpa et |
+| Audit izi | Kim, nə vaxt, nəyi, hansı vəziyyətdən hansına |
+
+### UI smoke testi (real toxunuşlar)
+
+Ekran şəkilləri yalnız "açılırmı" sualına cavab verir. `apps/mobile/e2e/smoke.py`
+isə simulyatorda **düymələrə basır**, mətn yazır və nəticəni həm ekranda, həm
+API/bazada yoxlayır:
+
+```bash
+brew install facebook/fb/idb-companion && pip install fb-idb   # bir dəfə
+cd apps/mobile && python3 e2e/smoke.py            # bütün axınlar
+python3 e2e/smoke.py chat review                  # yalnız seçilənlər
+```
+
+Əhatə (13 axın): bəyənmə, şərh yazma və silmə, izləmə, şikayət, çat, **canlı
+socket mesajı**, bildiriş → deep link, rəy yazma, fotolu paylaşım, hekayə
+(sistem foto seçicisi ilə, fayl MinIO-ya yüklənir), məkanı saxlama,
+tənzimləmələr (dil + açar) və profil redaktəsi.
+
+`onboarding` axını (qeydiyyat → maraqlar → profil qurma) defolt siyahıda deyil —
+çıxış/giriş ardıcıllığında iOS eyni adlı düyməni iki ekranda göstərir və axın
+kövrək olur. Əl ilə: `python3 e2e/smoke.py onboarding`.
+
+Şərtlər: API (3100) və Metro (8081) işləyir, tətbiq quraşdırılıb və sessiya
+yazılıb (aşağıdakı "Yoxlama"). Hər axın tətbiqi yenidən açır, yaratdığı
+məlumatı (şərh, rəy, paylaşım, hekayə) sonda silir.
+
+İki tələ: elementə **göründüyü kimi** basmaq olmur — lent hələ yüklənərkən
+yerini dəyişir, ona görə mövqe sabitləşənə qədər gözlənilir; alt CTA paneli
+kontenti örtdüyü üçün siyahı elementi panelin üstünə çıxana qədər sürüşdürülür.
+iOS foto seçicisi ayrı prosesdədir — accessibility ağacında görünmür, koordinatla
+basılır (`PICKER_PHOTO_1` və s. iPhone 17 Pro üçündür).
 
 ### Bilinən tələlər
 
@@ -240,7 +336,7 @@ Enum dəyərləri (`yarim-gun`, `asan`, `planned`) xam gəlir; insan oxunaqlı e
 
 **Niyə tiplər generasiya olunmur.** `pnpm mobile api:types` işləyir və `src/api/schema.d.ts` yaradır, amma orada yalnız **sorğu** DTO-ları var: NestJS controller-ləri `@ApiOkResponse({ type })` elan etmədiyi üçün Swagger cavab formalarını sənədləşdirmir. Tam həll backend-də response DTO-larının əlavə olunmasıdır.
 
-**Müvəqqəti həll — kontrakt testi.** `src/api/__tests__/contract.test.ts` canlı API-yə sorğu göndərib ekranların asılı olduğu sahələrin mövcudluğunu yoxlayır (25 test). Yuxarıdakı uyğunsuzluqların hamısı indi CI-də tutulur:
+**Müvəqqəti həll — kontrakt testi.** `src/api/__tests__/contract.test.ts` canlı API-yə sorğu göndərib ekranların asılı olduğu sahələrin mövcudluğunu yoxlayır (34 test). Yuxarıdakı uyğunsuzluqların hamısı indi CI-də tutulur:
 
 ```bash
 cd apps/mobile && pnpm test     # API işləmirsə testlər atlanılır

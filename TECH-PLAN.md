@@ -90,7 +90,16 @@ SPATIAL INDEX idx_places_geo (geo)
 
 ### 1.4 Admin panel
 
-**Next.js 15 (App Router) + shadcn/ui + TanStack Table** — eyni API-nin `/admin/*` endpointlərini istifadə edir. Sprint 10.
+**Next.js 15 (App Router)** — eyni API-nin `/admin/*` endpointlərini işlədir.
+
+Mərhələ A (moderasiya minimumu) **hazırdır**: `apps/admin` — panel, şikayət növbəsi və detalı,
+istifadəçi idarəsi, audit izi. Bütün oxu/yazma server komponentlərində və server action-larda gedir,
+token httpOnly cookie-dədir.
+
+> **Plandan sapma:** shadcn/ui + TanStack Table əvəzinə `@gezgin/shared` tokenləri ilə sadə CSS
+> işlədildi. Səbəb: panel 6 səhifədir, Tailwind + generator qurmaq bu həcm üçün artıq asılılıqdır,
+> üstəlik tokenlər mobil tətbiqlə eyni mənbədən gəlir. Panel böyüyəndə (Mərhələ B/C — kontent CRUD,
+> statistika) cədvəl komponenti üçün TanStack Table yenidən qiymətləndirilməlidir.
 
 ### 1.5 Xarici xidmətlər
 
@@ -319,11 +328,16 @@ interface PaymentProvider {
 | **4** | Planım & Marşrut qurucu | 8–9 | `trips` (14), `saved` (7) — **21** | 23, 24, 48, 50, 33 | Məkan/təcrübə → plana əlavə; marşrut qur, sırala, günlərə böl; Want to go |
 | **5** ✅ | Yaşa: check-in & gamification — **tamamlandı** | 10–11 | `gamification` (9), `offline` (4) — **13** | 51, 52, 28, 29, 30, 31, 25 | 🎯 **MVP hazırdır.** Check-in məsafə yoxlaması ilə, XP/level/badge eyni cavabda, gündəlik limitlər, liderlər cədvəli, offline manifest |
 | **6** ✅ | Rezervasiya & ödəniş — **tamamlandı** | 12–13 | `bookings` (7), `payments` (4), `businesses` (5) — **16** | 18, 19, 22, 49, 53 | Qiymət hesabı (uşaq endirimi, əlavələr), idempotent sifariş, 3-D Secure, rədd/müddəti bitmiş kart, bilet + QR, ləğv siyasəti və geri qaytarma, 80/20 komissiya |
-| **7** | Sosial lent | 14–15 | `posts` (16), `stories` (5), `users` (10), `chat` (7), `reviews` yazı (3) — **41** | 05, 06, 07, 08, 09, 26, 27, 40, 41, 42, 43 | Lent (For you/Following/Nearby), post/story yarat, şərh, izləmə, canlı çat |
+| **7** ✅ | Sosial lent — **tamamlandı** | 14–15 | `posts` (16), `stories` (5), `users` (10), `chat` (7), `reviews` yazı (3), `notifications` oxu (3) — **44** + WebSocket `/ws` | 05, 06, 07, 08, 09, 26, 27, 40, 41, 42, 43 | Lent (For you/Following/Nearby), post/story yarat, şərh, izləmə, canlı çat |
 | **8** | Ekosistem: Expert & PRO | 16–17 | `expert` (10), `subscriptions` (5) — **15** | 36, 55, 56, 35 | Expert müraciəti → təsdiq → təcrübə yarat → rezervasiya qəbulu → qazanc/ödəniş; PRO abunəlik (mock IAP) |
 | **9** | Tədbirlər, push, offline | 18–19 | `events` (6), `notifications` (7) — **13** | 20, 44, 07, 25 | Push bildiriş + deep link; offline xəritə paketi və offline rejim |
-| **10** | Admin panel & moderasiya | 20–21 | `admin/*` (~25) + Next.js panel | — | Kontent CRUD, moderasiya növbəsi, expert təsdiqi, statistika |
+| **10** | Admin panel & moderasiya | 20–21 | `admin/*` — **Mərhələ A (10 endpoint) hazırdır** ✅, qalan ~15 + Next.js panel | — | Kontent CRUD, moderasiya növbəsi, expert təsdiqi, statistika |
 | **11** | Hardening & buraxılış | 22–23 | Performans, təhlükəsizlik auditi, i18n AZ/EN/RU, yük testi | Bütün ekranlar — polish, boş/xəta halları | 🚀 **App Store + Google Play** |
+
+> **Qeyd (2026-09-21 auditi və icrası).** Audit bitmiş sprintlərdən 9 ekranın qaldığını
+> göstərdi; həmin gün **34, 39, 54, 32, 45, 46, 47, 21** yazıldı (yalnız **25** Sprint 9-a qaldı).
+> Admin panelin **Mərhələ A backend-i** (`admin/*`, 10 endpoint, 17 test) Sprint 10-dan irəli
+> çəkilib artıq hazırdır — qalan Next.js paneli. Təfərrüat: [AUDIT.md](AUDIT.md).
 
 ### Sprint 5 (MVP) nə edə biləcək
 Qeydiyyat · maraq seçimi · xəritədə məkan kəşfi · filtr/axtarış · məkan və marşrut detalı · təcrübə baxışı · səyahət planı qurmaq · marşrut yaratmaq · yola çıxmaq və check-in etmək · XP/level/badge qazanmaq · profil və liderlər cədvəli · offline xəritə.
@@ -373,9 +387,10 @@ Qeydiyyat · maraq seçimi · xəritədə məkan kəşfi · filtr/axtarış · m
 ~~Sprint 4 — Planım & Saxlanılanlar~~ ✅ tamamlandı — 21 endpoint
 ~~Sprint 5 — Yaşa: check-in & gamification~~ ✅ **MVP** — 13 endpoint
 ~~Sprint 6 — Rezervasiya & ödəniş~~ ✅ tamamlandı — 16 endpoint, 173 test yaşıl
+~~Sprint 7 — Sosial lent~~ ✅ tamamlandı — 44 endpoint + WebSocket, 220 test yaşıl
 
 1. **Mock datanı doldurun** — `seed/` CSV şablonları. Hazırda 7 region, 11 məkan, 5 marşrut, 10 istifadəçi, 8 təcrübə yüklənib; hədəf: 50 region, 200 məkan.
-2. **MVP-ni sınaqdan keçirin** — 112 endpoint canlıdır, tam dövrə işləyir: qeydiyyat → kəşf → plan → yola çıx → check-in → XP/level/badge.
-3. **Sprint 7 — Sosial lent** (41 endpoint, ekranlar 05–09, 26, 27, 40–43) — layihənin ən böyük sprinti.
+2. **MVP-ni sınaqdan keçirin** — 172 endpoint canlıdır, tam dövrə işləyir: qeydiyyat → kəşf → plan → yola çıx → check-in → XP/level/badge.
+3. **Sprint 8 — Ekosistem: Expert & PRO** (15 endpoint, ekranlar 35, 36, 55, 56) — expert müraciəti → təsdiq → təcrübə yarat → rezervasiya qəbulu → qazanc; PRO abunəlik (mock IAP).
 
 > PSP və IAP qərarları təxirə salınıb — mock provayderlərlə işləyirik, buraxılışdan əvvəl (Sprint 11) real inteqrasiya edilməlidir.

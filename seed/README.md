@@ -49,3 +49,30 @@ Prezentasiya öz-özü ilə ziddiyyətlidir:
 - **Tətbiq ekranları:** Aysel **Level 12 "Kəşf edən"**, Tural **Level 14**, badge **"Əfsanə — Level 20"**
 
 `config-levels.csv`-də təklif etdiyim həll: **20 nömrəli level**, slayd 8-dəki 5 ad isə **tier (dərəcə)** kimi level aralıqlarına bağlanır. Beləliklə hər iki mənbə uyğunlaşır. Fayldakı `tier_az` sütununu nəzərdən keçirin.
+
+
+## Sosial kontent (Sprint 7)
+
+| Fayl | Nədir | Açar (idempotentlik) |
+|---|---|---|
+| `11-posts.csv` | Paylaşımlar — mətn, məkan, marşrut, fotolar, bəyənənlər | müəllif + mətn |
+| `12-follows.csv` | Kim kimi izləyir | izləyən + izlənən |
+| `13-comments.csv` | Şərhlər; `reply_to` — kimin kök şərhinə cavabdır | paylaşım + müəllif + mətn |
+| `14-stories.csv` | Hekayələr | müəllif + foto |
+
+- `ref` (`11-posts.csv`) yalnız şərhlərin paylaşıma istinadı üçündür, bazaya yazılmır.
+- `hours_ago` / `minutes_after` — vaxt seed-in işlədiyi andan hesablanır.
+- Paylaşımın koordinatı məkandan götürülür — **Nearby** lenti yalnız məkanı olan paylaşımları göstərir.
+- Hekayələr 24 saat yaşayır: `pnpm db:seed` hər dəfə onları yenidən aktivləşdirir.
+- Heşteqlər mətndən avtomatik çıxarılır (`#Xınalıq` → `xınalıq`), ayrıca sütun lazım deyil.
+
+## Admin hesabı
+
+Seed hər dev mühitində panel üçün bir admin yaradır:
+
+```
+username: admin.demo          (ADMIN_SEED_USERNAME ilə dəyişir)
+şifrə:    Sifre12345          (ADMIN_SEED_PASSWORD ilə dəyişir)
+```
+
+`NODE_ENV=production` olanda bu addım atlanılır — produksiyada admin əl ilə yaradılmalıdır.
