@@ -1,6 +1,6 @@
 import { StyleSheet, View } from 'react-native';
 import {
-  Avatar, Button, Card, Icon, Loading, Photo, Pill, Progress, Screen, StatCell, Text, TopBar,
+  Avatar, Button, Card, ErrorState, Icon, Loading, Photo, Pill, Progress, Screen, StatCell, Text, TopBar,
 } from '@/components';
 import { useMe, useMyStats } from '@/api/hooks/me';
 import { t } from '@/theme';
@@ -11,8 +11,14 @@ export function ProfileScreen({ navigation }: TabScreenProps<'Profile'>) {
   const me = useMe();
   const stats = useMyStats();
 
-  if (me.isLoading) return <Loading label="Profil yüklənir…" />;
-  if (!me.data) return null;
+  if (!me.data) {
+    // Tab ekranıdır — geri yolu yoxdur, amma ağ ekran da olmamalıdır
+    return me.error && !me.isFetching ? (
+      <ErrorState error={me.error} onRetry={() => void me.refetch()} />
+    ) : (
+      <Loading label="Profil yüklənir…" />
+    );
+  }
 
   const g = me.data.gamification;
 

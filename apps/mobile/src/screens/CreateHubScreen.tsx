@@ -40,7 +40,8 @@ export function CreateHubScreen({ navigation }: TabScreenProps<'Create'>) {
       icon: 'pin' as IconName,
       title: 'Check-in et',
       hint: 'Olduğun məkanı qeyd et, XP qazan',
-      onPress: () => navigation.navigate('Search'),
+      // Əvvəl axtarışı açırdı — indi mövqeyə görə yaxın məkanlar siyahısı
+      onPress: () => navigation.navigate('CheckinPicker'),
     },
   ];
 

@@ -3,6 +3,7 @@ import { api } from '@/api/client';
 import type { RouteDetail } from '@/api/hooks/details';
 import type { RouteSummary } from '@/api/hooks/content';
 import type { XpReward } from '@/api/hooks/gamification';
+import { meKeys } from '@/api/hooks/me';
 
 /** `POST /routes` marşrut detalını + qazanılan XP-ni qaytarır (ekran 50 "+350 XP"). */
 export interface CreatedRoute extends RouteDetail {
@@ -26,11 +27,12 @@ export interface AddStopInput {
   note?: string;
 }
 
-/** Öz marşrutların — şəxsi olanlar da daxil (ekran 14, 50). */
-export const useMyRoutes = () =>
+/** Öz marşrutların — şəxsi olanlar da daxil (ekran 14, 41 öz profilində, 50). */
+export const useMyRoutes = (enabled = true) =>
   useQuery({
     queryKey: ['routes', 'mine'],
     queryFn: () => api<{ data: Array<RouteSummary & { visibility: string }>; nextOffset: number | null }>('/routes/mine'),
+    enabled,
   });
 
 export function useCreateRoute() {
@@ -82,6 +84,12 @@ export const useDeleteRoute = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (slug: string) => api<{ deleted: boolean }>(`/routes/${slug}`, { method: 'DELETE' }),
-    onSuccess: () => void qc.invalidateQueries({ queryKey: ['routes'] }),
+    onSuccess: (_res, slug) => {
+      qc.removeQueries({ queryKey: ['route', slug] });
+      void qc.invalidateQueries({ queryKey: ['routes'] });
+      // Profildəki "Marşrutlar" tabı və sayğaclar (`['user', username, 'routes']`)
+      void qc.invalidateQueries({ queryKey: ['user'] });
+      void qc.invalidateQueries({ queryKey: meKeys.stats });
+    },
   });
 };

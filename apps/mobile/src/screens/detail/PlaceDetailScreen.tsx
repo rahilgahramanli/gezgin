@@ -1,71 +1,82 @@
 import { ScrollView, StyleSheet, View } from 'react-native';
 import {
-  Avatar, Button, Card, DetailSkeleton, Icon, Photo, Pill, Rating, RowCard, Screen,
-  SectionHead, Text, TopBar,
+  Button, DetailSkeleton, ErrorState, HeroScreen, Icon, Photo, Pill, Rating, RowCard, SectionHead, Text,
 } from '@/components';
-import { useNearbyPlaces, usePlaceDetail, useReviews, useToggleSaved } from '@/api/hooks/details';
+import { useNearbyPlaces, usePlaceDetail, useToggleSaved } from '@/api/hooks/details';
 import { shareItem } from '@/lib/share';
 import { t } from '@/theme';
 import type { AppScreenProps } from '@/navigation/types';
+import { ReviewsBlock } from './ReviewsBlock';
+
+const HERO_HEIGHT = 320;
 
 /** Ekran 13 — məkan detalı. */
 export function PlaceDetailScreen({ route, navigation }: AppScreenProps<'PlaceDetail'>) {
   const { slug } = route.params;
   const place = usePlaceDetail(slug);
   const nearby = useNearbyPlaces(slug);
-  const reviews = useReviews('place', slug);
   const save = useToggleSaved('place', slug);
 
-  if (place.isLoading) return <DetailSkeleton />;
-  if (!place.data) return null;
+  if (!place.data) {
+    // Xəta halında ağ ekran yox — səbəb, "Yenidən cəhd et" və geri; təkrar cəhd zamanı skelet
+    return place.error && !place.isFetching ? (
+      <ErrorState error={place.error} onRetry={() => void place.refetch()} onBack={navigation.goBack} />
+    ) : (
+      <DetailSkeleton onBack={navigation.goBack} />
+    );
+  }
   const p = place.data;
 
   return (
-    <Screen
-      padded={false}
-      edges={[]}
+    <HeroScreen
+      heroHeight={HERO_HEIGHT}
+      title={p.name}
+      onBack={navigation.goBack}
+      actions={[
+        {
+          icon: 'bookmark',
+          label: p.isSaved ? 'Saxlamanı götür' : 'Saxla',
+          active: p.isSaved,
+          onPress: () => save.mutate(!p.isSaved),
+        },
+        { icon: 'share', label: 'Paylaş', onPress: () => void shareItem('place', slug, p.name) },
+      ]}
       footer={
-        <Button
-          label="Plana əlavə et"
-          left={<Icon name="plus" size={18} color="#fff" />}
-          onPress={() => navigation.navigate('AddToPlan', { type: 'place', slug, name: p.name })}
-          style={styles.ctaButton}
-        />
-      }
-    >
-      <View style={styles.hero}>
-        <Photo uri={p.photos[0]?.url} style={styles.heroImage} radius={0} />
-        <View style={styles.heroShade} />
-        <View style={styles.heroBar}>
-          <TopBar
-            light
-            transparent
-            onBack={navigation.goBack}
-            actions={[
-              {
-                icon: 'bookmark',
-                label: p.isSaved ? 'Saxlamanı götür' : 'Saxla',
-                active: p.isSaved,
-                onPress: () => save.mutate(!p.isSaved),
-              },
-              { icon: 'share', label: 'Paylaş', onPress: () => void shareItem('place', slug, p.name) },
-            ]}
+        <View style={styles.footerRow}>
+          {/* Check-in əvvəllər yalnız səyahət planındakı elementdən açılırdı */}
+          <Button
+            label="Check-in et"
+            variant="outline"
+            left={<Icon name="pin" size={18} color={t.colors.green900} />}
+            onPress={() => navigation.navigate('Checkin', { place: slug })}
+            style={styles.checkinButton}
+          />
+          <Button
+            label="Plana əlavə et"
+            onPress={() => navigation.navigate('AddToPlan', { type: 'place', slug, name: p.name })}
+            style={styles.planButton}
           />
         </View>
-        <View style={styles.heroText}>
-          <Text variant="titleXl" style={styles.onPhoto}>
-            {p.name}
-          </Text>
-          <View style={styles.heroMeta}>
-            <Icon name="pin" size={15} color="rgba(255,255,255,0.9)" />
-            <Text variant="small" style={styles.onPhotoMeta}>
-              {p.region.name}
-              {p.altitudeM ? ` · ${p.altitudeM} m` : ''}
+      }
+      hero={
+        <>
+          <Photo uri={p.photos[0]?.url} style={styles.heroImage} radius={0} />
+          <View style={styles.heroShade} />
+          <View style={styles.heroText}>
+            <Text variant="titleXl" style={styles.onPhoto}>
+              {p.name}
             </Text>
+            <View style={styles.heroMeta}>
+              <Icon name="pin" size={15} color="rgba(255,255,255,0.9)" />
+              <Text variant="small" style={styles.onPhotoMeta}>
+                {p.region.name}
+                {p.altitudeM ? ` · ${p.altitudeM} m` : ''}
+              </Text>
+            </View>
           </View>
-        </View>
-      </View>
-
+        </>
+      }
+    >
       <View style={styles.body}>
         <View style={styles.ratingRow}>
           <Rating value={p.rating} count={p.ratingCount} size={18} />
@@ -93,7 +104,8 @@ export function PlaceDetailScreen({ route, navigation }: AppScreenProps<'PlaceDe
           </Text>
         ) : null}
 
-        {p.photos.length > 1 ? (
+        {/* Bir foto olsa da qalereyaya (ekran 46) keçid lazımdır — icma fotoları orada */}
+        {p.photos.length > 0 ? (
           <View style={styles.section}>
             <SectionHead
               title={`Fotolar (${p.photoCount})`}
@@ -108,66 +120,7 @@ export function PlaceDetailScreen({ route, navigation }: AppScreenProps<'PlaceDe
           </View>
         ) : null}
 
-        {reviews.data?.data.length ? (
-          <View style={styles.section}>
-            <SectionHead
-              title={`Rəylər (${p.reviewCount})`}
-              actionLabel="Hamısına bax"
-              onAction={() => navigation.navigate('ReviewsAll', { targetType: 'place', target: slug, name: p.name })}
-            />
-            <View style={styles.list}>
-              {reviews.data.data.slice(0, 3).map((r) => (
-                <Card key={r.publicId} padded style={styles.review}>
-                  <View style={styles.reviewHead}>
-                    <Avatar uri={r.author.avatarUrl} size={36} name={r.author.fullName} />
-                    <View style={styles.flex}>
-                      <View style={styles.reviewAuthor}>
-                        <Text variant="h3">{r.author.fullName}</Text>
-                        {r.author.isLocalExpert ? <Pill label="Local Expert" tone="brown" /> : null}
-                      </View>
-                      <Text variant="caption">Level {r.author.level}</Text>
-                    </View>
-                    <Rating value={r.rating} />
-                  </View>
-                  {r.body ? (
-                    <Text variant="small" color="ink2" style={styles.reviewBody}>
-                      {r.body}
-                    </Text>
-                  ) : null}
-                </Card>
-              ))}
-              <Button
-                label="Rəy yaz"
-                variant="outline"
-                left={<Icon name="edit" size={18} color={t.colors.green900} />}
-                onPress={() =>
-                  navigation.navigate('WriteReview', {
-                    targetType: 'place',
-                    target: slug,
-                    name: p.name,
-                    subtitle: p.region.name,
-                  })
-                }
-              />
-            </View>
-          </View>
-        ) : (
-          // Rəy yoxdursa da yazmaq mümkün olmalıdır — ekran 27-yə yeganə giriş budur
-          <Card padded style={styles.review}>
-            <Text variant="h3">Hələ rəy yoxdur</Text>
-            <Text variant="small" color="ink2">
-              Burada olmusan? Təcrübəni bölüş — rəy +400 XP qazandırır.
-            </Text>
-            <Button
-              label="İlk rəyi sən yaz"
-              variant="soft"
-              size="sm"
-              onPress={() =>
-                navigation.navigate('WriteReview', { targetType: 'place', target: slug, name: p.name, subtitle: p.region.name })
-              }
-            />
-          </Card>
-        )}
+        <ReviewsBlock targetType="place" target={slug} name={p.name} subtitle={p.region.name} />
 
         {nearby.data?.length ? (
           <View style={styles.section}>
@@ -187,7 +140,7 @@ export function PlaceDetailScreen({ route, navigation }: AppScreenProps<'PlaceDe
           </View>
         ) : null}
       </View>
-    </Screen>
+    </HeroScreen>
   );
 }
 
@@ -204,8 +157,7 @@ function Fact({ icon, value, label }: { icon: 'mountain' | 'clock' | 'coins'; va
 }
 
 const styles = StyleSheet.create({
-  hero: { height: 320, backgroundColor: t.colors.bg2 },
-  heroImage: { width: '100%', height: 320 },
+  heroImage: { width: '100%', height: HERO_HEIGHT },
   heroShade: {
     position: 'absolute',
     top: 0,
@@ -214,7 +166,6 @@ const styles = StyleSheet.create({
     bottom: 0,
     backgroundColor: 'rgba(10,20,20,0.34)',
   },
-  heroBar: { position: 'absolute', top: 44, left: 0, right: 0 },
   heroText: { position: 'absolute', left: t.spacing.page, right: t.spacing.page, bottom: t.spacing.xl, gap: 4 },
   onPhoto: { color: '#fff' },
   onPhotoMeta: { color: 'rgba(255,255,255,0.92)' },
@@ -239,10 +190,7 @@ const styles = StyleSheet.create({
   hscroll: { gap: t.spacing.md, paddingRight: t.spacing.page },
   galleryPhoto: { width: 150, height: 110, backgroundColor: t.colors.bg2 },
   list: { gap: t.spacing.md },
-  review: { gap: t.spacing.sm },
-  reviewHead: { flexDirection: 'row', alignItems: 'center', gap: t.spacing.md },
-  reviewAuthor: { flexDirection: 'row', alignItems: 'center', gap: t.spacing.sm },
-  reviewBody: { lineHeight: 20 },
-  flex: { flex: 1, minWidth: 0 },
-  ctaButton: { width: '100%' },
+  footerRow: { flexDirection: 'row', gap: t.spacing.md },
+  checkinButton: { paddingHorizontal: 16 },
+  planButton: { flex: 1, paddingHorizontal: 12 },
 });

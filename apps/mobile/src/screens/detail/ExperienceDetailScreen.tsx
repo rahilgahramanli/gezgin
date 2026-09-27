@@ -1,12 +1,24 @@
 import { StyleSheet, View } from 'react-native';
 import {
-  Avatar, Button, Card, DetailSkeleton, Icon, Photo, Pill, Progress, Rating, Screen, SectionHead, Text, TopBar,
+  Avatar, Button, Card, DetailSkeleton, ErrorState, HeroScreen, Icon, Photo, Pill, Progress, Rating, SectionHead, Text,
 } from '@/components';
 import { useExperienceDetail, useToggleSaved } from '@/api/hooks/details';
 import { durationLabel } from '@/lib/labels';
 import { shareItem } from '@/lib/share';
 import { t } from '@/theme';
 import type { AppScreenProps } from '@/navigation/types';
+import { ReviewsBlock } from './ReviewsBlock';
+
+const HERO_HEIGHT = 300;
+
+/** Slotun başlama anı yerli vaxtla — UTC `slice(0, 10)` gecə yarısı ətrafında günü səhv göstərirdi. */
+const slotLabel = (iso: string): string => {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso.slice(0, 10);
+  const day = d.toLocaleDateString('az-AZ', { day: 'numeric', month: 'short' });
+  const time = d.toLocaleTimeString('az-AZ', { hour: '2-digit', minute: '2-digit', hour12: false });
+  return `${day}, ${time}`;
+};
 
 /** Ekran 17 — təcrübə detalı, 80/20 gəlir bölgüsü ilə. */
 export function ExperienceDetailScreen({ route, navigation }: AppScreenProps<'ExperienceDetail'>) {
@@ -14,17 +26,34 @@ export function ExperienceDetailScreen({ route, navigation }: AppScreenProps<'Ex
   const detail = useExperienceDetail(slug);
   const save = useToggleSaved('experience', slug);
 
-  if (detail.isLoading) return <DetailSkeleton />;
-  if (!detail.data) return null;
+  if (!detail.data) {
+    return detail.error && !detail.isFetching ? (
+      <ErrorState error={detail.error} onRetry={() => void detail.refetch()} onBack={navigation.goBack} />
+    ) : (
+      <DetailSkeleton onBack={navigation.goBack} />
+    );
+  }
   const e = detail.data;
 
   return (
-    <Screen padded={false} edges={[]}
+    <HeroScreen
+      heroHeight={HERO_HEIGHT}
+      title={e.title}
+      onBack={navigation.goBack}
+      actions={[
+        {
+          icon: 'heart',
+          label: e.isSaved ? 'Seçilmişlərdən çıxar' : 'Seçilmişlərə at',
+          active: e.isSaved,
+          onPress: () => save.mutate(!e.isSaved),
+        },
+        { icon: 'share', label: 'Paylaş', onPress: () => void shareItem('experience', slug, e.title) },
+      ]}
       footer={
         <>
           {e.nextAvailable ? (
             <Text variant="caption" center style={styles.availability}>
-              Növbəti tarix: {e.nextAvailable.startAt.slice(0, 10)} · {e.nextAvailable.seatsLeft} yer qalıb
+              Növbəti tarix: {slotLabel(e.nextAvailable.startAt)} · {e.nextAvailable.seatsLeft} yer qalıb
             </Text>
           ) : null}
           <Button
@@ -34,38 +63,23 @@ export function ExperienceDetailScreen({ route, navigation }: AppScreenProps<'Ex
           />
         </>
       }
+      hero={
+        <>
+          <Photo uri={e.photos[0]?.url} style={styles.heroImage} radius={0} />
+          <View style={styles.heroShade} />
+          <View style={styles.heroText}>
+            <Pill label="Lokal təcrübə" tone="brown" />
+            <Text variant="titleXl" style={styles.onPhoto}>
+              {e.title}
+            </Text>
+            <Text variant="small" style={styles.onPhotoMeta}>
+              {e.region.name}
+              {e.durationText ? ` · ${durationLabel(e.durationText)}` : ''}
+            </Text>
+          </View>
+        </>
+      }
     >
-      <View style={styles.hero}>
-        <Photo uri={e.photos[0]?.url} style={styles.heroImage} radius={0} />
-        <View style={styles.heroShade} />
-        <View style={styles.heroBar}>
-          <TopBar
-            light
-            transparent
-            onBack={navigation.goBack}
-            actions={[
-              {
-                icon: 'heart',
-                label: e.isSaved ? 'Seçilmişlərdən çıxar' : 'Seçilmişlərə at',
-                active: e.isSaved,
-                onPress: () => save.mutate(!e.isSaved),
-              },
-              { icon: 'share', label: 'Paylaş', onPress: () => void shareItem('experience', slug, e.title) },
-            ]}
-          />
-        </View>
-        <View style={styles.heroText}>
-          <Pill label="Lokal təcrübə" tone="brown" />
-          <Text variant="titleXl" style={styles.onPhoto}>
-            {e.title}
-          </Text>
-          <Text variant="small" style={styles.onPhotoMeta}>
-            {e.region.name}
-            {e.durationText ? ` · ${durationLabel(e.durationText)}` : ''}
-          </Text>
-        </View>
-      </View>
-
       <View style={styles.body}>
         <View style={styles.priceRow}>
           <View>
@@ -76,6 +90,16 @@ export function ExperienceDetailScreen({ route, navigation }: AppScreenProps<'Ex
           </View>
           {e.ratingCount > 0 ? <Rating value={e.rating} count={e.ratingCount} size={18} /> : null}
         </View>
+
+        {/* Bron əsas hərəkətdir (alt panel); səyahət planına əlavə etmək ikinci dərəcəli */}
+        <Button
+          label="Plana əlavə et"
+          variant="soft"
+          size="sm"
+          left={<Icon name="plus" size={16} color={t.colors.green900} />}
+          onPress={() => navigation.navigate('AddToPlan', { type: 'experience', slug, name: e.title })}
+          style={styles.planButton}
+        />
 
         <Card padded style={styles.expert}>
           <Avatar uri={e.expert.avatarUrl} size={48} name={e.expert.fullName} />
@@ -154,8 +178,10 @@ export function ExperienceDetailScreen({ route, navigation }: AppScreenProps<'Ex
             </View>
           </View>
         ) : null}
+
+        <ReviewsBlock targetType="experience" target={slug} name={e.title} subtitle={e.region.name} />
       </View>
-    </Screen>
+    </HeroScreen>
   );
 }
 
@@ -171,13 +197,11 @@ function Reward({ value, label }: { value: string; label: string }) {
 }
 
 const styles = StyleSheet.create({
-  hero: { height: 300, backgroundColor: t.colors.bg2 },
-  heroImage: { width: '100%', height: 300 },
+  heroImage: { width: '100%', height: HERO_HEIGHT },
   heroShade: {
     position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
     backgroundColor: 'rgba(10,20,20,0.36)',
   },
-  heroBar: { position: 'absolute', top: 44, left: 0, right: 0 },
   heroText: { position: 'absolute', left: t.spacing.page, right: t.spacing.page, bottom: t.spacing.xl, gap: 6 },
   onPhoto: { color: '#fff' },
   onPhotoMeta: { color: 'rgba(255,255,255,0.92)' },
@@ -201,5 +225,6 @@ const styles = StyleSheet.create({
   bold: { fontWeight: '600' },
   flex: { flex: 1, minWidth: 0 },
   availability: { marginBottom: 2 },
+  planButton: { alignSelf: 'stretch' },
   ctaButton: { width: '100%' },
 });

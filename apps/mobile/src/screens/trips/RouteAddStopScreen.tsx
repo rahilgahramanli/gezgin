@@ -17,12 +17,16 @@ export function RouteAddStopScreen({ route, navigation }: AppScreenProps<'RouteA
   const addStop = useAddStop(slug);
 
   // Axtarış boşdursa marşrutun öz regionundakı məkanları təklif edirik
-  const search = useSearch(q, { type: 'place', limit: 20 });
+  // API `types` parametrini oxuyur (`type` yox) — əks halda marşrut, təcrübə və
+  // istifadəçilər də gəlirdi və onlara toxunmaq "Məkan tapılmadı" xətası verirdi
+  const search = useSearch(q, { types: 'place', limit: 20 });
   const suggestions = usePlaces({ region: detail.data?.region.slug, limit: 20 });
 
   const searching = q.trim().length >= 2;
   const items = searching
-    ? (search.data?.results ?? []).map((h) => ({ slug: h.slug, name: h.title, meta: h.subtitle, coverUrl: h.imageUrl }))
+    ? (search.data?.results ?? [])
+        .filter((h) => h.type === 'place')
+        .map((h) => ({ slug: h.slug, name: h.title, meta: h.subtitle, coverUrl: h.imageUrl }))
     : (suggestions.data?.data ?? []).map((p) => ({
         slug: p.slug,
         name: p.name,

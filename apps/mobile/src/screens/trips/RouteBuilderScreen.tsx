@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import {
-  Button, Card, Icon, Input, Loading, Photo, Screen, Text, TopBar,
+  Button, Card, ErrorState, Icon, Input, Loading, Photo, Screen, Text, TopBar,
 } from '@/components';
 import { useRegions } from '@/api/hooks/content';
 import { useRouteDetail } from '@/api/hooks/details';
@@ -182,8 +182,32 @@ function RouteEditor({ slug, navigation }: { slug: string; navigation: Nav }) {
       { text: 'Sil', style: 'destructive', onPress: () => removeStop.mutate(stopId) },
     ]);
 
-  if (detail.isLoading) return <Loading label="Yüklənir…" />;
-  if (!r) return null;
+  if (!r) {
+    // Xəta halında ağ ekran yox — səbəb, təkrar cəhd və geri yolu
+    if (detail.error && !detail.isFetching) {
+      return <ErrorState error={detail.error} onRetry={() => void detail.refetch()} onBack={navigation.goBack} />;
+    }
+    return (
+      <Screen padded={false} scroll={false}>
+        <TopBar title="Marşrut qur" onBack={navigation.goBack} />
+        <Loading label="Yüklənir…" />
+      </Screen>
+    );
+  }
+
+  /**
+   * Marşrut detalından "Redaktə et" ilə gəlinibsə geri qayıdırıq — `replace`
+   * yığında iki eyni detal ekranı qoyurdu. Yaradandan sonra isə detal ekranı yoxdur.
+   */
+  const finish = () => {
+    const state = navigation.getState();
+    const prev = state.routes[state.index - 1];
+    if (prev?.name === 'RouteDetail' && (prev.params as { slug?: string } | undefined)?.slug === slug) {
+      navigation.goBack();
+    } else {
+      navigation.replace('RouteDetail', { slug });
+    }
+  };
 
   return (
     <Screen
@@ -191,7 +215,7 @@ function RouteEditor({ slug, navigation }: { slug: string; navigation: Nav }) {
       footer={
         <Button
           label="Saxla və bax"
-          onPress={() => navigation.replace('RouteDetail', { slug })}
+          onPress={finish}
           loading={update.isPending || reorder.isPending || removeStop.isPending}
           style={styles.ctaButton}
         />

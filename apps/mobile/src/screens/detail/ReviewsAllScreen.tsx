@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { Avatar, Button, Card, Chip, EmptyState, Icon, ListSkeleton, Pill, Rating, Screen, Text, TopBar } from '@/components';
 import { useAllReviews, useReviewSummary, type ReviewSort } from '@/api/hooks/details';
 import { timeAgo } from '@/lib/time';
+import { errorText } from '@/lib/errors';
 import { t } from '@/theme';
 import type { AppScreenProps } from '@/navigation/types';
 
@@ -79,6 +80,13 @@ export function ReviewsAllScreen({ route, navigation }: AppScreenProps<'ReviewsA
       <View style={styles.list}>
         {reviews.isLoading ? (
           <ListSkeleton rows={4} thumb={44} />
+        ) : reviews.error && !reviews.data ? (
+          <EmptyState
+            icon="wifiOff"
+            title="Rəylər yüklənmədi"
+            message={errorText(reviews.error, 'Bir az sonra yenidən cəhd et.')}
+            action={<Button label="Yenidən cəhd et" onPress={() => void reviews.refetch()} />}
+          />
         ) : !reviews.data?.data.length ? (
           <EmptyState
             icon="star"

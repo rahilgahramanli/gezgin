@@ -12,3 +12,4 @@ export * from './Screen';
 export * from './TopBar';
 export * from './PostCard';
 export * from './Skeleton';
+export * from './HeroScreen';

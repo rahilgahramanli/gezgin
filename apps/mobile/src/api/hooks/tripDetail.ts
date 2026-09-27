@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/client';
+import { meKeys } from './me';
 
 export interface TripItem {
   itemId: number;
@@ -96,6 +97,48 @@ export function useStartTrip(publicId: string) {
     onSuccess: (data) => {
       qc.setQueryData(['trip', publicId], data);
       void qc.invalidateQueries({ queryKey: ['trips'] });
+    },
+  });
+}
+
+/**
+ * `POST /trips/:id/complete` detal + mükafat qaytarır. XP yalnız ilk
+ * tamamlanmada verilir — təkrar çağırışda `rewards` `null`-dur.
+ */
+export interface CompletedTrip extends TripDetail {
+  rewards: {
+    xpGained: number;
+    leveledUp: boolean;
+    levelBefore: number;
+    levelAfter: number;
+    newBadges: Array<{ slug: string; name: string }>;
+  } | null;
+}
+
+export function useCompleteTrip(publicId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => api<CompletedTrip>(`/trips/${publicId}/complete`, { method: 'POST' }),
+    onSuccess: ({ rewards: _rewards, ...detail }) => {
+      qc.setQueryData(['trip', publicId], detail);
+      void qc.invalidateQueries({ queryKey: ['trips'] });
+      // +500 XP — profil, score, nailiyyətlər dəyişir
+      void qc.invalidateQueries({ queryKey: meKeys.profile });
+      void qc.invalidateQueries({ queryKey: meKeys.score });
+      void qc.invalidateQueries({ queryKey: meKeys.badges });
+      void qc.invalidateQueries({ queryKey: ['leaderboard'] });
+    },
+  });
+}
+
+export function useDeleteTrip(publicId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => api<{ deleted: boolean }>(`/trips/${publicId}`, { method: 'DELETE' }),
+    onSuccess: () => {
+      qc.removeQueries({ queryKey: ['trip', publicId] });
+      void qc.invalidateQueries({ queryKey: ['trips'] });
+      void qc.invalidateQueries({ queryKey: meKeys.stats });
     },
   });
 }

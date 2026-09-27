@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
 import {
-  Avatar, Button, Card, EmptyState, Icon, Loading, Photo, Pill, Rating, RowCard, Screen, StatCell, Text, TopBar,
+  Avatar, Button, Card, ErrorState, Icon, Loading, Photo, Pill, Rating, RowCard, Screen, StatCell, Text, TopBar,
 } from '@/components';
 import {
   useFollow, useOpenConversation, useUserBadges, useUserPosts, useUserProfile, useUserRoutes,
 } from '@/api/hooks/social';
 import { useExperiences } from '@/api/hooks/content';
+import { useMyRoutes } from '@/api/hooks/routeBuilder';
 import { compactCount } from '@/lib/time';
 import { durationLabel } from '@/lib/labels';
 import { t } from '@/theme';
@@ -24,18 +25,24 @@ export function UserProfileScreen({ route, navigation }: AppScreenProps<'UserPro
   const follow = useFollow();
   const open = useOpenConversation();
   const posts = useUserPosts(username, tab === 'posts');
-  const routes = useUserRoutes(username, tab === 'routes');
+  // Öz profilində şəxsi marşrutlar da görünməlidir — ictimai siyahı onları vermir
+  const isMe = profile.data?.viewer.isMe ?? false;
+  const publicRoutes = useUserRoutes(username, tab === 'routes' && profile.isSuccess && !isMe);
+  const myRoutes = useMyRoutes(tab === 'routes' && isMe);
+  const routes = isMe ? myRoutes : publicRoutes;
   const badges = useUserBadges(username, tab === 'badges');
   // Ekran 21 — expert profilində təklif etdiyi təcrübələr də göstərilir
   const expertProfile = profile.data?.expert ?? null;
   const experiences = useExperiences({ expert: username, limit: 10 });
 
-  if (profile.isLoading) return <Loading label="Profil yüklənir…" />;
   if (!profile.data) {
+    if (profile.error && !profile.isFetching) {
+      return <ErrorState error={profile.error} onRetry={() => void profile.refetch()} onBack={navigation.goBack} />;
+    }
     return (
-      <Screen padded={false}>
+      <Screen padded={false} scroll={false}>
         <TopBar onBack={navigation.goBack} />
-        <EmptyState title="İstifadəçi tapılmadı" />
+        <Loading label="Profil yüklənir…" />
       </Screen>
     );
   }
@@ -150,7 +157,7 @@ export function UserProfileScreen({ route, navigation }: AppScreenProps<'UserPro
           {(
             [
               ['posts', `Paylaşımlar · ${u.stats.posts}`],
-              ['routes', `Marşrutlar · ${u.stats.routes}`],
+              ['routes', `Marşrutlar · ${isMe && myRoutes.data ? myRoutes.data.data.length : u.stats.routes}`],
               ['badges', `Nailiyyətlər · ${u.stats.badges}`],
             ] as const
           ).map(([key, label]) => (
@@ -217,9 +224,18 @@ export function UserProfileScreen({ route, navigation }: AppScreenProps<'UserPro
           routes.isLoading ? (
             <Loading />
           ) : !routes.data?.data.length ? (
-            <Text variant="small" color="muted" center>
-              İctimai marşrut yoxdur
-            </Text>
+            isMe ? (
+              <View style={styles.emptyRoutes}>
+                <Text variant="small" color="muted" center>
+                  Hələ marşrutun yoxdur
+                </Text>
+                <Button label="Marşrut qur" variant="soft" size="sm" onPress={() => navigation.navigate('RouteBuilder')} />
+              </View>
+            ) : (
+              <Text variant="small" color="muted" center>
+                İctimai marşrut yoxdur
+              </Text>
+            )
           ) : (
             <View style={styles.list}>
               {routes.data.data.map((r) => (
@@ -230,6 +246,7 @@ export function UserProfileScreen({ route, navigation }: AppScreenProps<'UserPro
                   subtitle={`${r.days} gün · ${r.region.name}`}
                   meta={
                     <View style={styles.meta}>
+                      {isMe && r.visibility === 'private' ? <Pill label="Şəxsi" tone="gray" /> : null}
                       {r.ratingCount > 0 ? <Rating value={r.rating} count={r.ratingCount} /> : null}
                       <Text variant="caption">{r.stopCount} dayanacaq</Text>
                     </View>
@@ -290,6 +307,7 @@ const styles = StyleSheet.create({
   textTile: { borderRadius: t.radius.sm, backgroundColor: t.colors.green050, padding: t.spacing.sm },
   multi: { position: 'absolute', top: 6, right: 6 },
   list: { gap: t.spacing.md },
+  emptyRoutes: { alignItems: 'center', gap: t.spacing.md },
   meta: { flexDirection: 'row', alignItems: 'center', gap: t.spacing.sm, flexWrap: 'wrap' },
   badges: { flexDirection: 'row', flexWrap: 'wrap', gap: t.spacing.md },
   badge: { width: '30%', alignItems: 'center', gap: 4 },
