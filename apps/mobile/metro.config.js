@@ -11,6 +11,8 @@ const workspaceRoot = path.resolve(projectRoot, '../..');
 module.exports = mergeConfig(getDefaultConfig(projectRoot), {
   watchFolders: [workspaceRoot],
   resolver: {
+    // Claude/git worktree-ləri repo kökündədir — Metro onların node_modules-unu indeksləməsin
+    blockList: [/[\\/]\.claude[\\/].*/],
     nodeModulesPaths: [
       path.resolve(projectRoot, 'node_modules'),
       path.resolve(workspaceRoot, 'node_modules'),

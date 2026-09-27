@@ -71,3 +71,4 @@ apps/admin/next-env.d.ts
 # Python keşi
 __pycache__/
 *.pyc
+.claude/worktrees/

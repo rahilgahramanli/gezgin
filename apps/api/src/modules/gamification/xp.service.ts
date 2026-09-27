@@ -3,6 +3,7 @@ import { Prisma, type BadgeCondition, type XpAction } from '@prisma/client';
 import {
   XP_RULES, gezginScore, levelForXp, levelProgress, tierForLevel, type ScoreInput,
 } from '@gezgin/shared';
+import { bakuDayStart } from '@/common/time';
 import { PrismaService } from '@/common/prisma/prisma.service';
 import { NotificationsService } from '@/modules/community/notifications.service';
 
@@ -51,8 +52,8 @@ export class XpService {
     const rule = XP_RULES[action as keyof typeof XP_RULES];
     if (!rule?.dailyCap) return false;
 
-    const since = new Date();
-    since.setHours(0, 0, 0, 0);
+    // Limit Bakı təqvim gününə görə sıfırlanır — check-in qaydası ilə eyni gün sərhədi
+    const since = bakuDayStart();
     // Yalnız XP gətirən sətirlər sayılır — geri alma (mənfi) sətirləri limiti doldurmamalıdır
     const used = await this.prisma.xpTransaction.count({
       where: { userId, action, createdAt: { gte: since }, xp: { gt: 0 } },
