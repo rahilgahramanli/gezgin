@@ -221,11 +221,13 @@ export class PlacesService {
       };
     }
 
-    const clusters = await this.prisma.$queryRaw<Array<{ count: bigint; lat: number; lng: number; sample: string }>>`
+    const clusters = await this.prisma.$queryRaw<Array<{ count: bigint; lat: number; lng: number; sample: string; sample_slug: string; sample_rating: Prisma.Decimal | null }>>`
       SELECT COUNT(*) AS count,
              AVG(p.lat) AS lat,
              AVG(p.lng) AS lng,
-             MIN(t.name) AS sample
+             MIN(t.name) AS sample,
+             MIN(p.slug) AS sample_slug,
+             MIN(p.rating_avg) AS sample_rating
       FROM places p
       JOIN regions r ON r.id = p.region_id
       ${translationJoin({ table: 'place_translations', fk: 'place_id', alias: 't', owner: 'p', lang })}
@@ -243,6 +245,8 @@ export class PlacesService {
         lat: Number(c.lat),
         lng: Number(c.lng),
         sampleName: c.sample,
+        // Tək məkanlı klaster xəritədə pin kimi göstərilir — kartı açmaq üçün slug lazımdır
+        ...(Number(c.count) === 1 ? { slug: c.sample_slug, rating: Number(c.sample_rating ?? 0) } : {}),
       })),
     };
   }

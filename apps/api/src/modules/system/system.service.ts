@@ -3,11 +3,10 @@ import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '@/common/prisma/prisma.service';
 import { LEVEL_XP, TIERS, XP_RULES, PLATFORM_COMMISSION_RATE, CURRENCY, MEDIA } from '@gezgin/shared';
 
-const LEGAL_DOCS: Record<string, { titleAz: string; version: string; url: string }> = {
-  terms: { titleAz: 'İstifadə şərtləri', version: '1.0', url: 'https://gezgin.app/legal/terms' },
-  privacy: { titleAz: 'Məxfilik siyasəti', version: '1.0', url: 'https://gezgin.app/legal/privacy' },
-  'expert-terms': { titleAz: 'Local Expert şərtləri', version: '1.0', url: 'https://gezgin.app/legal/expert-terms' },
-};
+import { LEGAL_DOCS } from './legal-content';
+
+const escapeHtml = (s: string): string =>
+  s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
 @Injectable()
 export class SystemService {
@@ -84,9 +83,18 @@ export class SystemService {
     };
   }
 
-  legal(slug: string) {
+  legal(slug: string, url: string) {
     const doc = LEGAL_DOCS[slug];
     if (!doc) throw new NotFoundException({ message: `Sənəd tapılmadı: ${slug}` });
-    return { slug, ...doc };
+    return { slug, ...doc, url };
+  }
+
+  legalHtml(slug: string): string {
+    const doc = LEGAL_DOCS[slug];
+    if (!doc) throw new NotFoundException({ message: `Sənəd tapılmadı: ${slug}` });
+    const sections = doc.sections
+      .map((s) => `<h2>${escapeHtml(s.heading)}</h2>${s.body.split('\n').map((p) => `<p>${escapeHtml(p)}</p>`).join('')}`)
+      .join('');
+    return `<!doctype html><html lang="az"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(doc.titleAz)} — GEZGIN</title><style>body{font:16px/1.6 -apple-system,system-ui,sans-serif;max-width:720px;margin:0 auto;padding:24px 16px;color:#1b2a28;background:#faf8f4}h1{font-size:26px}h2{font-size:18px;margin-top:28px}.meta{color:#6b7a77;font-size:14px}</style></head><body><h1>${escapeHtml(doc.titleAz)}</h1><p class="meta">Versiya ${doc.version} · ${doc.updatedAt}</p>${sections}</body></html>`;
   }
 }

@@ -1,4 +1,5 @@
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Header, Param, Post, Query, Req } from '@nestjs/common';
+import type { Request } from 'express';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Public } from '@/common/decorators/public.decorator';
 import { PrismaService } from '@/common/prisma/prisma.service';
@@ -44,8 +45,18 @@ export class SystemController {
   @Public()
   @Get('legal/:slug')
   @ApiOperation({ summary: 'Hüquqi sənəd: terms, privacy, expert-terms' })
-  legal(@Param('slug') slug: string) {
-    return this.system.legal(slug);
+  legal(@Param('slug') slug: string, @Req() req: Request) {
+    // Brauzerdə açılan versiyanın ünvanı — App Store "Privacy Policy URL" sahəsi üçün
+    const base = `${req.protocol}://${req.get('host') ?? 'localhost'}`;
+    return this.system.legal(slug, `${base}/api/v1/legal/${slug}/page`);
+  }
+
+  @Public()
+  @Get('legal/:slug/page')
+  @Header('Content-Type', 'text/html; charset=utf-8')
+  @ApiOperation({ summary: 'Hüquqi sənədin HTML səhifəsi (brauzer üçün)' })
+  legalPage(@Param('slug') slug: string) {
+    return this.system.legalHtml(slug);
   }
 
   @Public()

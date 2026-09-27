@@ -90,7 +90,8 @@ export class XpService {
     const [places, regions, posts, routes, experiences, reviews, checkins] = await Promise.all([
       this.prisma.checkin.findMany({ where: { userId }, select: { placeId: true }, distinct: ['placeId'] }),
       this.prisma.checkin.findMany({ where: { userId }, select: { regionId: true }, distinct: ['regionId'] }),
-      this.prisma.post.count({ where: { userId, deletedAt: null } }),
+      // "Fotoqu" badge-i foto/video paylaşımlarını sayır — mətn yazıları yox
+      this.prisma.post.count({ where: { userId, deletedAt: null, media: { some: {} } } }),
       this.prisma.route.count({ where: { authorId: userId, deletedAt: null } }),
       this.prisma.booking.count({ where: { userId, status: 'completed', type: 'experience' } }),
       this.prisma.review.count({ where: { userId, deletedAt: null } }),
