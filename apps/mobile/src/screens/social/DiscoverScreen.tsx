@@ -11,6 +11,7 @@ import {
 } from '@/api/hooks/social';
 import { getCurrentPosition, type Coords } from '@/lib/location';
 import { t } from '@/theme';
+import { errorText } from '@/lib/errors';
 import type { TabScreenProps } from '@/navigation/types';
 import { ShareSheet } from './ShareSheet';
 
@@ -140,6 +141,14 @@ export function DiscoverScreen({ navigation }: TabScreenProps<'Discover'>) {
         title="Hardasan?"
         message="Yaxınlıqdakı paylaşımları göstərmək üçün mövqe icazəsi lazımdır."
         action={<Button label="İcazə ver" variant="soft" size="sm" onPress={() => void locate()} />}
+      />
+    ) : feed.isError ? (
+      // Oflayn/server xətası "Lent hələ boşdur" kimi görünməsin
+      <EmptyState
+        icon="wifiOff"
+        title="Lent yüklənmədi"
+        message={errorText(feed.error, 'Bir az sonra yenidən cəhd et.')}
+        action={<Button label="Yenidən cəhd et" variant="soft" size="sm" onPress={() => void feed.refetch()} />}
       />
     ) : feed.isLoading ? (
       // Spinner əvəzinə kartın forması — ekran "sıçramır"

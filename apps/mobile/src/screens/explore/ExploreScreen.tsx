@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
-  Chip, ExperienceCard, Icon, Loading, PhotoCard, RowCard, SectionHead, Text,
+  Button, Card, Chip, ExperienceCard, Icon, Loading, PhotoCard, RowCard, SectionHead, Text,
 } from '@/components';
+import { errorText } from '@/lib/errors';
 import { useExperiences, usePlaces, useRegions, useRoutes } from '@/api/hooks/content';
 import { useBusinesses } from '@/api/hooks/business';
 import { BUSINESS_TYPE_LABEL, label } from '@/lib/labels';
@@ -39,9 +40,24 @@ export function ExploreScreen({ navigation }: TabScreenProps<'Explore'>) {
 
   if (regions.isLoading) return <Loading label="Yüklənir…" />;
 
+  // Oflayn və ya server xətası — bölmələr səssizcə boş qalmasın
+  const failed = [regions, places, experiences, routes].find((q) => q.isError);
+  const refetchAll = () => {
+    void regions.refetch();
+    void places.refetch();
+    void experiences.refetch();
+    void routes.refetch();
+    void businesses.refetch();
+  };
+  const refreshing = [places, experiences, routes].some((q) => q.isRefetching);
+
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.content}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refetchAll} tintColor={t.colors.green900} />}
+      >
         <View style={styles.header}>
           <Text variant="titleLg">
             Salam, {user?.fullName?.split(' ')[0] ?? 'gezgin'} 👋
@@ -55,6 +71,13 @@ export function ExploreScreen({ navigation }: TabScreenProps<'Explore'>) {
             Məkan, marşrut və ya təcrübə axtar…
           </Text>
         </Pressable>
+
+        {failed ? (
+          <Card padded style={styles.errorCard}>
+            <Text variant="h3">{errorText(failed.error, 'Məlumat yüklənmədi')}</Text>
+            <Button label="Yenidən cəhd et" size="sm" variant="soft" onPress={refetchAll} style={styles.errorBtn} />
+          </Card>
+        ) : null}
 
         <ScrollView
           horizontal
@@ -191,6 +214,8 @@ export function ExploreScreen({ navigation }: TabScreenProps<'Explore'>) {
 }
 
 const styles = StyleSheet.create({
+  errorCard: { marginHorizontal: t.spacing.page, marginBottom: t.spacing.md },
+  errorBtn: { marginTop: t.spacing.sm, alignSelf: 'flex-start' },
   safe: { flex: 1, backgroundColor: t.colors.bg },
   content: { paddingBottom: t.spacing.xxl },
   header: { paddingHorizontal: t.spacing.page, gap: 2, marginBottom: t.spacing.md },
