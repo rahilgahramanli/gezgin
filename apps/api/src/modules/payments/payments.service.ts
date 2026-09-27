@@ -97,6 +97,26 @@ export class PaymentsService {
     return { publicId: created.publicId, brand: created.brand, last4: created.last4, isDefault: created.isDefault };
   }
 
+  /**
+   * Əsas kartı dəyişir. Əvvəl yalnız ilk kart avtomatik əsas olurdu —
+   * istifadəçinin bunu sonradan dəyişmək yolu yox idi (ekran "Ödəniş üsullarım").
+   */
+  async setDefault(userId: bigint, id: string) {
+    const method = await this.prisma.paymentMethod.findFirst({
+      where: { publicId: id, userId, deletedAt: null },
+    });
+    if (!method) throw new NotFoundException({ code: ERROR_CODES.NOT_FOUND, message: 'Ödəniş üsulu tapılmadı' });
+
+    await this.prisma.$transaction([
+      this.prisma.paymentMethod.updateMany({
+        where: { userId, isDefault: true, id: { not: method.id } },
+        data: { isDefault: false },
+      }),
+      this.prisma.paymentMethod.update({ where: { id: method.id }, data: { isDefault: true } }),
+    ]);
+    return this.methods(userId);
+  }
+
   async removeMethod(userId: bigint, id: string) {
     const method = await this.prisma.paymentMethod.findFirst({
       where: { publicId: id, userId, deletedAt: null },

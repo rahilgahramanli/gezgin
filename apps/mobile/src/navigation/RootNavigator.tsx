@@ -28,6 +28,8 @@ import { BookingScreen } from '@/screens/booking/BookingScreen';
 import { BookingSuccessScreen } from '@/screens/booking/BookingSuccessScreen';
 import { HotelBookingScreen } from '@/screens/booking/HotelBookingScreen';
 import { MyBookingsScreen } from '@/screens/booking/MyBookingsScreen';
+import { BookingDetailScreen } from '@/screens/booking/BookingDetailScreen';
+import { PaymentMethodsScreen } from '@/screens/booking/PaymentMethodsScreen';
 import { BusinessProfileScreen } from '@/screens/business/BusinessProfileScreen';
 import { CreateTripScreen } from '@/screens/trips/CreateTripScreen';
 import { RouteBuilderScreen } from '@/screens/trips/RouteBuilderScreen';
@@ -56,9 +58,8 @@ const AuthStack = createNativeStackNavigator<AuthStackParamList>();
 const AppStack = createNativeStackNavigator<AppStackParamList>();
 
 function AuthFlow() {
-  const entry = useAuth((st) => st.authEntry);
   return (
-    <AuthStack.Navigator screenOptions={{ headerShown: false }} initialRouteName={entry}>
+    <AuthStack.Navigator screenOptions={{ headerShown: false }}>
       <AuthStack.Screen name="Splash" component={SplashScreen} />
       <AuthStack.Screen name="Login" component={LoginScreen} />
       <AuthStack.Screen name="Register" component={RegisterScreen} />
@@ -101,6 +102,8 @@ function AppFlow() {
         <AppStack.Screen name="HotelBooking" component={HotelBookingScreen} />
         <AppStack.Screen name="BookingSuccess" component={BookingSuccessScreen} />
         <AppStack.Screen name="MyBookings" component={MyBookingsScreen} />
+        <AppStack.Screen name="BookingDetail" component={BookingDetailScreen} />
+        <AppStack.Screen name="PaymentMethods" component={PaymentMethodsScreen} />
         <AppStack.Screen name="BusinessProfile" component={BusinessProfileScreen} />
         <AppStack.Screen name="CreateTrip" component={CreateTripScreen} />
         <AppStack.Screen name="RouteBuilder" component={RouteBuilderScreen} />

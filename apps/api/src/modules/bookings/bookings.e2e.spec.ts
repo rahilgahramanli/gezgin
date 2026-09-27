@@ -147,6 +147,19 @@ describe('Rezervasiya + Ödəniş (e2e)', () => {
       expect(methods.body[0].isDefault).toBe(true);
     });
 
+    it('başqa kartı əsas edir, əvvəlki əsaslıqdan çıxır', async () => {
+      const second = await addCard(CARDS.declined);
+      const res = await http().post(`/api/v1/payments/methods/${second}/default`).set(auth()).expect(200);
+      const isDefault = Object.fromEntries(
+        (res.body as Array<{ publicId: string; isDefault: boolean }>).map((m) => [m.publicId, m.isDefault]),
+      );
+      expect(isDefault).toMatchObject({ [second]: true, [cardId]: false });
+
+      // Sonrakı testlər ilk kartın əsas olduğunu gözləyir
+      await http().post(`/api/v1/payments/methods/${cardId}/default`).set(auth()).expect(200);
+      await http().post('/api/v1/payments/methods/01NOTEXISTING000000000000/default').set(auth()).expect(404);
+    });
+
     it('yanlış kart nömrəsini rədd edir', async () => {
       await http().post('/api/v1/payments/methods').set(auth())
         .send({ number: '123', expMonth: 12, expYear: 2029, cvv: '123' }).expect(400);

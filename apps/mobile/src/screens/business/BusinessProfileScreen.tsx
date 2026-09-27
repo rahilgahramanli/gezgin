@@ -3,16 +3,10 @@ import {
   Button, Card, Icon, Loading, Photo, Pill, Rating, Screen, SectionHead, Text, TopBar,
 } from '@/components';
 import { useBusiness } from '@/api/hooks/business';
-import { AMENITY_LABEL, label } from '@/lib/labels';
+import { AMENITY_LABEL, BUSINESS_TYPE_LABEL, label } from '@/lib/labels';
+import { shareItem } from '@/lib/share';
 import { t } from '@/theme';
 import type { AppScreenProps } from '@/navigation/types';
-
-const TYPE_LABEL: Record<string, string> = {
-  otel: 'Otel',
-  restoran: 'Restoran',
-  'qonaq-evi': 'Qonaq evi',
-  tur: 'Tur şirkəti',
-};
 
 /** Ekran 22 — biznes profili və paketlər. */
 export function BusinessProfileScreen({ route, navigation }: AppScreenProps<'BusinessProfile'>) {
@@ -29,7 +23,12 @@ export function BusinessProfileScreen({ route, navigation }: AppScreenProps<'Bus
         <Photo uri={b.coverUrl} style={styles.coverImage} radius={0} />
         <View style={styles.coverShade} />
         <View style={styles.coverBar}>
-          <TopBar light transparent onBack={navigation.goBack} actions={[{ icon: 'share' }]} />
+          <TopBar
+            light
+            transparent
+            onBack={navigation.goBack}
+            actions={[{ icon: 'share', label: 'Paylaş', onPress: () => void shareItem('business', slug, b.name) }]}
+          />
         </View>
         {b.photoCount > 0 ? (
           <View style={styles.photoBadge}>
@@ -55,7 +54,7 @@ export function BusinessProfileScreen({ route, navigation }: AppScreenProps<'Bus
         </Text>
         <View style={styles.metaRow}>
           <Text variant="meta">
-            {TYPE_LABEL[b.type] ?? b.type} · {b.region.name}
+            {label(BUSINESS_TYPE_LABEL, b.type)} · {b.region.name}
           </Text>
           {b.isVerified ? <Pill label="Təsdiqlənib" tone="teal" /> : null}
         </View>

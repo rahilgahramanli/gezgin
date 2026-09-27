@@ -39,10 +39,17 @@ export interface BusinessDetail extends BusinessSummary {
   packages: BusinessPackage[];
 }
 
-export const useBusinesses = () =>
+/** `region` — Kəşf et ekranının region çipi; verilməsə bütün bizneslər. */
+export const useBusinesses = (params: { region?: string; type?: string } = {}) =>
   useQuery({
-    queryKey: ['businesses'],
-    queryFn: () => api<{ data: BusinessSummary[] }>('/businesses'),
+    queryKey: ['businesses', params],
+    queryFn: () => {
+      const qs = new URLSearchParams();
+      if (params.region) qs.set('region', params.region);
+      if (params.type) qs.set('type', params.type);
+      const query = qs.toString();
+      return api<{ data: BusinessSummary[]; nextOffset: number | null }>(`/businesses${query ? `?${query}` : ''}`);
+    },
   });
 
 export const useBusiness = (slug: string) =>

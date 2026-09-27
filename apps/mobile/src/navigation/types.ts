@@ -38,6 +38,10 @@ export type AppStackParamList = {
   HotelBooking: { business: string; package?: string };
   BookingSuccess: { publicId: string };
   MyBookings: undefined;
+  /** Rezervasiya detalı: status, ləğv siyasəti, bilet, "Ödənişi tamamla". */
+  BookingDetail: { publicId: string };
+  /** "Ödəniş üsullarım" — Tənzimləmələr → Hesab. */
+  PaymentMethods: undefined;
   BusinessProfile: { slug: string };
   /** Marşrut detalından gələndə həmin marşrut əvvəlcədən seçilir. */
   CreateTrip: { fromRoute?: string; title?: string } | undefined;

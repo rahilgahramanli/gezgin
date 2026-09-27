@@ -14,6 +14,7 @@ export function PhotoCard({
   width,
   onPress,
   badge,
+  accessibilityLabel,
 }: {
   uri?: string | null;
   title: string;
@@ -23,9 +24,16 @@ export function PhotoCard({
   width?: number;
   onPress?: () => void;
   badge?: string;
+  /** Avtomatlaşdırılmış testlər kartı bu etiketlə tapır. */
+  accessibilityLabel?: string;
 }) {
   return (
-    <Pressable onPress={onPress} style={[styles.photoCard, { height, ...(width ? { width } : null) }]}>
+    <Pressable
+      onPress={onPress}
+      accessibilityRole={onPress ? 'button' : undefined}
+      accessibilityLabel={accessibilityLabel}
+      style={[styles.photoCard, { height, ...(width ? { width } : null) }]}
+    >
       <Photo uri={uri} style={styles.fill} radius={t.radius.lg} />
       <View style={styles.shade} />
       {badge ? (

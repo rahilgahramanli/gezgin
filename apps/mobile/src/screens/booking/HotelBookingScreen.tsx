@@ -1,25 +1,42 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { BOOKING_EXTRAS } from '@gezgin/shared';
-import {
-  Button, Card, Icon, Loading, Photo, Pill, Screen, Text, TopBar,
-} from '@/components';
-import { useAddCard, useCreateBooking, usePaymentMethods, usePayBooking, useQuote } from '@/api/hooks/booking';
+import { Card, Icon, Loading, Photo, Pill, Screen, Text, TopBar } from '@/components';
+import { useQuote, type QuoteInput } from '@/api/hooks/booking';
 import { useBusiness } from '@/api/hooks/business';
-import { ApiError } from '@/api/client';
 import { AMENITY_LABEL, label } from '@/lib/labels';
+import { bakuDate, bakuDayAt, bakuDayKey, bakuParts, bakuShortDate, bakuWeekday, AZ_MONTHS_SHORT } from '@/lib/time';
+import { useIsGuest } from '@/store/auth';
 import { t } from '@/theme';
 import type { AppScreenProps } from '@/navigation/types';
+import {
+  CheckoutFooter, CheckoutOtp, GuestGate, PaymentPicker, PriceRow, Stepper, errorText, useCheckout,
+} from './parts';
 
 /** Otel paketində əlavələr rezervasiya başınadır (nəfər başına deyil). */
 const HOTEL_EXTRAS = ['spa', 'transfer'] as const;
 
-const fmtDate = (d: Date): string =>
-  d.toLocaleDateString('az-AZ', { day: 'numeric', month: 'long' });
+/** Giriş tarixi seçimləri — bu gündən neçə gün sonra. */
+const START_OPTIONS = [0, 7, 14, 30] as const;
+
+/** Giriş saatı, Bakı vaxtı ilə. */
+const CHECK_IN_HOUR = 14;
+const DAY_MS = 86_400_000;
+
+/**
+ * Göndəriləcək giriş vaxtı — TOXUNUŞ ANINDA hesablanır. Əvvəl ekran açılanda
+ * bir dəfə hesablanırdı: "bu gün" seçilib bir müddət gözlənəndə vaxt keçmişdə
+ * qalırdı və server "Keçmiş tarixə rezervasiya edilə bilməz" qaytarırdı.
+ * Bu gün saat 14:00 artıq keçibsə giriş indidən 10 dəqiqə sonraya yazılır.
+ */
+function checkInAt(days: number, now = Date.now()): string {
+  return new Date(Math.max(bakuDayAt(days, CHECK_IN_HOUR, now), now + 10 * 60_000)).toISOString();
+}
 
 /** Ekran 49 — otel/qonaq evi paket rezervasiyası. */
 export function HotelBookingScreen({ route, navigation }: AppScreenProps<'HotelBooking'>) {
   const { business: slug, package: initialPackage } = route.params;
+  const isGuest = useIsGuest();
 
   const business = useBusiness(slug);
   const packages = business.data?.packages ?? [];
@@ -27,88 +44,81 @@ export function HotelBookingScreen({ route, navigation }: AppScreenProps<'HotelB
   const [selected, setSelected] = useState<string | undefined>(initialPackage);
   const [adults, setAdults] = useState(2);
   const [children, setChildren] = useState(0);
-  const [startsIn, setStartsIn] = useState(7);
+  const [startsIn, setStartsIn] = useState<number>(7);
   const [extras, setExtras] = useState<string[]>([]);
+  const [cardId, setCardId] = useState<string | null>(null);
 
   // Biznes yüklənəndə ilk paketi seçirik — ekran heç vaxt paketsiz qalmır
   const pkg = packages.find((p) => p.publicId === selected) ?? packages[0];
-  const startDate = useMemo(() => new Date(Date.now() + startsIn * 86400_000), [startsIn]);
 
-  const quote = useQuote(
-    pkg
+  // Qiymət hesabı üçün sabit giriş vaxtı (Bakı günü dəyişəndə yenilənir) — sorğu açarı hər renderdə dəyişməsin
+  const today = bakuDayKey(Date.now());
+  const displayCheckIn = bakuDayAt(startsIn, CHECK_IN_HOUR);
+  const quoteInput: QuoteInput | null =
+    pkg && !isGuest
       ? {
           type: 'business_package',
           target: pkg.publicId,
           adults,
           children,
-          startAt: startDate.toISOString(),
+          startAt: new Date(displayCheckIn).toISOString(),
           extras,
         }
-      : null,
-  );
+      : null;
+  const quote = useQuote(quoteInput);
 
-  const methods = usePaymentMethods();
-  const createBooking = useCreateBooking();
-  const pay = usePayBooking();
-  const addCard = useAddCard();
-
-  const busy = createBooking.isPending || pay.isPending || addCard.isPending;
-  const error = [createBooking.error, pay.error, quote.error].find((e) => e instanceof ApiError) as
-    | ApiError
-    | undefined;
+  const checkout = useCheckout({
+    onConfirmed: (publicId) => navigation.replace('BookingSuccess', { publicId }),
+  });
 
   // Gecə sayı quote-dan gəlir — paket dəyişəndə çıxış tarixi də dəyişir
   const nights = quote.data?.nights ?? pkg?.nights ?? 0;
-  const endDate = new Date(startDate.getTime() + nights * 86400_000);
+  const checkOut = displayCheckIn + nights * DAY_MS;
 
-  const confirm = async () => {
-    if (!pkg) return;
-    const existing = methods.data?.find((m) => m.isDefault) ?? methods.data?.[0];
-    const method =
-      existing ??
-      (await addCard.mutateAsync({
-        number: '4111111111111111',
-        expMonth: 12,
-        expYear: 2030,
-        cvv: '123',
-        holderName: 'TEST KART',
-      }));
-
-    createBooking.mutate(
-      {
-        type: 'business_package',
-        target: pkg.publicId,
-        adults,
-        children,
-        startAt: startDate.toISOString(),
-        extras,
-      },
-      {
-        onSuccess: (booking) => {
-          pay.mutate(
-            { publicId: booking.publicId, paymentMethod: method.publicId },
-            { onSuccess: () => navigation.replace('BookingSuccess', { publicId: booking.publicId }) },
-          );
-        },
-      },
-    );
+  const pay = () => {
+    if (!pkg || !cardId) return;
+    const input: QuoteInput = {
+      type: 'business_package',
+      target: pkg.publicId,
+      adults,
+      children,
+      startAt: checkInAt(startsIn),
+      extras,
+    };
+    // İmza günə bağlıdır, dəqiqəyə yox — təkrar cəhd eyni rezervasiyanı ödəsin
+    const signature = JSON.stringify({ pkg: pkg.publicId, adults, children, startsIn, today, extras });
+    void checkout.submit(input, cardId, signature);
   };
 
   if (business.isLoading) return <Loading label="Yüklənir…" />;
   if (!business.data) return null;
 
+  const quoteReady = !!quote.data && !quote.isPlaceholderData;
+  const hint = !pkg
+    ? 'Bu obyektdə açıq paket yoxdur'
+    : !cardId
+      ? 'Ödəniş üçün kart seçin və ya əlavə edin'
+      : !quoteReady
+        ? 'Qiymət hesablanır…'
+        : null;
+  const error = checkout.error ?? (quote.error ? errorText(quote.error) : null);
+
   return (
     <Screen
       padded={false}
       footer={
-        <Button
-          label={quote.data ? `${quote.data.totalAzn} AZN ödə və bron et` : 'Bron et'}
-          onPress={confirm}
-          loading={busy}
-          disabled={!quote.data}
-          left={<Icon name="lock" size={18} color="#fff" />}
-          style={styles.ctaButton}
-        />
+        isGuest ? (
+          <GuestGate />
+        ) : (
+          <CheckoutFooter
+            error={error}
+            hint={hint}
+            label={quote.data ? `${quote.data.totalAzn} AZN ödə və bron et` : 'Bron et'}
+            onPress={pay}
+            loading={checkout.busy}
+            disabled={!pkg || !cardId || !quoteReady}
+          />
+        )
       }
     >
       <TopBar title="Rezervasiya" onBack={navigation.goBack} />
@@ -134,26 +144,33 @@ export function HotelBookingScreen({ route, navigation }: AppScreenProps<'HotelB
           {quote.data ? <Pill label={`+${quote.data.rewards.bookingXp} XP`} tone="brown" /> : null}
         </Card>
 
-        {/* Tarixlər — giriş seçilir, çıxış paketin gecə sayından çıxır */}
+        {/* Tarixlər — giriş seçilir, çıxış paketin gecə sayından çıxır. Hamısı Bakı təqvimi ilə */}
         <View>
           <Text variant="h2" style={styles.sectionTitle}>
             Tarixlər
           </Text>
           <View style={styles.dateRow}>
-            {[0, 7, 14, 30].map((days) => {
-              const d = new Date(Date.now() + days * 86400_000);
+            {START_OPTIONS.map((days) => {
+              const at = bakuDayAt(days, CHECK_IN_HOUR);
+              const p = bakuParts(at);
               const active = startsIn === days;
               return (
                 <Pressable
                   key={days}
                   onPress={() => setStartsIn(days)}
+                  accessibilityRole="radio"
+                  accessibilityLabel={`Giriş ${bakuDate(at)}`}
+                  accessibilityState={{ checked: active }}
                   style={[styles.date, active && styles.dateActive]}
                 >
+                  <Text variant="caption" color={active ? 'paper' : 'muted'}>
+                    {days === 0 ? 'Bu gün' : bakuWeekday(at)}
+                  </Text>
                   <Text variant="h3" color={active ? 'paper' : 'ink'}>
-                    {d.getDate()}
+                    {p.day}
                   </Text>
                   <Text variant="caption" color={active ? 'paper' : 'muted'}>
-                    {d.toLocaleDateString('az-AZ', { month: 'short' })}
+                    {AZ_MONTHS_SHORT[p.month]}
                   </Text>
                 </Pressable>
               );
@@ -162,8 +179,9 @@ export function HotelBookingScreen({ route, navigation }: AppScreenProps<'HotelB
           {nights > 0 ? (
             <View style={styles.stayRow}>
               <Icon name="calendar" size={15} color={t.colors.muted} />
-              <Text variant="caption">
-                Giriş {fmtDate(startDate)} · Çıxış {fmtDate(endDate)} · {nights} gecə
+              <Text variant="caption" style={styles.flex}>
+                Giriş {bakuShortDate(displayCheckIn)} ({CHECK_IN_HOUR}:00-dan) · Çıxış {bakuDate(checkOut)} · {nights}{' '}
+                gecə
               </Text>
             </View>
           ) : null}
@@ -173,8 +191,8 @@ export function HotelBookingScreen({ route, navigation }: AppScreenProps<'HotelB
           <Text variant="h2" style={styles.sectionTitle}>
             Qonaqlar
           </Text>
-          <Stepper label="Böyük" hint="13 yaş və yuxarı" value={adults} min={1} onChange={setAdults} />
-          <Stepper label="Uşaq (0–12)" hint="Valideynlə pulsuz" value={children} min={0} onChange={setChildren} />
+          <Stepper label="Böyük" hint="13 yaş və yuxarı" value={adults} min={1} max={20} onChange={setAdults} />
+          <Stepper label="Uşaq (0–12)" hint="Valideynlə pulsuz" value={children} min={0} max={20} onChange={setChildren} />
         </View>
 
         {packages.length ? (
@@ -185,7 +203,13 @@ export function HotelBookingScreen({ route, navigation }: AppScreenProps<'HotelB
             {packages.map((p) => {
               const active = p.publicId === pkg?.publicId;
               return (
-                <Pressable key={p.publicId} onPress={() => setSelected(p.publicId)}>
+                <Pressable
+                  key={p.publicId}
+                  onPress={() => setSelected(p.publicId)}
+                  accessibilityRole="radio"
+                  accessibilityLabel={`Paket ${p.title}, ${p.priceAzn} AZN`}
+                  accessibilityState={{ checked: active }}
+                >
                   <Card padded style={[styles.option, active && styles.optionActive]}>
                     <View style={[styles.radio, active && styles.radioOn]}>
                       {active ? <View style={styles.radioDot} /> : null}
@@ -227,6 +251,9 @@ export function HotelBookingScreen({ route, navigation }: AppScreenProps<'HotelB
               <Pressable
                 key={code}
                 onPress={() => setExtras((v) => (on ? v.filter((c) => c !== code) : [...v, code]))}
+                accessibilityRole="checkbox"
+                accessibilityLabel={`${extra.nameAz}, +${extra.priceAzn} AZN`}
+                accessibilityState={{ checked: on }}
               >
                 <Card padded style={[styles.option, on && styles.optionActive]}>
                   <View style={[styles.check, on && styles.checkOn]}>
@@ -245,29 +272,14 @@ export function HotelBookingScreen({ route, navigation }: AppScreenProps<'HotelB
           })}
         </View>
 
-        <View>
-          <Text variant="h2" style={styles.sectionTitle}>
-            Ödəniş üsulu
-          </Text>
-          {methods.data?.length ? (
-            methods.data.map((m) => (
-              <Card key={m.publicId} padded style={styles.method}>
-                <Icon name="coins" size={20} color={t.colors.green900} />
-                <Text variant="body" style={styles.flex}>
-                  {m.brand.toUpperCase()} •••• {m.last4}
-                </Text>
-                {m.isDefault ? <Pill label="Əsas" tone="green" /> : null}
-              </Card>
-            ))
-          ) : (
-            <Card padded style={styles.method}>
-              <Icon name="info" size={20} color={t.colors.brown700} />
-              <Text variant="small" color="ink2" style={styles.flex}>
-                Kart əlavə edilməyib — test rejimində ödəniş mock provayderlə keçir.
-              </Text>
-            </Card>
-          )}
-        </View>
+        {!isGuest ? (
+          <View>
+            <Text variant="h2" style={styles.sectionTitle}>
+              Ödəniş üsulu
+            </Text>
+            <PaymentPicker selected={cardId} onSelect={setCardId} />
+          </View>
+        ) : null}
 
         {quote.data ? (
           <View>
@@ -276,25 +288,15 @@ export function HotelBookingScreen({ route, navigation }: AppScreenProps<'HotelB
             </Text>
             <Card padded style={styles.price}>
               {quote.data.lines.map((line) => (
-                <View key={line.code} style={styles.priceRow}>
-                  <Text variant="body" color="ink2" style={styles.flex}>
-                    {line.label}
-                    {line.quantity > 1 ? ` × ${line.quantity}` : ''}
-                  </Text>
-                  <Text variant="body">{line.totalAzn} AZN</Text>
-                </View>
+                <PriceRow
+                  key={line.code}
+                  label={`${line.label}${line.quantity > 1 ? ` × ${line.quantity}` : ''}`}
+                  value={`${line.totalAzn} AZN`}
+                />
               ))}
-              <View style={styles.priceRow}>
-                <Text variant="body" color="ink2">
-                  Xidmət haqqı
-                </Text>
-                <Text variant="body">{quote.data.serviceFeeAzn} AZN</Text>
-              </View>
+              <PriceRow label="Xidmət haqqı" value={`${quote.data.serviceFeeAzn} AZN`} />
               <View style={styles.total}>
-                <Text variant="h3">Cəmi</Text>
-                <Text variant="h2" color="green900">
-                  {quote.data.totalAzn} AZN
-                </Text>
+                <PriceRow label="Cəmi" value={`${quote.data.totalAzn} AZN`} strong />
               </View>
             </Card>
             <Text variant="caption" style={styles.xpNote}>
@@ -304,52 +306,10 @@ export function HotelBookingScreen({ route, navigation }: AppScreenProps<'HotelB
         ) : quote.isLoading ? (
           <Loading />
         ) : null}
-
-        {error ? (
-          <Text variant="small" color="danger" center>
-            {error.message}
-          </Text>
-        ) : null}
       </View>
+
+      <CheckoutOtp checkout={checkout} />
     </Screen>
-  );
-}
-
-function Stepper({
-  label: name,
-  hint,
-  value,
-  min,
-  onChange,
-}: {
-  label: string;
-  hint: string;
-  value: number;
-  min: number;
-  onChange: (v: number) => void;
-}) {
-  return (
-    <View style={styles.stepper}>
-      <View style={styles.flex}>
-        <Text variant="body">{name}</Text>
-        <Text variant="caption">{hint}</Text>
-      </View>
-      <View style={styles.stepperControls}>
-        <Pressable
-          onPress={() => onChange(Math.max(min, value - 1))}
-          style={[styles.stepBtn, value <= min && styles.stepBtnOff]}
-          disabled={value <= min}
-        >
-          <Icon name="minus" size={14} color={value <= min ? t.colors.muted : t.colors.green900} strokeWidth={2.4} />
-        </Pressable>
-        <Text variant="h3" style={styles.stepValue}>
-          {value}
-        </Text>
-        <Pressable onPress={() => onChange(Math.min(20, value + 1))} style={styles.stepBtn}>
-          <Icon name="plus" size={14} color={t.colors.green900} strokeWidth={2.4} />
-        </Pressable>
-      </View>
-    </View>
   );
 }
 
@@ -368,14 +328,6 @@ const styles = StyleSheet.create({
   },
   dateActive: { backgroundColor: t.colors.green900, borderColor: t.colors.green900 },
   stayRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: t.spacing.sm },
-  stepper: { flexDirection: 'row', alignItems: 'center', paddingVertical: t.spacing.md },
-  stepperControls: { flexDirection: 'row', alignItems: 'center', gap: t.spacing.md },
-  stepBtn: {
-    width: 32, height: 32, borderRadius: 16, backgroundColor: t.colors.green100,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  stepBtnOff: { backgroundColor: t.colors.bg2 },
-  stepValue: { minWidth: 20, textAlign: 'center' },
   option: { flexDirection: 'row', alignItems: 'center', gap: t.spacing.md, marginBottom: t.spacing.sm },
   optionActive: { borderColor: t.colors.green900, backgroundColor: t.colors.green050 },
   radio: {
@@ -390,14 +342,8 @@ const styles = StyleSheet.create({
   },
   checkOn: { borderColor: t.colors.green900, backgroundColor: t.colors.green900 },
   notice: { flexDirection: 'row', alignItems: 'center', gap: t.spacing.md },
-  method: { flexDirection: 'row', alignItems: 'center', gap: t.spacing.md },
   price: { gap: t.spacing.sm },
-  priceRow: { flexDirection: 'row', justifyContent: 'space-between', gap: t.spacing.md },
-  total: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    borderTopWidth: 1, borderTopColor: t.colors.line, paddingTop: t.spacing.md, marginTop: 4,
-  },
+  total: { borderTopWidth: 1, borderTopColor: t.colors.line, paddingTop: t.spacing.md, marginTop: 4 },
   xpNote: { marginTop: t.spacing.sm },
   flex: { flex: 1, minWidth: 0 },
-  ctaButton: { width: '100%' },
 });

@@ -34,6 +34,17 @@ export const SEARCH_TYPE_LABEL: Record<string, string> = {
   business: 'Otel',
 };
 
+/** Biznes növü — API enum-u (`qonaq_evi`) və köhnə seed slug-ları (`qonaq-evi`). */
+export const BUSINESS_TYPE_LABEL: Record<string, string> = {
+  otel: 'Otel',
+  restoran: 'Restoran',
+  qonaq_evi: 'Qonaq evi',
+  'qonaq-evi': 'Qonaq evi',
+  tur_sirketi: 'Tur şirkəti',
+  tur: 'Tur şirkəti',
+  diger: 'Digər',
+};
+
 /** Paket və xidmət kodları — seed CSV-lərindəki slug-lar. */
 export const AMENITY_LABEL: Record<string, string> = {
   // xidmətlər

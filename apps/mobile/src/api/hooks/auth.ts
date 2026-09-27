@@ -1,4 +1,4 @@
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/client';
 import { useAuth, type Session } from '@/store/auth';
 
@@ -62,6 +62,26 @@ export function useLogout() {
         );
       }
       await signOut();
+    },
+  });
+}
+
+/**
+ * Qonaq → qeydiyyat. Qonaq sessiyası bağlanır, keş təmizlənir (qonağın 403
+ * cavabları yeni hesaba keçməsin) və giriş axını Qeydiyyat ekranında açılır.
+ */
+export function useGuestSignUp() {
+  const qc = useQueryClient();
+  const { session, signOut } = useAuth();
+  return useMutation({
+    mutationFn: async () => {
+      if (session?.refreshToken) {
+        await api('/auth/logout', { method: 'POST', body: { refreshToken: session.refreshToken } }).catch(
+          () => undefined,
+        );
+      }
+      await signOut('Register');
+      qc.clear();
     },
   });
 }

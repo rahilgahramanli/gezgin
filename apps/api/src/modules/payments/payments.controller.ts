@@ -25,6 +25,12 @@ export class PaymentsController {
     return this.payments.addMethod(user.id, dto);
   }
 
+  @ApiBearerAuth() @UseGuards(GuestBlockedGuard) @Post('methods/:id/default') @HttpCode(200)
+  @ApiOperation({ summary: 'Kartı əsas et — yenilənmiş siyahını qaytarır' })
+  setDefault(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+    return this.payments.setDefault(user.id, id);
+  }
+
   @ApiBearerAuth() @UseGuards(GuestBlockedGuard) @Delete('methods/:id')
   @ApiOperation({ summary: 'Kartı sil' })
   removeMethod(@CurrentUser() user: AuthUser, @Param('id') id: string) {

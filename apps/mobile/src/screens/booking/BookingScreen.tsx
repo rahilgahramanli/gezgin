@@ -1,66 +1,91 @@
-import { useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
-import {
-  Button, Card, EmptyState, Icon, Loading, Pill, Screen, Text, TopBar,
-} from '@/components';
-import { useAddCard, useAvailability, useCreateBooking, usePaymentMethods, usePayBooking, useQuote } from '@/api/hooks/booking';
+import { useEffect, useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Card, Icon, Loading, Pill, Screen, Text, TopBar } from '@/components';
+import { useAvailability, useQuote, type Slot } from '@/api/hooks/booking';
 import { useExperienceDetail } from '@/api/hooks/details';
-import { ApiError } from '@/api/client';
 import { durationLabel } from '@/lib/labels';
+import { bakuDate, bakuShortDate, bakuTime, bakuWeekday } from '@/lib/time';
+import { useIsGuest } from '@/store/auth';
 import { t } from '@/theme';
 import type { AppScreenProps } from '@/navigation/types';
+import {
+  CheckoutFooter, CheckoutOtp, GuestGate, PaymentPicker, PriceRow, Stepper, errorText, useCheckout,
+} from './parts';
+
+/** API `children` üçün 20, ümumi qrup üçün ağlabatan hədd. */
+const MAX_PARTY = 20;
 
 /** Ekran 18 — rezervasiya: tarix, nəfər sayı, qiymət bölgüsü, ödəniş. */
 export function BookingScreen({ route, navigation }: AppScreenProps<'Booking'>) {
   const { experience: slug } = route.params;
+  const isGuest = useIsGuest();
   const [adults, setAdults] = useState(2);
   const [children, setChildren] = useState(0);
   const [slotId, setSlotId] = useState<number | undefined>();
+  const [cardId, setCardId] = useState<string | null>(null);
 
   const detail = useExperienceDetail(slug);
-  const methods = usePaymentMethods();
-  const quote = useQuote({ type: 'experience', target: slug, adults, children, slotId });
-  const createBooking = useCreateBooking();
-  const pay = usePayBooking();
-  const addCard = useAddCard();
+  const availability = useAvailability(slug);
+  const slots = availability.data?.slots ?? [];
+  const slot = slots.find((s) => s.slotId === slotId);
 
-  const busy = createBooking.isPending || pay.isPending || addCard.isPending;
-  const error =
-    createBooking.error instanceof ApiError
-      ? createBooking.error.message
-      : pay.error instanceof ApiError
-        ? pay.error.message
-        : null;
+  const checkout = useCheckout({
+    onConfirmed: (publicId) => navigation.replace('BookingSuccess', { publicId }),
+    onCapacityError: () => void availability.refetch(),
+  });
 
   /**
-   * Bron → ödəniş. Ödəniş üçün tokenləşdirilmiş kart lazımdır; istifadəçidə
-   * kart yoxdursa test kartı əlavə edilir (mock provayder — real PSP gələndə
-   * bu addım kart formasına əvəz olunacaq).
+   * Ödənişi alınmamış rezervasiyamız yerləri artıq tutub (server onları boş
+   * yerdən çıxır). Həmin slot üçün onları geri əlavə edirik — əks halda kart
+   * rədd olunandan sonra öz rezervasiyamız slotu "dolu" göstərərdi.
    */
-  const confirm = async () => {
-    const existing = methods.data?.find((m) => m.isDefault) ?? methods.data?.[0];
-    const method =
-      existing ??
-      (await addCard.mutateAsync({
-        number: '4111111111111111',
-        expMonth: 12,
-        expYear: 2030,
-        cvv: '123',
-        holderName: 'TEST KART',
-      }));
+  const held = (id: number | undefined) =>
+    checkout.pending && id !== undefined && checkout.pending.slotId === id
+      ? checkout.pending.adults + (checkout.pending.children ?? 0)
+      : 0;
+  const seatsLeft = slot ? slot.seatsLeft + held(slot.slotId) : undefined;
 
-    createBooking.mutate(
-      { type: 'experience', target: slug, adults, children, slotId },
-      {
-        onSuccess: (booking) => {
-          pay.mutate(
-            { publicId: booking.publicId, paymentMethod: method.publicId },
-            { onSuccess: () => navigation.replace('BookingSuccess', { publicId: booking.publicId }) },
-          );
-        },
-      },
-    );
+  // İlk boş tarix avtomatik seçilir. Seçilmiş tarix sonradan dolsa belə seçim
+  // dəyişdirilmir — istifadəçi bilmədən başqa günə keçməsin; düymə səbəbi deyir.
+  useEffect(() => {
+    const list = availability.data?.slots ?? [];
+    if (slotId !== undefined && list.some((s) => s.slotId === slotId)) return;
+    setSlotId(list.find((s) => !s.isFull)?.slotId);
+    // Yalnız slot siyahısı dəyişəndə — istifadəçinin seçimi hər renderdə sıfırlanmasın
+  }, [availability.data]);
+
+  const slotFull = seatsLeft !== undefined && seatsLeft <= 0;
+  /**
+   * Qrup seçilmiş tarixdəki boş yerdən böyük ola bilməz. Tarix tam dolubsa
+   * nəfər sayı 1-ə endirilmir — istifadəçi başqa tarix seçəcək.
+   */
+  const cap = Math.max(1, Math.min(MAX_PARTY, (slotFull ? undefined : seatsLeft) ?? detail.data?.maxGroup ?? MAX_PARTY));
+  useEffect(() => {
+    if (adults + children <= cap) return;
+    const a = Math.min(adults, cap);
+    setAdults(a);
+    setChildren(Math.max(0, Math.min(children, cap - a)));
+    // Yalnız hədd dəyişəndə (başqa tarix seçildi və ya boş yer azaldı)
+  }, [cap]);
+
+  const quote = useQuote(isGuest ? null : { type: 'experience', target: slug, adults, children, slotId });
+
+  const pay = () => {
+    if (!slotId || !cardId) return;
+    void checkout.submit({ type: 'experience', target: slug, adults, children, slotId }, cardId);
   };
+
+  const quoteReady = !!quote.data && !quote.isPlaceholderData;
+  const hint = !slot
+    ? 'Ödəniş üçün əvvəlcə tarix seçin'
+    : slotFull
+      ? 'Bu tarixdə yer qalmayıb — başqa tarix seçin'
+      : !cardId
+        ? 'Ödəniş üçün kart seçin və ya əlavə edin'
+        : !quoteReady
+          ? 'Qiymət hesablanır…'
+          : null;
+  const error = checkout.error ?? (quote.error ? errorText(quote.error) : null);
 
   if (detail.isLoading) return <Loading label="Yüklənir…" />;
 
@@ -68,14 +93,18 @@ export function BookingScreen({ route, navigation }: AppScreenProps<'Booking'>) 
     <Screen
       padded={false}
       footer={
-        <Button
-          label={quote.data ? `${quote.data.totalAzn} AZN ödə və bron et` : 'Bron et'}
-          onPress={confirm}
-          loading={busy}
-          disabled={!quote.data}
-          left={<Icon name="lock" size={18} color="#fff" />}
-          style={styles.ctaButton}
-        />
+        isGuest ? (
+          <GuestGate />
+        ) : (
+          <CheckoutFooter
+            error={error}
+            hint={hint}
+            label={quote.data ? `${quote.data.totalAzn} AZN ödə və bron et` : 'Bron et'}
+            onPress={pay}
+            loading={checkout.busy}
+            disabled={!slot || slotFull || !cardId || !quoteReady}
+          />
+        )
       }
     >
       <TopBar title="Rezervasiya" onBack={navigation.goBack} />
@@ -88,30 +117,79 @@ export function BookingScreen({ route, navigation }: AppScreenProps<'Booking'>) 
               {detail.data.region.name}
               {detail.data.durationText ? ` · ${durationLabel(detail.data.durationText)}` : ''}
             </Text>
-            <Text variant="h3" color="green900">
-              {detail.data.pricing.priceAzn} AZN / nəfər
-            </Text>
+            <View style={styles.summaryRow}>
+              <Text variant="h3" color="green900">
+                {detail.data.pricing.priceAzn} AZN / nəfər
+              </Text>
+              <Pill label={`+${detail.data.gezginRewards.bookingXp} XP`} tone="teal" />
+            </View>
           </Card>
         ) : null}
 
-        {/* Tarix seçimi — ekran 18 date strip */}
+        {/* Tarix seçimi — ekran 18 date strip, vaxtlar Bakı saatı ilə */}
         <View>
           <Text variant="h2" style={styles.sectionTitle}>
             Tarix seç
           </Text>
-          {detail.data?.nextAvailable ? (
-            <SlotPicker slug={slug} selected={slotId} onSelect={setSlotId} />
-          ) : (
+          {availability.isLoading ? (
+            <Loading />
+          ) : availability.isError ? (
+            <Text variant="meta" color="danger">
+              Tarixlər yüklənmədi — {errorText(availability.error)}
+            </Text>
+          ) : !slots.length ? (
             <Text variant="meta">Bu təcrübə üçün hələ tarix açılmayıb</Text>
+          ) : (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.slots}>
+              {slots.map((s) => (
+                <SlotChip
+                  key={s.slotId}
+                  slot={s}
+                  seatsLeft={s.seatsLeft + held(s.slotId)}
+                  active={s.slotId === slotId}
+                  onPress={() => setSlotId(s.slotId)}
+                />
+              ))}
+            </ScrollView>
           )}
+          {slot && seatsLeft !== undefined ? (
+            <View style={styles.slotInfo}>
+              <Icon name="calendar" size={15} color={t.colors.muted} />
+              <Text variant="caption" style={styles.flex}>
+                {bakuWeekday(slot.startAt)}, {bakuDate(slot.startAt)} · başlama {bakuTime(slot.startAt)} ·{' '}
+                <Text variant="caption" color={slotFull ? 'danger' : 'green900'} style={styles.bold}>
+                  {slotFull ? 'yer qalmayıb' : `${seatsLeft} yer qalıb`}
+                </Text>
+              </Text>
+            </View>
+          ) : null}
         </View>
 
         <View>
           <Text variant="h2" style={styles.sectionTitle}>
             Nəfər sayı
           </Text>
-          <Stepper label="Böyük" hint="13 yaş və yuxarı" value={adults} min={1} onChange={setAdults} />
-          <Stepper label="Uşaq" hint="0–12 yaş · 50% endirim" value={children} min={0} onChange={setChildren} />
+          <Stepper
+            label="Böyük"
+            hint="13 yaş və yuxarı"
+            value={adults}
+            min={1}
+            max={Math.max(1, cap - children)}
+            onChange={setAdults}
+          />
+          <Stepper
+            label="Uşaq"
+            hint="0–12 yaş · 50% endirim"
+            value={children}
+            min={0}
+            max={Math.max(0, cap - adults)}
+            onChange={setChildren}
+          />
+          {seatsLeft !== undefined && !slotFull && adults + children >= cap ? (
+            <Text variant="caption" color="brown700">
+              Seçilmiş tarixdə {seatsLeft} yer qalıb — daha çox nəfər üçün başqa tarix seçin.
+            </Text>
+          ) : null}
         </View>
 
         {quote.data ? (
@@ -121,26 +199,13 @@ export function BookingScreen({ route, navigation }: AppScreenProps<'Booking'>) 
             </Text>
             <Card padded style={styles.price}>
               {quote.data.lines.map((line) => (
-                <View key={line.code} style={styles.priceRow}>
-                  <Text variant="body" color="ink2">
-                    {line.label} × {line.quantity}
-                  </Text>
-                  <Text variant="body">{line.totalAzn} AZN</Text>
-                </View>
+                <PriceRow key={line.code} label={`${line.label} × ${line.quantity}`} value={`${line.totalAzn} AZN`} />
               ))}
               {quote.data.serviceFeeAzn > 0 ? (
-                <View style={styles.priceRow}>
-                  <Text variant="body" color="ink2">
-                    Xidmət haqqı
-                  </Text>
-                  <Text variant="body">{quote.data.serviceFeeAzn} AZN</Text>
-                </View>
+                <PriceRow label="Xidmət haqqı" value={`${quote.data.serviceFeeAzn} AZN`} />
               ) : null}
               <View style={styles.total}>
-                <Text variant="h3">Cəmi</Text>
-                <Text variant="h2" color="green900">
-                  {quote.data.totalAzn} AZN
-                </Text>
+                <PriceRow label="Cəmi" value={`${quote.data.totalAzn} AZN`} strong />
               </View>
             </Card>
           </View>
@@ -148,150 +213,75 @@ export function BookingScreen({ route, navigation }: AppScreenProps<'Booking'>) 
           <Loading />
         ) : null}
 
-        <View>
-          <Text variant="h2" style={styles.sectionTitle}>
-            Ödəniş üsulu
-          </Text>
-          {methods.data?.length ? (
-            methods.data.map((m) => (
-              <Card key={m.publicId} padded style={styles.method}>
-                <Icon name="coins" size={20} color={t.colors.green900} />
-                <Text variant="body" style={styles.flex}>
-                  {m.brand.toUpperCase()} •••• {m.last4}
-                </Text>
-                {m.isDefault ? <Pill label="Əsas" tone="green" /> : null}
-              </Card>
-            ))
-          ) : (
-            <Card padded style={styles.method}>
-              <Icon name="info" size={20} color={t.colors.brown700} />
-              <Text variant="small" color="ink2" style={styles.flex}>
-                Kart əlavə edilməyib — test rejimində ödəniş mock provayderlə keçir.
-              </Text>
-            </Card>
-          )}
-        </View>
-
-        {error ? (
-          <Text variant="small" color="danger" center>
-            {error}
-          </Text>
+        {!isGuest ? (
+          <View>
+            <Text variant="h2" style={styles.sectionTitle}>
+              Ödəniş üsulu
+            </Text>
+            <PaymentPicker selected={cardId} onSelect={setCardId} />
+          </View>
         ) : null}
       </View>
+
+      <CheckoutOtp checkout={checkout} />
     </Screen>
   );
 }
 
-/** Boş tarixlər — API-dən gələn slotlar. */
-function SlotPicker({
-  slug,
-  selected,
-  onSelect,
+/** Tarix çipi: həftə günü + tarix, başlama saatı və boş yer — eyni gündə bir neçə slot seçilə bilsin. */
+function SlotChip({
+  slot,
+  seatsLeft,
+  active,
+  onPress,
 }: {
-  slug: string;
-  selected?: number;
-  onSelect: (id: number) => void;
+  slot: Slot;
+  /** Öz ödənilməmiş rezervasiyamızın tutduğu yerlər daxil. */
+  seatsLeft: number;
+  active: boolean;
+  onPress: () => void;
 }) {
-  const slots = useAvailability(slug);
-
-  if (slots.isLoading) return <Loading />;
-  if (!slots.data?.slots.length) {
-    return <Text variant="meta">Boş tarix yoxdur</Text>;
-  }
-
+  const full = seatsLeft <= 0;
+  const seats = full ? 'dolu' : `${seatsLeft} yer`;
+  const fg = active ? 'paper' : 'muted';
   return (
-    <View style={styles.slots}>
-      {slots.data.slots.map((s) => {
-        const active = selected === s.slotId;
-        const date = new Date(s.startAt);
-        return (
-          <Pressable
-            key={s.slotId}
-            onPress={() => onSelect(s.slotId)}
-            disabled={s.isFull}
-            style={[styles.slot, active && styles.slotActive, s.isFull && styles.slotFull]}
-          >
-            <Text variant="h3" color={active ? 'paper' : 'ink'}>
-              {date.getDate()}
-            </Text>
-            <Text variant="caption" color={active ? 'paper' : 'muted'}>
-              {date.toLocaleDateString('az-AZ', { month: 'short' })}
-            </Text>
-            <Text variant="caption" color={active ? 'paper' : 'muted'}>
-              {s.isFull ? 'dolu' : `${s.seatsLeft} yer`}
-            </Text>
-          </Pressable>
-        );
-      })}
-    </View>
-  );
-}
-
-function Stepper({
-  label,
-  hint,
-  value,
-  min,
-  onChange,
-}: {
-  label: string;
-  hint: string;
-  value: number;
-  min: number;
-  onChange: (v: number) => void;
-}) {
-  return (
-    <View style={styles.stepper}>
-      <View style={styles.flex}>
-        <Text variant="body">{label}</Text>
-        <Text variant="caption">{hint}</Text>
-      </View>
-      <View style={styles.stepperControls}>
-        <Pressable
-          onPress={() => onChange(Math.max(min, value - 1))}
-          style={[styles.stepBtn, value <= min && styles.stepBtnOff]}
-          disabled={value <= min}
-        >
-          <Icon name="minus" size={14} color={value <= min ? t.colors.muted : t.colors.green900} strokeWidth={2.4} />
-        </Pressable>
-        <Text variant="h3" style={styles.stepValue}>
-          {value}
-        </Text>
-        <Pressable onPress={() => onChange(Math.min(20, value + 1))} style={styles.stepBtn}>
-          <Icon name="plus" size={14} color={t.colors.green900} strokeWidth={2.4} />
-        </Pressable>
-      </View>
-    </View>
+    <Pressable
+      onPress={onPress}
+      disabled={full}
+      accessibilityRole="radio"
+      accessibilityLabel={`Tarix ${bakuDate(slot.startAt)}, ${bakuTime(slot.startAt)}, ${seats}`}
+      accessibilityState={{ checked: active, disabled: full }}
+      style={[styles.slot, active && styles.slotActive, full && styles.slotFull]}
+    >
+      <Text variant="caption" color={fg}>
+        {bakuWeekday(slot.startAt)}, {bakuShortDate(slot.startAt)}
+      </Text>
+      <Text variant="h3" color={active ? 'paper' : 'ink'}>
+        {bakuTime(slot.startAt)}
+      </Text>
+      <Text variant="caption" color={full && !active ? 'danger' : fg} style={styles.bold}>
+        {seats}
+      </Text>
+    </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   body: { paddingHorizontal: t.spacing.page, gap: t.spacing.xl },
   summary: { gap: 4 },
+  summaryRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   sectionTitle: { marginBottom: t.spacing.md },
-  slots: { flexDirection: 'row', flexWrap: 'wrap', gap: t.spacing.sm },
+  slots: { gap: t.spacing.sm, paddingRight: t.spacing.page },
   slot: {
-    width: 66, paddingVertical: t.spacing.md, alignItems: 'center', gap: 1,
+    minWidth: 84, paddingVertical: t.spacing.md, paddingHorizontal: t.spacing.sm, alignItems: 'center', gap: 2,
     borderRadius: t.radius.md, borderWidth: 1, borderColor: t.colors.line,
     backgroundColor: t.colors.paper,
   },
   slotActive: { backgroundColor: t.colors.green900, borderColor: t.colors.green900 },
   slotFull: { opacity: 0.45 },
-  stepper: { flexDirection: 'row', alignItems: 'center', paddingVertical: t.spacing.md },
-  stepperControls: { flexDirection: 'row', alignItems: 'center', gap: t.spacing.md },
-  stepBtn: {
-    width: 32, height: 32, borderRadius: 16, backgroundColor: t.colors.green100,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  stepBtnOff: { backgroundColor: t.colors.bg2 },
-  stepValue: { minWidth: 20, textAlign: 'center' },
+  slotInfo: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: t.spacing.sm },
+  bold: { fontWeight: '700' },
   price: { gap: t.spacing.sm },
-  priceRow: { flexDirection: 'row', justifyContent: 'space-between' },
-  total: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    borderTopWidth: 1, borderTopColor: t.colors.line, paddingTop: t.spacing.md, marginTop: 4,
-  },
-  method: { flexDirection: 'row', alignItems: 'center', gap: t.spacing.md },
+  total: { borderTopWidth: 1, borderTopColor: t.colors.line, paddingTop: t.spacing.md, marginTop: 4 },
   flex: { flex: 1, minWidth: 0 },
-  ctaButton: { width: '100%' },
 });
