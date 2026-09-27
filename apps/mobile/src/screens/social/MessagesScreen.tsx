@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { FlatList, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
-import { Avatar, Chip, EmptyState, ListSkeleton, LogoMark, Pill, Screen, Text, TopBar } from '@/components';
+import {
+  Avatar, Chip, EmptyState, GuestEmpty, ListSkeleton, LogoMark, Pill, Screen, Text, TopBar,
+} from '@/components';
+import { useUser } from '@/store/auth';
 import { useConversations, type ConversationFilter, type ConversationItem } from '@/api/hooks/social';
 import { chatTime } from '@/lib/time';
 import { t } from '@/theme';
@@ -15,6 +18,7 @@ const FILTERS: Array<{ key: ConversationFilter; label: string }> = [
 
 /** Ekran 08 — söhbətlər, son mesaja görə. */
 export function MessagesScreen({ navigation }: AppScreenProps<'Messages'>) {
+  const isGuest = useUser()?.isGuest ?? false;
   const [filter, setFilter] = useState<ConversationFilter>('all');
   const list = useConversations(filter);
 
@@ -39,11 +43,19 @@ export function MessagesScreen({ navigation }: AppScreenProps<'Messages'>) {
             <Row c={item} onPress={() => navigation.navigate('Chat', { publicId: item.publicId })} />
           )}
           ListEmptyComponent={
+            isGuest ? (
+              <GuestEmpty
+                icon="chat"
+                title="Mesajlaşma hesab tələb edir"
+                message="Gezginlərə və Local Expert-lərə yazmaq üçün hesab yarat."
+              />
+            ) : (
             <EmptyState
               icon="chat"
               title="Yazışma yoxdur"
               message='Gezgin və ya Local Expert profilində "Mesaj" düyməsinə toxun.'
             />
+            )
           }
           refreshControl={
             <RefreshControl refreshing={list.isRefetching} onRefresh={() => void list.refetch()} tintColor={t.colors.green900} />

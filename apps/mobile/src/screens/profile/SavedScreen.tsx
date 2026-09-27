@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Chip, EmptyState, Loading, Rating, RowCard, Screen, Text, TopBar } from '@/components';
+import {
+  Chip, EmptyState, GuestEmpty, Loading, Rating, RowCard, Screen, Text, TopBar,
+} from '@/components';
+import { useUser } from '@/store/auth';
 import { useSaved } from '@/api/hooks/details';
 import { SEARCH_TYPE_LABEL, label } from '@/lib/labels';
 import { t } from '@/theme';
@@ -21,6 +24,7 @@ const ALWAYS = new Set(['all', 'place', 'route', 'experience']);
 
 /** Ekran 33 — İstəklərim (saxlanılanlar). */
 export function SavedScreen({ navigation }: AppScreenProps<'Saved'>) {
+  const isGuest = useUser()?.isGuest ?? false;
   const [type, setType] = useState<string | undefined>();
   const saved = useSaved(type);
 
@@ -51,7 +55,13 @@ export function SavedScreen({ navigation }: AppScreenProps<'Saved'>) {
       </View>
 
       <View style={styles.body}>
-        {saved.isLoading ? (
+        {isGuest ? (
+          <GuestEmpty
+            icon="bookmark"
+            title="Sevdiklərini saxla"
+            message="Məkan, marşrut və təcrübələri sonraya saxlamaq üçün hesab yarat."
+          />
+        ) : saved.isLoading ? (
           <Loading />
         ) : !saved.data?.data.length ? (
           <EmptyState

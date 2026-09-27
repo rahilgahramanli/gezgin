@@ -400,6 +400,28 @@ export const REPORT_REASONS = [
   { code: 'other', label: 'Digər' },
 ] as const;
 
+export const useReportUser = () =>
+  useMutation({
+    mutationFn: ({ username, reason }: { username: string; reason: string }) =>
+      api<{ reported: boolean; duplicate: boolean }>(`/users/${username}/report`, { method: 'POST', body: { reason } }),
+  });
+
+/** Bloklama: qarşılıqlı izləmələr silinir, onun kontenti lentdən, söhbət siyahısından çıxır. */
+export function useBlockUser() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (username: string) => api(`/me/blocked/${username}`, { method: 'POST' }),
+    onSuccess: (_r, username) => {
+      qc.removeQueries({ queryKey: socialKeys.user(username) });
+      void qc.invalidateQueries({ queryKey: ['feed'] });
+      void qc.invalidateQueries({ queryKey: socialKeys.stories });
+      void qc.invalidateQueries({ queryKey: ['me', 'blocked'] });
+      void qc.invalidateQueries({ queryKey: ['conversations'] });
+      void qc.invalidateQueries({ queryKey: meKeys.stats });
+    },
+  });
+}
+
 export const useReportPost = () =>
   useMutation({
     mutationFn: ({ publicId, reason }: { publicId: string; reason: string }) =>
@@ -476,6 +498,17 @@ export const useUserStories = (username: string) =>
     queryKey: socialKeys.userStories(username),
     queryFn: () => api<{ user: UserCard; data: Story[] }>(`/stories/${username}`),
   });
+
+/** Öz hekayəni silmək — dairələr və müəllifin hekayə siyahısı yenilənir. */
+export function useDeleteStory() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (publicId: string) => api(`/stories/${publicId}`, { method: 'DELETE' }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: socialKeys.stories });
+    },
+  });
+}
 
 /** Baxış keşi dərhal yeniləmir — dairələr baxış ekranı bağlananda bir dəfə yenilənir. */
 export const useViewStory = () =>
@@ -555,6 +588,7 @@ export function useFollow() {
     mutationFn: ({ username, follow }: { username: string; follow: boolean }) =>
       api<{ following: boolean; followers: number }>(`/users/${username}/follow`, { method: follow ? 'POST' : 'DELETE' }),
     onMutate: ({ username, follow }) => {
+      const previous = qc.getQueryData<UserProfile>(socialKeys.user(username));
       qc.setQueryData<UserProfile>(socialKeys.user(username), (u) =>
         u && {
           ...u,
@@ -563,13 +597,16 @@ export function useFollow() {
         },
       );
       patchLists(username, follow);
+      return { previous };
     },
     onSuccess: (res, { username }) =>
       qc.setQueryData<UserProfile>(socialKeys.user(username), (u) =>
         u && { ...u, viewer: { ...u.viewer, isFollowing: res.following }, stats: { ...u.stats, followers: res.followers } },
       ),
-    onError: (error, { username, follow }) => {
+    onError: (error, { username, follow }, ctx) => {
       patchLists(username, !follow);
+      // Profil kartı da əvvəlki vəziyyətinə qayıdır — qonaqda "İzləyirsən" və +1 qalırdı
+      if (ctx?.previous) qc.setQueryData(socialKeys.user(username), ctx.previous);
       alertError(error, 'İzləmək alınmadı');
     },
     onSettled: () => {

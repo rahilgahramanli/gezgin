@@ -14,6 +14,8 @@ const PERIODS = [
 /** Ekran 31 — liderlər cədvəli. */
 export function LeaderboardScreen({ navigation }: AppScreenProps<'Leaderboard'>) {
   const [period, setPeriod] = useState<'weekly' | 'monthly' | 'all_time'>('weekly');
+  // "Bütün zamanlar" Gezgin Score üzrədir, həftəlik/aylıq isə həmin dövrdə qazanılan XP
+  const unit = period === 'all_time' ? 'xal' : 'XP';
   const board = useLeaderboard(period);
 
   return (
@@ -31,7 +33,7 @@ export function LeaderboardScreen({ navigation }: AppScreenProps<'Leaderboard'>)
       ) : (
         <View style={styles.body}>
           {board.data?.entries.map((e) => (
-            <Row key={e.username} entry={e} />
+            <Row key={e.username} entry={e} unit={unit} />
           ))}
 
           {board.data?.me && !board.data.entries.some((e) => e.isMe) ? (
@@ -39,7 +41,7 @@ export function LeaderboardScreen({ navigation }: AppScreenProps<'Leaderboard'>)
               <Text variant="caption" center style={styles.divider}>
                 • • •
               </Text>
-              <Row entry={board.data.me} />
+              <Row entry={board.data.me} unit={unit} />
             </>
           ) : null}
         </View>
@@ -48,7 +50,7 @@ export function LeaderboardScreen({ navigation }: AppScreenProps<'Leaderboard'>)
   );
 }
 
-function Row({ entry }: { entry: LeaderboardEntry }) {
+function Row({ entry, unit }: { entry: LeaderboardEntry; unit: string }) {
   const medal = entry.rank <= 3;
   return (
     <Card padded style={[styles.row, entry.isMe && styles.rowMe]}>
@@ -70,7 +72,7 @@ function Row({ entry }: { entry: LeaderboardEntry }) {
         <Text variant="h3" color="green900">
           {entry.points.toLocaleString('az-AZ')}
         </Text>
-        <Text variant="caption">XP</Text>
+        <Text variant="caption">{unit}</Text>
       </View>
     </Card>
   );

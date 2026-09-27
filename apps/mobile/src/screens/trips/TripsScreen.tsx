@@ -1,7 +1,8 @@
 import { StyleSheet, View } from 'react-native';
 import {
-  Button, Card, EmptyState, Icon, Loading, Photo, Pill, Progress, Screen, Text,
+  Button, Card, EmptyState, GuestEmpty, Icon, Loading, Photo, Pill, Progress, Screen, Text,
 } from '@/components';
+import { useUser } from '@/store/auth';
 import { useTrips } from '@/api/hooks/trips';
 import { TRIP_STATUS_LABEL, label } from '@/lib/labels';
 import { t } from '@/theme';
@@ -9,6 +10,7 @@ import type { TabScreenProps } from '@/navigation/types';
 
 /** Ekran 23 — Planım. */
 export function TripsScreen({ navigation }: TabScreenProps<'Trips'>) {
+  const isGuest = useUser()?.isGuest ?? false;
   const trips = useTrips();
 
   if (trips.isLoading) return <Loading label="Səyahətlər yüklənir…" />;
@@ -33,7 +35,13 @@ export function TripsScreen({ navigation }: TabScreenProps<'Trips'>) {
         </View>
       </View>
 
-      {list.length === 0 ? (
+      {isGuest ? (
+        <GuestEmpty
+          icon="route"
+          title="Səyahətini planla"
+          message="Gün-gün plan qurmaq, marşrut izləmək və check-in etmək üçün hesab yarat."
+        />
+      ) : list.length === 0 ? (
         <EmptyState
           title="Hələ səyahətin yoxdur"
           message="Marşrut seç və ya sıfırdan plan qur — hər addım XP qazandırır."

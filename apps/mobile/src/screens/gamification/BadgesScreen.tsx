@@ -34,7 +34,10 @@ export function BadgesScreen({ navigation }: AppScreenProps<'Badges'>) {
       </View>
 
       <View style={styles.body}>
-        {b.badges.map((badge) => (
+        {/* Qazanılanlar əvvəl, sonra ən yaxın olanlar — kilidlilər sonda */}
+        {[...b.badges]
+          .sort((x, y) => Number(y.earned) - Number(x.earned) || y.progress / (y.conditionValue || 1) - x.progress / (x.conditionValue || 1))
+          .map((badge) => (
           <Card key={badge.slug} padded style={styles.badge}>
             <View style={[styles.icon, badge.earned ? styles.iconEarned : styles.iconLocked]}>
               <Icon

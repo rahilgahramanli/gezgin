@@ -1,15 +1,17 @@
 import { useState } from 'react';
-import { Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { Alert, Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
 import {
   Avatar, Button, Card, EmptyState, Icon, Loading, Photo, Pill, Rating, RowCard, Screen, StatCell, Text, TopBar,
 } from '@/components';
 import {
-  useFollow, useOpenConversation, useUserBadges, useUserPosts, useUserProfile, useUserRoutes,
+  REPORT_REASONS, useBlockUser, useFollow, useOpenConversation, useReportUser, useUserBadges, useUserPosts,
+  useUserProfile, useUserRoutes,
 } from '@/api/hooks/social';
 import { useExperiences } from '@/api/hooks/content';
 import { compactCount } from '@/lib/time';
 import { durationLabel } from '@/lib/labels';
 import { t } from '@/theme';
+import { alertError } from '@/lib/errors';
 import type { AppScreenProps } from '@/navigation/types';
 
 type Tab = 'posts' | 'routes' | 'badges';
@@ -23,6 +25,8 @@ export function UserProfileScreen({ route, navigation }: AppScreenProps<'UserPro
   const profile = useUserProfile(username);
   const follow = useFollow();
   const open = useOpenConversation();
+  const block = useBlockUser();
+  const report = useReportUser();
   const posts = useUserPosts(username, tab === 'posts');
   const routes = useUserRoutes(username, tab === 'routes');
   const badges = useUserBadges(username, tab === 'badges');
@@ -45,7 +49,58 @@ export function UserProfileScreen({ route, navigation }: AppScreenProps<'UserPro
   const postList = posts.data?.pages.flatMap((p) => p.data) ?? [];
 
   const message = () =>
-    open.mutate(username, { onSuccess: (c) => navigation.navigate('Chat', { publicId: c.publicId }) });
+    open.mutate(username, {
+      onSuccess: (c) => navigation.navigate('Chat', { publicId: c.publicId }),
+      onError: (e) => alertError(e, 'Söhbət açılmadı'),
+    });
+
+  const askReport = () =>
+    Alert.alert('Niyə şikayət edirsən?', undefined, [
+      ...REPORT_REASONS.map((r) => ({
+        text: r.label,
+        onPress: () =>
+          report.mutate(
+            { username, reason: r.code },
+            {
+              onSuccess: (res) =>
+                Alert.alert(
+                  'Təşəkkürlər',
+                  res.duplicate ? 'Bu istifadəçini artıq şikayət etmisiniz — baxılır.' : 'Şikayətiniz moderatorlara göndərildi.',
+                ),
+              onError: (e) => alertError(e, 'Şikayət göndərilmədi'),
+            },
+          ),
+      })),
+      { text: 'İmtina', style: 'cancel' as const },
+    ]);
+
+  const askBlock = () =>
+    Alert.alert(
+      `${u.fullName} bloklansın?`,
+      'O səni izləyə, sənə yaza və paylaşımlarını görə bilməyəcək. Bloku Tənzimləmələrdən götürə bilərsən.',
+      [
+        { text: 'İmtina', style: 'cancel' },
+        {
+          text: 'Blokla',
+          style: 'destructive',
+          onPress: () =>
+            block.mutate(username, {
+              onSuccess: () => {
+                Alert.alert('Bloklandı', `${u.fullName} bloklandı.`);
+                navigation.goBack();
+              },
+              onError: (e) => alertError(e, 'Bloklanmadı'),
+            }),
+        },
+      ],
+    );
+
+  const openMenu = () =>
+    Alert.alert(u.fullName, undefined, [
+      { text: 'Şikayət et', onPress: askReport },
+      { text: 'Blokla', style: 'destructive', onPress: askBlock },
+      { text: 'İmtina', style: 'cancel' },
+    ]);
 
   return (
     <Screen padded={false} edges={[]}>
@@ -53,7 +108,12 @@ export function UserProfileScreen({ route, navigation }: AppScreenProps<'UserPro
         {u.coverUrl ? <Photo uri={u.coverUrl} style={styles.coverImage} radius={0} /> : null}
         <View style={styles.coverShade} />
         <View style={styles.coverBar}>
-          <TopBar light transparent onBack={navigation.goBack} />
+          <TopBar
+            light
+            transparent
+            onBack={navigation.goBack}
+            actions={u.viewer.isMe ? undefined : [{ icon: 'more', onPress: openMenu, label: 'Daha çox' }]}
+          />
         </View>
       </View>
 

@@ -9,6 +9,7 @@ import { emitRealtime, useSocketEvent } from '@/realtime/socket';
 import { durationLabel } from '@/lib/labels';
 import { clockTime, dayLabel, isSameDay, timeAgo } from '@/lib/time';
 import { t } from '@/theme';
+import { alertError } from '@/lib/errors';
 import type { AppScreenProps } from '@/navigation/types';
 
 /** Ardıcıl mesajlar qruplaşır — saat yalnız qrupun sonuncusunda görünür. */
@@ -74,7 +75,16 @@ export function ChatScreen({ route, navigation }: AppScreenProps<'Chat'>) {
     if (!body) return;
     setText('');
     // Uğursuz olsa mətn itməsin
-    send.mutate({ body }, { onError: () => setText(body) });
+    send.mutate(
+      { body },
+      {
+        // Mətn itmir və səbəb göstərilir — əvvəl səssizcə geri qayıdırdı
+        onError: (e) => {
+          setText(body);
+          alertError(e, 'Mesaj göndərilmədi');
+        },
+      },
+    );
   };
 
   const other = conv.data?.other;

@@ -9,6 +9,7 @@ import {
 import { ApiError } from '@/api/client';
 import { timeAgo } from '@/lib/time';
 import { t } from '@/theme';
+import { alertError, isGuestBlocked, promptGuestSignup } from '@/lib/errors';
 import type { AppScreenProps } from '@/navigation/types';
 import { ShareSheet } from './ShareSheet';
 
@@ -68,6 +69,9 @@ export function PostDetailScreen({ route, navigation }: AppScreenProps<'PostDeta
           setText('');
           setReplyTo(null);
         },
+        onError: (e) => {
+          if (isGuestBlocked(e)) promptGuestSignup('Şərh yazmaq üçün hesab yaratmalısınız');
+        },
       },
     );
   };
@@ -75,7 +79,11 @@ export function PostDetailScreen({ route, navigation }: AppScreenProps<'PostDeta
   const confirmRemove = (c: PostComment) =>
     Alert.alert('Şərhi sil', c.replies.length ? 'Cavabları da silinəcək.' : 'Bu şərh silinəcək.', [
       { text: 'İmtina', style: 'cancel' },
-      { text: 'Sil', style: 'destructive', onPress: () => remove.mutate(c.publicId) },
+      {
+        text: 'Sil',
+        style: 'destructive',
+        onPress: () => remove.mutate(c.publicId, { onError: (e) => alertError(e, 'Şərh silinmədi') }),
+      },
     ]);
 
   const renderComment = (c: PostComment, isReply = false) => (
@@ -109,7 +117,9 @@ export function PostDetailScreen({ route, navigation }: AppScreenProps<'PostDeta
       <Pressable
         hitSlop={10}
         accessibilityLabel={c.liked ? 'Şərh bəyənməsini geri al' : 'Şərhi bəyən'}
-        onPress={() => likeComment.mutate({ publicId: c.publicId, like: !c.liked })}
+        onPress={() =>
+          likeComment.mutate({ publicId: c.publicId, like: !c.liked }, { onError: (e) => alertError(e, 'Bəyənmək alınmadı') })
+        }
       >
         <Icon name="heart" size={16} color={c.liked ? t.colors.danger : t.colors.muted} filled={c.liked} />
       </Pressable>

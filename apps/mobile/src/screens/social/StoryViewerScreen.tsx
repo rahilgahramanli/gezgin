@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Animated, Pressable, StyleSheet, View } from 'react-native';
+import { Alert, Animated, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import { useQueryClient } from '@tanstack/react-query';
 import { Avatar, Button, Icon, Loading, Photo, Text } from '@/components';
-import { socialKeys, useUserStories, useViewStory } from '@/api/hooks/social';
+import { socialKeys, useDeleteStory, useUserStories, useViewStory } from '@/api/hooks/social';
+import { useUser } from '@/store/auth';
+import { alertError } from '@/lib/errors';
 import { timeAgo } from '@/lib/time';
 import type { AppScreenProps } from '@/navigation/types';
 
@@ -17,7 +19,11 @@ export function StoryViewerScreen({ route, navigation }: AppScreenProps<'StoryVi
   const qc = useQueryClient();
   const stories = useUserStories(username);
   const { mutate: markViewed } = useViewStory();
+  const removeStory = useDeleteStory();
+  const me = useUser();
   const [index, setIndex] = useState(0);
+  /** Silmə təsdiqi açıq olanda taymer dayanır — hekayə alertin arxasında keçib getməsin. */
+  const [paused, setPaused] = useState(false);
   const progress = useRef(new Animated.Value(0)).current;
 
   const list = stories.data?.data ?? [];
@@ -48,7 +54,7 @@ export function StoryViewerScreen({ route, navigation }: AppScreenProps<'StoryVi
   };
 
   useEffect(() => {
-    if (!current) return;
+    if (!current || paused) return;
     if (!current.viewed) markViewed(current.publicId);
     progress.setValue(0);
     const anim = Animated.timing(progress, { toValue: 1, duration: STORY_MS, useNativeDriver: false });
@@ -56,7 +62,34 @@ export function StoryViewerScreen({ route, navigation }: AppScreenProps<'StoryVi
       if (finished) next();
     });
     return () => anim.stop();
-  }, [current, next, progress, markViewed]);
+  }, [current, next, progress, markViewed, paused]);
+
+  const confirmDelete = () => {
+    if (!current) return;
+    setPaused(true);
+    Alert.alert('Hekayəni sil', 'Bu hekayə həmişəlik silinəcək.', [
+      { text: 'İmtina', style: 'cancel', onPress: () => setPaused(false) },
+      {
+        text: 'Sil',
+        style: 'destructive',
+        onPress: () =>
+          removeStory.mutate(current.publicId, {
+            onSuccess: () => {
+              void stories.refetch().then((r) => {
+                const left = r.data?.data.length ?? 0;
+                if (!left) close();
+                else setIndex((i) => Math.min(i, left - 1));
+                setPaused(false);
+              });
+            },
+            onError: (e) => {
+              setPaused(false);
+              alertError(e, 'Hekayə silinmədi');
+            },
+          }),
+      },
+    ]);
+  };
 
   if (stories.isLoading) return <Loading label="Yüklənir…" />;
 
@@ -74,6 +107,7 @@ export function StoryViewerScreen({ route, navigation }: AppScreenProps<'StoryVi
   }
 
   const author = stories.data.user;
+  const isMine = !!me && author.username === me.username;
 
   return (
     <View style={styles.root}>
@@ -146,12 +180,23 @@ export function StoryViewerScreen({ route, navigation }: AppScreenProps<'StoryVi
               {current.caption}
             </Text>
           ) : null}
-          {current.viewCount !== undefined ? (
+          {current.viewCount !== undefined || isMine ? (
             <View style={styles.views}>
-              <Icon name="eye" size={16} color="#fff" />
-              <Text variant="small" color="paper">
-                {current.viewCount} baxış
-              </Text>
+              {current.viewCount !== undefined ? (
+                <>
+                  <Icon name="eye" size={16} color="#fff" />
+                  <Text variant="small" color="paper" style={styles.flexText}>
+                    {current.viewCount} baxış
+                  </Text>
+                </>
+              ) : (
+                <View style={styles.flexText} />
+              )}
+              {isMine ? (
+                <Pressable onPress={confirmDelete} hitSlop={12} accessibilityRole="button" accessibilityLabel="Hekayəni sil">
+                  <Icon name="trash" size={20} color="#fff" />
+                </Pressable>
+              ) : null}
             </View>
           ) : null}
         </View>
@@ -202,4 +247,5 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.4)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999,
   },
   views: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  flexText: { flex: 1 },
 });

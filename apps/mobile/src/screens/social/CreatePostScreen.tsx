@@ -7,6 +7,7 @@ import { launchImageLibrary, type Asset } from 'react-native-image-picker';
 import { XP_RULES } from '@gezgin/shared';
 import { Avatar, Button, Card, Icon, Input, Photo, Text, type IconName } from '@/components';
 import { ApiError } from '@/api/client';
+import { isGuestBlocked, promptGuestSignup } from '@/lib/errors';
 import { usePlaces, useRoutes } from '@/api/hooks/content';
 import { useMe } from '@/api/hooks/me';
 import { useCreatePost, useCreateStory, type PostVisibility } from '@/api/hooks/social';
@@ -71,6 +72,7 @@ export function CreatePostScreen({ route, navigation }: AppScreenProps<'CreatePo
         const media = uploaded[0];
         if (!media) return;
         await createStory.mutateAsync({ media, caption: body.trim() || undefined, place: place?.slug });
+        Alert.alert('Hekayə paylaşıldı', '24 saat ərzində izləyicilərin görəcək.');
         navigation.goBack();
         return;
       }
@@ -87,6 +89,8 @@ export function CreatePostScreen({ route, navigation }: AppScreenProps<'CreatePo
       }
       navigation.replace('PostDetail', { publicId: post.publicId });
     } catch (e) {
+      // Qonaq paylaşa bilməz — səbəbi deyib qeydiyyata yönləndiririk
+      if (isGuestBlocked(e)) promptGuestSignup('Paylaşım etmək üçün hesab yaratmalısınız');
       setError(e instanceof ApiError ? e.message : 'Paylaşım alınmadı — yenidən cəhd edin');
     } finally {
       setBusy(false);

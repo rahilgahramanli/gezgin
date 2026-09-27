@@ -15,6 +15,7 @@ export function ProfileScreen({ navigation }: TabScreenProps<'Profile'>) {
   if (!me.data) return null;
 
   const g = me.data.gamification;
+  const openMyProfile = () => navigation.navigate('UserProfile', { username: me.data!.username });
 
   return (
     <Screen padded={false}>
@@ -72,11 +73,11 @@ export function ProfileScreen({ navigation }: TabScreenProps<'Profile'>) {
 
         {stats.data ? (
           <View style={styles.stats}>
-            <StatCell value={`${stats.data.regions}`} label="Regions" onPress={() => navigation.navigate('Regions')} />
-            <StatCell value={`${stats.data.places}`} label="Places" />
-            <StatCell value={`${stats.data.experiences}`} label="Experiences" />
-            <StatCell value={`${stats.data.routes}`} label="Routes" />
-            <StatCell value={`${stats.data.wantToGo}`} label="Want to go" />
+            <StatCell value={`${stats.data.regions}`} label="Regionlar" onPress={() => navigation.navigate('Regions')} />
+            <StatCell value={`${stats.data.places}`} label="Məkanlar" onPress={() => navigation.navigate('Regions')} />
+            <StatCell value={`${stats.data.experiences}`} label="Təcrübələr" onPress={() => navigation.navigate('MyBookings')} />
+            <StatCell value={`${stats.data.routes}`} label="Marşrutlar" onPress={openMyProfile} />
+            <StatCell value={`${stats.data.wantToGo}`} label="İstəklərim" onPress={() => navigation.navigate('Saved')} />
           </View>
         ) : null}
 
@@ -116,7 +117,7 @@ export function ProfileScreen({ navigation }: TabScreenProps<'Profile'>) {
           <Button label="Nailiyyətlər" variant="soft" onPress={() => navigation.navigate('Badges')} style={styles.link} />
           <Button label="Liderlər" variant="soft" onPress={() => navigation.navigate('Leaderboard')} style={styles.link} />
         </View>
-        <Button label="Want to go" variant="outline" onPress={() => navigation.navigate('Saved')} />
+        <Button label="İstəklərim" variant="outline" onPress={() => navigation.navigate('Saved')} />
         <Button label="Rezervasiyalarım" variant="outline" onPress={() => navigation.navigate('MyBookings')} />
 
         <Button

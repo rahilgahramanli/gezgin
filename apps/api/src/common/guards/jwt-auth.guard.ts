@@ -33,9 +33,14 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
 
     try {
       await super.canActivate(context);
-    } catch {
-      // Açıq endpointdə yanlış və ya vaxtı bitmiş token sorğunu bloklamır —
-      // sadəcə anonim kimi davam edir.
+    } catch (err) {
+      // Vaxtı bitmiş token 401 qaytarır ki, klient yeniləyib təkrar sorğu göndərsin —
+      // əks halda hər 15 dəqiqədən bir lent, "bəyəndim", "saxlanılıb", "mənim hekayəm"
+      // anonim istifadəçi üçün qaytarılırdı. Yanlış formatlı token isə anonim davam edir.
+      if (err instanceof UnauthorizedException) {
+        const body = err.getResponse() as { code?: string };
+        if (body?.code === ERROR_CODES.TOKEN_EXPIRED) throw err;
+      }
     }
     return true;
   }
