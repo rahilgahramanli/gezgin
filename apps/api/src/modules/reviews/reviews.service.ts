@@ -190,6 +190,17 @@ export class ReviewsService {
     return this.shape(row, viewerId);
   }
 
+  /** İstifadəçinin bu obyektə rəyi — mobil formu əvvəlcədən doldurur. */
+  async mine(userId: bigint, targetType: CreateReviewDto['targetType'], target: string) {
+    const targetId = await this.resolveTarget(targetType, target);
+    const row = await this.prisma.review.findUnique({
+      where: { userId_targetType_targetId: { userId, targetType, targetId } },
+      select: { id: true, deletedAt: true },
+    });
+    if (!row || row.deletedAt) return { review: null };
+    return { review: await this.one(row.id, userId) };
+  }
+
   /** Hər obyekt üçün bir rəy — ikincisi 409, mobil redaktəyə yönləndirir. */
   async create(userId: bigint, dto: CreateReviewDto) {
     const targetId = await this.resolveTarget(dto.targetType, dto.target);

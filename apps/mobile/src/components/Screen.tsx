@@ -2,8 +2,11 @@ import type { ReactNode } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, View, type ViewStyle } from 'react-native';
 import { SafeAreaView, type Edge } from 'react-native-safe-area-context';
 import { t } from '@/theme';
+import { ApiError } from '@/api/client';
+import { Button } from './Button';
 import { Icon, type IconName } from './Icon';
 import { Text } from './Text';
+import { TopBar } from './TopBar';
 
 export interface ScreenProps {
   children: ReactNode;
@@ -106,6 +109,43 @@ export function EmptyState({
       ) : null}
       {action ? <View style={{ marginTop: t.spacing.lg }}>{action}</View> : null}
     </View>
+  );
+}
+
+/**
+ * Sorğu alınmayanda ağ ekran əvəzinə: səbəb, "Yenidən cəhd et" və "Geri".
+ * Detal ekranları TopBar-ı data gələndən sonra çəkir — xəta halında geri
+ * yolunu bu komponent verir, istifadəçi ekranda ilişib qalmır.
+ */
+export function ErrorState({
+  error,
+  onRetry,
+  onBack,
+  title,
+}: {
+  error?: unknown;
+  onRetry?: () => void;
+  onBack?: () => void;
+  title?: string;
+}) {
+  const api = error instanceof ApiError ? error : null;
+  const network = api?.code === 'NETWORK';
+  const notFound = api?.status === 404;
+  const heading = title ?? (network ? 'Bağlantı yoxdur' : notFound ? 'Tapılmadı' : 'Yüklənmədi');
+  const message = network
+    ? 'İnternetini yoxla və yenidən cəhd et.'
+    : api?.message ?? 'Bir az sonra yenidən cəhd et.';
+
+  return (
+    <SafeAreaView style={[styles.safe, { backgroundColor: t.colors.bg }]} edges={['top']}>
+      {onBack ? <TopBar onBack={onBack} /> : null}
+      <EmptyState
+        icon={network ? 'wifiOff' : 'info'}
+        title={heading}
+        message={message}
+        action={onRetry && !notFound ? <Button label="Yenidən cəhd et" onPress={onRetry} /> : undefined}
+      />
+    </SafeAreaView>
   );
 }
 

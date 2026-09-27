@@ -23,6 +23,12 @@ export class ReviewsController {
     return this.reviews.summary(dto.targetType, dto.target);
   }
 
+  @ApiBearerAuth() @Get('mine')
+  @ApiOperation({ summary: 'Bu obyektə öz rəyim (yoxdursa null) — rəy formu redaktə rejimində açılsın' })
+  mine(@CurrentUser() user: AuthUser, @Query() dto: ReviewSummaryDto) {
+    return this.reviews.mine(user.id, dto.targetType, dto.target);
+  }
+
   @ApiBearerAuth() @UseGuards(GuestBlockedGuard) @Post()
   @ApiOperation({ summary: 'Rəy yaz — ekran 27 (+400 XP)' })
   create(@CurrentUser() user: AuthUser, @Body() dto: CreateReviewDto) {

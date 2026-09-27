@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { rawPost, setAccessToken, setRefreshHandler } from '@/api/client';
+import { ApiError, NETWORK_ERROR, api, rawPost, setAccessToken, setRefreshHandler } from '@/api/client';
 import { STORAGE_KEYS, storage } from '@/lib/storage';
 
 export interface SessionUser {
@@ -21,8 +21,14 @@ export interface Session {
   user: SessionUser;
 }
 
+/** Giriş axını hansı ekrandan açılsın — qonaq "Qeydiyyatdan keç" deyəndə birbaşa Register. */
+export type AuthEntry = 'Splash' | 'Login' | 'Register';
+
 interface AuthState {
   session: Session | null;
+  authEntry: AuthEntry;
+  /** Qonaq sessiyasını bağlayıb qeydiyyat ekranını açır. */
+  upgradeGuest: () => Promise<void>;
   /** Yaddaşdan bərpa bitənə qədər açılış ekranı göstərilir. */
   isRestoring: boolean;
   signIn: (session: Session) => Promise<void>;
@@ -33,12 +39,18 @@ interface AuthState {
 
 export const useAuth = create<AuthState>((set, get) => ({
   session: null,
+  authEntry: 'Splash',
   isRestoring: true,
+
+  async upgradeGuest() {
+    set({ authEntry: 'Register' });
+    await get().signOut();
+  },
 
   async signIn(session) {
     setAccessToken(session.accessToken);
     await storage.setJson(STORAGE_KEYS.session, session);
-    set({ session });
+    set({ session, authEntry: 'Splash' });
   },
 
   async signOut() {
@@ -50,7 +62,7 @@ export const useAuth = create<AuthState>((set, get) => ({
   async restore() {
     const saved = await storage.getJson<Session>(STORAGE_KEYS.session);
     if (saved?.accessToken) setAccessToken(saved.accessToken);
-    set({ session: saved, isRestoring: false });
+    set({ session: saved });
 
     // 401 gələndə klient bu funksiyanı çağırıb tokeni yeniləyir.
     // Refresh token rotasiya olunur — yeni cütü mütləq yaddaşa yazmalıyıq,
@@ -67,11 +79,24 @@ export const useAuth = create<AuthState>((set, get) => ({
         await storage.setJson(STORAGE_KEYS.session, next);
         set({ session: next });
         return next.accessToken;
-      } catch {
-        await get().signOut();
+      } catch (e) {
+        // İnternet yoxdursa sessiyanı silmirik — server rədd edəndə çıxarırıq
+        if (!(e instanceof ApiError && e.code === NETWORK_ERROR)) await get().signOut();
         return null;
       }
     });
+
+    // Onboarding yarımçıq qalıbsa (tətbiq 3-cü addımda bağlanıb) serverin
+    // vəziyyətini soruşuruq — maraqlar artıq yazılıbsa 2-ci addım təkrar açılmır.
+    if (saved && !saved.user.onboardingCompleted && !saved.user.isGuest) {
+      try {
+        const me = await api<{ onboardingCompleted: boolean }>('/me');
+        if (me.onboardingCompleted) get().patchUser({ onboardingCompleted: true });
+      } catch {
+        // şəbəkə yoxdursa yerli vəziyyətlə davam edirik
+      }
+    }
+    set({ isRestoring: false });
   },
 
   patchUser(patch) {

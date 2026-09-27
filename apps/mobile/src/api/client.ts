@@ -15,6 +15,29 @@ export class ApiError extends Error {
   }
 }
 
+/**
+ * Validasiya xətasında server `details`-də sahə mesajlarını qaytarır — ümumi
+ * "Validasiya xətası" əvəzinə istifadəçiyə konkret səbəbi göstəririk.
+ * Azərbaycanca mesajlar üstündür (class-validator-un ingiliscə defoltları deyil).
+ */
+function readableMessage(code: string | undefined, message: string | undefined, details: unknown): string {
+  if (code === ERROR_CODES.VALIDATION_FAILED && Array.isArray(details)) {
+    const texts = details.filter((d): d is string => typeof d === 'string');
+    const az = texts.find((d) => /[əğıöüçşİƏ]/.test(d));
+    if (az) return az;
+  }
+  return message ?? 'Şəbəkə xətası';
+}
+
+/** Server cavab vermir (internet yoxdur, server dayanıb) — ekranlar bu kodla fərqləndirir. */
+export const NETWORK_ERROR = 'NETWORK';
+
+/** İstifadəçinin seçdiyi dil — kontent (məkan adları, təsvirlər) bu dildə gəlir. */
+let contentLanguage: 'az' | 'en' | 'ru' = 'az';
+export const setContentLanguage = (lang: 'az' | 'en' | 'ru'): void => {
+  contentLanguage = lang;
+};
+
 let accessToken: string | null = null;
 export const setAccessToken = (token: string | null): void => {
   accessToken = token;
@@ -58,18 +81,23 @@ export interface RequestOptions extends Omit<RequestInit, 'body'> {
  * ekranlar `code` sahəsinə görə tərcümə göstərir, `message` developer üçündür.
  */
 export async function api<T>(path: string, options: RequestOptions = {}): Promise<T> {
-  const { body, language = 'az', headers, _retried, ...rest } = options;
+  const { body, language = contentLanguage, headers, _retried, ...rest } = options;
 
-  const res = await fetch(`${BASE_URL}${path}`, {
-    ...rest,
-    headers: {
-      'Content-Type': 'application/json',
-      'Accept-Language': language,
-      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-      ...headers,
-    },
-    ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${BASE_URL}${path}`, {
+      ...rest,
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept-Language': language,
+        ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+        ...headers,
+      },
+      ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
+    });
+  } catch {
+    throw new ApiError(0, NETWORK_ERROR, 'Bağlantı problemi — internetini yoxla və yenidən cəhd et');
+  }
 
   if (res.status === 204) return undefined as T;
 
@@ -90,7 +118,7 @@ export async function api<T>(path: string, options: RequestOptions = {}): Promis
     throw new ApiError(
       res.status,
       payload?.code ?? ERROR_CODES.INTERNAL,
-      payload?.message ?? 'Şəbəkə xətası',
+      readableMessage(payload?.code, payload?.message, payload?.details),
       payload?.details,
     );
   }
@@ -100,11 +128,16 @@ export async function api<T>(path: string, options: RequestOptions = {}): Promis
 
 /** Refresh sorğusu `api()`-dən keçmir — əks halda 401 dövrəsi yaranardı. */
 export async function rawPost<T>(path: string, body: unknown): Promise<T> {
-  const res = await fetch(`${BASE_URL}${path}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${BASE_URL}${path}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+  } catch {
+    throw new ApiError(0, NETWORK_ERROR, 'Bağlantı problemi — internetini yoxla və yenidən cəhd et');
+  }
   if (!res.ok) throw new ApiError(res.status, 'REFRESH_FAILED', 'Sessiya yenilənmədi');
   return (await res.json()) as T;
 }
