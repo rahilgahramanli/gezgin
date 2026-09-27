@@ -76,6 +76,7 @@ export type AppStackParamList = {
     name: string;
   };
   FilterSheet: { region?: string; value?: import('@/screens/list/FilterSheetScreen').PlaceFilterValue };
+  Legal: { slug: 'terms' | 'privacy' | 'expert-terms' };
 };
 
 export type AuthScreenProps<T extends keyof AuthStackParamList> = NativeStackScreenProps<

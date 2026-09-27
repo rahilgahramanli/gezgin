@@ -41,10 +41,16 @@ export function Input({ label, icon, error, secure, right, style, ...rest }: Inp
           secureTextEntry={hidden}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
+          accessibilityLabel={label ?? rest.placeholder}
           {...rest}
         />
         {secure ? (
-          <Pressable onPress={() => setHidden((v) => !v)} hitSlop={10}>
+          <Pressable
+            onPress={() => setHidden((v) => !v)}
+            hitSlop={10}
+            accessibilityRole="button"
+            accessibilityLabel={hidden ? 'Şifrəni göstər' : 'Şifrəni gizlət'}
+          >
             <Icon name="eye" size={20} color={t.colors.muted} filled={!hidden} />
           </Pressable>
         ) : null}

@@ -48,6 +48,7 @@ import { RegionsScreen } from '@/screens/profile/RegionsScreen';
 import { PhotoGalleryScreen } from '@/screens/detail/PhotoGalleryScreen';
 import { ReviewsAllScreen } from '@/screens/detail/ReviewsAllScreen';
 import { FilterSheetScreen } from '@/screens/list/FilterSheetScreen';
+import { LegalScreen } from '@/screens/profile/LegalScreen';
 import { RealtimeBridge } from '@/realtime/RealtimeBridge';
 import type { AppStackParamList, AuthStackParamList } from './types';
 
@@ -124,6 +125,7 @@ function AppFlow() {
         <AppStack.Screen name="PhotoGallery" component={PhotoGalleryScreen} />
         <AppStack.Screen name="ReviewsAll" component={ReviewsAllScreen} />
         <AppStack.Screen name="FilterSheet" component={FilterSheetScreen} options={{ presentation: 'modal' }} />
+        <AppStack.Screen name="Legal" component={LegalScreen} />
       </AppStack.Navigator>
     </>
   );

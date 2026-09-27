@@ -24,6 +24,7 @@ export function SearchScreen({ navigation }: AppScreenProps<'Search'>) {
     if (hit.type === 'place') navigation.navigate('PlaceDetail', { slug: hit.slug });
     else if (hit.type === 'route') navigation.navigate('RouteDetail', { slug: hit.slug });
     else if (hit.type === 'experience') navigation.navigate('ExperienceDetail', { slug: hit.slug });
+    else if (hit.type === 'user') navigation.navigate('UserProfile', { username: hit.slug });
   };
 
   return (

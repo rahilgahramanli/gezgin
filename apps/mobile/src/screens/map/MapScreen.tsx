@@ -47,8 +47,13 @@ export function MapScreen({ route, navigation }: AppScreenProps<'Map'>) {
   // istifadəçi xəritəni sürüşdürməmiş də nəticə görsün
   const map = usePlacesMap(region ? { region, zoom } : { bbox: bboxOf(viewport), zoom });
 
-  const points = map.data?.mode === 'points' ? map.data.items : [];
-  const clusters = map.data?.mode === 'clusters' ? map.data.items : [];
+  // Tək məkanlı klaster pin kimi göstərilir — toxunanda kart açılsın, sonsuz yaxınlaşdırma olmasın
+  const allClusters = map.data?.mode === 'clusters' ? map.data.items : [];
+  const singles = allClusters
+    .filter((c) => c.count === 1 && c.slug)
+    .map((c) => ({ slug: c.slug as string, lat: c.lat, lng: c.lng }));
+  const points = map.data?.mode === 'points' ? map.data.items : singles;
+  const clusters = allClusters.filter((c) => !(c.count === 1 && c.slug));
 
   const goToRegion = (slug?: string) => {
     setRegion(slug);
@@ -147,7 +152,7 @@ export function MapScreen({ route, navigation }: AppScreenProps<'Map'>) {
           <View style={styles.badge}>
             <Text variant="caption" color="paper">
               {map.data?.mode === 'clusters'
-                ? `${clusters.reduce((n, c) => n + c.count, 0)} məkan · yaxınlaş`
+                ? `${allClusters.reduce((n, c) => n + c.count, 0)} məkan · yaxınlaş`
                 : `${points.length} məkan`}
             </Text>
           </View>

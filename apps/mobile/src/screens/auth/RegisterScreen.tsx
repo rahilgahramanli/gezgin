@@ -4,6 +4,7 @@ import { Button, Input, Screen, Text, TopBar } from '@/components';
 import { useRegister } from '@/api/hooks/auth';
 import { ApiError } from '@/api/client';
 import { t } from '@/theme';
+import { sanitizeUsername } from '@/lib/username';
 import type { AuthScreenProps } from '@/navigation/types';
 
 /** Ekran 03 — qeydiyyat. */
@@ -51,8 +52,9 @@ export function RegisterScreen({ navigation }: AuthScreenProps<'Register'>) {
               placeholder="aysel.go"
               autoCapitalize="none"
               autoCorrect={false}
+              spellCheck={false}
               value={username}
-              onChangeText={setUsername}
+              onChangeText={(v) => setUsername(sanitizeUsername(v))}
               error={usernameError}
             />
             <Input

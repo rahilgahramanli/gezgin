@@ -60,7 +60,8 @@ export function FilterSheetScreen({ route, navigation }: AppScreenProps<'FilterS
           <Button
             label={preview.isLoading ? 'Göstər' : `${countLabel} məkanı göstər`}
             style={styles.apply}
-            onPress={() => navigation.navigate({ name: 'Places', params: { region, filter: draft }, merge: true })}
+            // popTo: mövcud Yerlər ekranına qayıdır — navigate isə hər dəfə yenisini üst-üstə qoyurdu
+            onPress={() => navigation.popTo('Places', { region, filter: draft }, { merge: true })}
           />
         </View>
       }

@@ -162,7 +162,7 @@ export type MapResponse =
       mode: 'clusters';
       zoom: number;
       precision: number;
-      items: Array<{ count: number; lat: number; lng: number; sampleName: string }>;
+      items: Array<{ count: number; lat: number; lng: number; sampleName: string; slug?: string; rating?: number }>;
     };
 
 export const usePlacesMap = (params: { bbox?: string; zoom?: number; region?: string; categories?: string[] }) =>

@@ -11,10 +11,15 @@ const FILTERS = [
   { key: 'place', label: 'Yerlər', countKey: 'place' },
   { key: 'route', label: 'Marşrutlar', countKey: 'route' },
   { key: 'experience', label: 'Təcrübələr', countKey: 'experience' },
+  { key: 'post', label: 'Paylaşımlar', countKey: 'post' },
+  { key: 'business', label: 'Otellər', countKey: 'business' },
   { key: 'event', label: 'Tədbirlər', countKey: 'event' },
 ] as const;
 
-/** Ekran 33 — Want to go. */
+/** Həmişə görünən çiplər — qalanları yalnız saxlanmış element varsa göstərilir. */
+const ALWAYS = new Set(['all', 'place', 'route', 'experience']);
+
+/** Ekran 33 — İstəklərim (saxlanılanlar). */
 export function SavedScreen({ navigation }: AppScreenProps<'Saved'>) {
   const [type, setType] = useState<string | undefined>();
   const saved = useSaved(type);
@@ -23,14 +28,16 @@ export function SavedScreen({ navigation }: AppScreenProps<'Saved'>) {
     if (itemType === 'place') navigation.navigate('PlaceDetail', { slug });
     else if (itemType === 'route') navigation.navigate('RouteDetail', { slug });
     else if (itemType === 'experience') navigation.navigate('ExperienceDetail', { slug });
+    else if (itemType === 'post') navigation.navigate('PostDetail', { publicId: slug });
+    else if (itemType === 'business') navigation.navigate('BusinessProfile', { slug });
   };
 
   return (
     <Screen padded={false}>
-      <TopBar title="Want to go" onBack={navigation.goBack} />
+      <TopBar title="İstəklərim" onBack={navigation.goBack} />
 
       <View style={styles.chips}>
-        {FILTERS.map((f) => {
+        {FILTERS.filter((f) => ALWAYS.has(f.countKey) || (saved.data?.counts[f.countKey] ?? 0) > 0 || type === f.key).map((f) => {
           const count = saved.data?.counts[f.countKey] ?? 0;
           return (
             <Chip

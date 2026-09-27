@@ -30,6 +30,8 @@ export const SEARCH_TYPE_LABEL: Record<string, string> = {
   experience: 'Təcrübə',
   event: 'Tədbir',
   user: 'Gezgin',
+  post: 'Paylaşım',
+  business: 'Otel',
 };
 
 /** Paket və xidmət kodları — seed CSV-lərindəki slug-lar. */

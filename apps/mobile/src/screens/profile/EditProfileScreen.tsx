@@ -7,6 +7,7 @@ import { useCategoryList, useRegions } from '@/api/hooks/content';
 import { PICKER_OPTIONS, uploadImage } from '@/api/upload';
 import { alertError } from '@/lib/errors';
 import { t } from '@/theme';
+import { sanitizeUsername } from '@/lib/username';
 import type { AppScreenProps } from '@/navigation/types';
 
 const BIO_MAX = 300;
@@ -59,14 +60,24 @@ export function EditProfileScreen({ navigation }: AppScreenProps<'EditProfile'>)
       Alert.alert('Ad qısadır', 'Adın ən azı 2 hərf olmalıdır');
       return;
     }
+    if (f.username.trim().length < 3) {
+      Alert.alert('İstifadəçi adı qısadır', 'İstifadəçi adı ən azı 3 simvol olmalıdır');
+      return;
+    }
+    // Maraqlar ayrıca endpointdədir (PUT /me/interests) və ən azı 1 seçim tələb edir —
+    // hamısını götürüb səssizcə yadda saxlamamaq əvəzinə səbəbi deyirik
+    if (interests && interests.length === 0) {
+      Alert.alert('Maraq seç', 'Tövsiyələr üçün ən azı 1 maraq seçilməlidir');
+      return;
+    }
     try {
       await update.mutateAsync({
         fullName: name,
         username: f.username.trim(),
         bio: f.bio.trim(),
-        homeRegion: f.homeRegion ?? undefined,
+        // API sahəsi `homeRegionSlug`-dır; null seçimi götürür
+        homeRegionSlug: f.homeRegion,
       });
-      // Maraqlar ayrıca endpointdədir (PUT /me/interests) və ən azı 1 seçim tələb edir
       if (interests?.length) await saveInterests.mutateAsync(interests);
       navigation.goBack();
     } catch (error) {
@@ -110,8 +121,10 @@ export function EditProfileScreen({ navigation }: AppScreenProps<'EditProfile'>)
         <Input
           label="İstifadəçi adı"
           value={f.username}
-          onChangeText={(v) => set({ username: v.toLowerCase().replace(/[^a-z0-9._]/g, '') })}
+          onChangeText={(v) => set({ username: sanitizeUsername(v) })}
           autoCapitalize="none"
+          autoCorrect={false}
+          spellCheck={false}
           icon="at"
         />
         <Input

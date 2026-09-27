@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { ApiError, NETWORK_ERROR, api, rawPost, setAccessToken, setRefreshHandler } from '@/api/client';
 import { STORAGE_KEYS, storage } from '@/lib/storage';
+import { restoreLanguage } from '@/lib/language';
 
 export interface SessionUser {
   publicId: string;
@@ -60,6 +61,7 @@ export const useAuth = create<AuthState>((set, get) => ({
   },
 
   async restore() {
+    await restoreLanguage();
     const saved = await storage.getJson<Session>(STORAGE_KEYS.session);
     if (saved?.accessToken) setAccessToken(saved.accessToken);
     set({ session: saved });

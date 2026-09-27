@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Alert, StyleSheet, View } from 'react-native';
 import { Button, Icon, Input, Screen, Text, TopBar } from '@/components';
 import { useForgotPassword, useResetPassword } from '@/api/hooks/auth';
 import { ApiError } from '@/api/client';
@@ -28,7 +28,12 @@ export function ForgotPasswordScreen({ navigation }: AuthScreenProps<'ForgotPass
   const submitReset = () =>
     reset.mutate(
       { email: email.trim().toLowerCase(), code, newPassword: password },
-      { onSuccess: () => navigation.navigate('Login') },
+      {
+        onSuccess: () => {
+          Alert.alert('Şifrə yeniləndi', 'Yeni şifrənlə daxil ola bilərsən.');
+          navigation.navigate('Login');
+        },
+      },
     );
 
   return (

@@ -8,6 +8,7 @@ import { useAuth } from '@/store/auth';
 import { ensurePermission } from '@/lib/location';
 import { alertError } from '@/lib/errors';
 import { t } from '@/theme';
+import { sanitizeUsername } from '@/lib/username';
 
 const BIO_MAX = 300;
 
@@ -102,7 +103,9 @@ export function ProfileSetupScreen() {
           icon="at"
           autoCapitalize="none"
           value={username ?? me.data?.username ?? ''}
-          onChangeText={(v) => setUsername(v.toLowerCase().replace(/[^a-z0-9._]/g, ''))}
+          onChangeText={(v) => setUsername(sanitizeUsername(v))}
+          autoCorrect={false}
+          spellCheck={false}
         />
         <Input
           label={`Haqqında (${bio.length}/${BIO_MAX})`}

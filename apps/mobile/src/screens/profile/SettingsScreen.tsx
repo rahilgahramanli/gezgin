@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { Alert, Linking, Pressable, StyleSheet, Switch, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, Switch, View } from 'react-native';
+import { useQueryClient } from '@tanstack/react-query';
 import { Avatar, Button, Card, Icon, Screen, Text, TopBar, type IconName } from '@/components';
 import { useBlockedUsers, useDeleteAccount, useMe, useSettings, useUnblock, useUpdateSettings } from '@/api/hooks/me';
 import { useLogout } from '@/api/hooks/auth';
-import { api } from '@/api/client';
-import i18n from '@/i18n';
+import { applyLanguage } from '@/lib/language';
 import { t } from '@/theme';
 import type { AppScreenProps } from '@/navigation/types';
 
@@ -156,16 +156,16 @@ export function SettingsScreen({ navigation }: AppScreenProps<'Settings'>) {
 
   const s = settings.data;
 
-  const openLegal = async (slug: 'terms' | 'privacy') => {
-    try {
-      const doc = await api<{ url: string; titleAz: string }>(`/legal/${slug}`);
-      const can = await Linking.canOpenURL(doc.url);
-      if (can) await Linking.openURL(doc.url);
-      else Alert.alert(doc.titleAz, doc.url);
-    } catch {
-      Alert.alert('Açılmadı', 'Sənəd hazırda əlçatan deyil');
-    }
-  };
+  const qc = useQueryClient();
+
+  // Sənəd tətbiqin içində açılır — gezgin.app saytı hələ yoxdur
+  const openLegal = (slug: 'terms' | 'privacy') => navigation.navigate('Legal', { slug });
+
+  const confirmLogout = () =>
+    Alert.alert('Çıxış', 'Hesabdan çıxmaq istəyirsən?', [
+      { text: 'İmtina', style: 'cancel' },
+      { text: 'Çıxış', style: 'destructive', onPress: () => logout.mutate() },
+    ]);
 
   const confirmDelete = () =>
     Alert.alert(
@@ -209,8 +209,8 @@ export function SettingsScreen({ navigation }: AppScreenProps<'Settings'>) {
               last={i === LANGS.length - 1}
               onPress={() => {
                 update.mutate({ language: l.code });
-                // Tərcüməsi olmayan dil seçiləndə i18n özü `az`-a düşür
-                void i18n.changeLanguage(l.code);
+                // Kontent (məkan, marşrut, region adları) seçilmiş dildə yenidən yüklənir
+                void applyLanguage(l.code, qc);
               }}
             />
           ))}
@@ -308,12 +308,12 @@ export function SettingsScreen({ navigation }: AppScreenProps<'Settings'>) {
 
         <SectionTitle>Hüquqi</SectionTitle>
         <Group>
-          <Row icon="info" label="İstifadə şərtləri" onPress={() => void openLegal('terms')} />
-          <Row icon="lock" label="Məxfilik siyasəti" onPress={() => void openLegal('privacy')} last />
+          <Row icon="info" label="İstifadə şərtləri" onPress={() => openLegal('terms')} />
+          <Row icon="lock" label="Məxfilik siyasəti" onPress={() => openLegal('privacy')} last />
         </Group>
 
         <View style={styles.footer}>
-          <Button block label="Çıxış" variant="outline" onPress={() => logout.mutate()} loading={logout.isPending} />
+          <Button block label="Çıxış" variant="outline" onPress={confirmLogout} loading={logout.isPending} />
           <Button block label="Hesabı sil" variant="ghost" textColor={t.colors.danger} onPress={confirmDelete} loading={removeAccount.isPending} />
           <Text variant="meta" color="muted" style={styles.version}>
             GEZGIN 1.0.0
