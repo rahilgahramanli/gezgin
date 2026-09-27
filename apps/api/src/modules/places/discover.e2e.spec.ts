@@ -1,6 +1,7 @@
 import { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import request from 'supertest';
+import { ulid } from 'ulid';
 import { AppModule } from '@/app.module';
 import { uniqueTag } from '@/common/testing/unique-tag';
 import { PrismaService } from '@/common/prisma/prisma.service';
@@ -187,6 +188,42 @@ describe('Kəşf: regions + places + search + reviews (e2e)', () => {
     });
   });
 
+  describe('places — tərcümə olmayanda AZ-yə düşür', () => {
+    it('ingiliscə tərcüməsi olmayan məkan siyahıda, xəritədə, detalda və axtarışda görünür', async () => {
+      const region = await prisma.region.findUniqueOrThrow({ where: { slug: 'quba' }, select: { id: true } });
+      const slug = `az-only-${tag}`;
+      const name = `Sinaq mekani ${tag}`;
+      await prisma.place.create({
+        data: {
+          publicId: ulid(),
+          slug,
+          regionId: region.id,
+          lat: 41.3611,
+          lng: 48.5134,
+          translations: { create: { lang: 'az', name } },
+        },
+      });
+      try {
+        const en = { 'Accept-Language': 'en' };
+        const list = await http().get('/api/v1/places?region=quba&limit=50').set(en).expect(200);
+        const row = list.body.data.find((p: { slug: string }) => p.slug === slug);
+        expect(row).toMatchObject({ name });
+        expect(row.region.name).toBeTruthy();
+
+        const map = await http().get('/api/v1/places/map?region=quba&zoom=14').set(en).expect(200);
+        expect(map.body.items.map((p: { slug: string }) => p.slug)).toContain(slug);
+
+        const detail = await http().get(`/api/v1/places/${slug}`).set(en).expect(200);
+        expect(detail.body.name).toBe(name);
+
+        const found = await http().get(`/api/v1/search?q=${tag}&types=place`).set(en).expect(200);
+        expect(found.body.results.map((r: { slug: string }) => r.slug)).toContain(slug);
+      } finally {
+        await prisma.place.deleteMany({ where: { slug } });
+      }
+    });
+  });
+
   describe('places — detal və fotolar', () => {
     it('detalda kateqoriya, faktlar və fotolar var', async () => {
       const res = await http().get('/api/v1/places/xinaliq-kendi').expect(200);
@@ -265,9 +302,10 @@ describe('Kəşf: regions + places + search + reviews (e2e)', () => {
       for (const r of res.body.data) expect(r.photos.length).toBeGreaterThan(0);
     });
 
-    it('ulduza görə filtrləyir', async () => {
+    it('ulduza görə minimal filtrləyir (4 → 4 və 5)', async () => {
       const res = await http().get('/api/v1/reviews?targetType=place&target=xinaliq-kendi&rating=4').expect(200);
-      for (const r of res.body.data) expect(r.rating).toBe(4);
+      expect(res.body.data.length).toBeGreaterThan(0);
+      for (const r of res.body.data) expect(r.rating).toBeGreaterThanOrEqual(4);
     });
 
     it('faydalı işarəsini qoyub götürür', async () => {

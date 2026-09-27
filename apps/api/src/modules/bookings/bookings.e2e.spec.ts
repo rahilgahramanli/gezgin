@@ -2,6 +2,7 @@ import { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import request from 'supertest';
 import * as argon2 from 'argon2';
+import { createHmac } from 'node:crypto';
 import { AppModule } from '@/app.module';
 import { uniqueTag } from '@/common/testing/unique-tag';
 import { PrismaService } from '@/common/prisma/prisma.service';
@@ -55,7 +56,7 @@ describe('Rezervasiya + Ödəniş (e2e)', () => {
     await request(app.getHttpServer())
       .post('/api/v1/experiences/kend-metbexi-masterklassi/slots')
       .set({ Authorization: `Bearer ${expertToken}` })
-      .send({ startAt: [startAt], capacity: 10 });
+      .send({ startAt: [startAt], capacity: 30 });
 
     const avail = await request(app.getHttpServer())
       .get('/api/v1/experiences/kend-metbexi-masterklassi/availability?days=60');
@@ -63,8 +64,9 @@ describe('Rezervasiya + Ödəniş (e2e)', () => {
   });
 
   afterAll(async () => {
-    const user = await prisma.user.findUnique({ where: { email }, select: { id: true } });
-    if (user) {
+    for (const e of [email, `oth3.${tag}@gezgin.test`]) {
+      const user = await prisma.user.findUnique({ where: { email: e }, select: { id: true } });
+      if (!user) continue;
       await prisma.booking.deleteMany({ where: { userId: user.id } });
       await prisma.user.delete({ where: { id: user.id } });
     }
@@ -270,6 +272,179 @@ describe('Rezervasiya + Ödəniş (e2e)', () => {
       await http().post(`/api/v1/bookings/${booking.body.publicId}/cancel`).set(auth()).send({}).expect(201);
       const res = await http().post(`/api/v1/bookings/${booking.body.publicId}/cancel`).set(auth()).send({}).expect(400);
       expect(res.body.code).toBe('CONFLICT');
+    });
+  });
+
+  describe('həyat dövrü və ödəniş qaydaları', () => {
+    // Hamısı eyni IP-dən gəlir — "burst" limiti (20 sorğu/san) dolmasın deyə hər test təzə pəncərədə başlayır
+    beforeEach(() => new Promise((resolve) => setTimeout(resolve, 1100)));
+
+    const xpOf = async () => (await prisma.user.findUniqueOrThrow({ where: { email }, select: { xp: true } })).xp;
+    const seatsOf = async () =>
+      (await prisma.experienceSlot.findUniqueOrThrow({ where: { id: BigInt(slotId) }, select: { booked: true } })).booked;
+    const experienceBookingCount = async () =>
+      (await prisma.experience.findUniqueOrThrow({ where: { slug: 'kend-metbexi-masterklassi' }, select: { bookingCount: true } }))
+        .bookingCount;
+
+    it('geri qaytarma endpointi yalnız admin üçündür', async () => {
+      const booking = await book({ paymentMethod: cardId }).expect(201);
+      const res = await http().post(`/api/v1/payments/${booking.body.payment.publicId}/refund`).set(auth())
+        .send({ amountAzn: 1 }).expect(403);
+      expect(res.body.code).toBe('INSUFFICIENT_ROLE');
+    });
+
+    it('Idempotency-Key istifadəçiyə aiddir — başqasının eyni açarı öz sifarişini yaradır', async () => {
+      const key = `shared-${tag}`;
+      const mine = await book().set('Idempotency-Key', key).expect(201);
+
+      const other = await http().post('/api/v1/auth/register').send({
+        fullName: 'Digər 3', username: `oth3.${tag}`, email: `oth3.${tag}@gezgin.test`, password: 'Sifre12345',
+      });
+      const theirs = await http().post('/api/v1/bookings')
+        .set({ Authorization: `Bearer ${other.body.accessToken}`, 'Idempotency-Key': key })
+        .send({ type: 'experience', target: 'kend-metbexi-masterklassi', slotId, adults: 1 })
+        .expect(201);
+      expect(theirs.body.publicId).not.toBe(mine.body.publicId);
+    });
+
+    it('ləğv edilmiş rezervasiyanı ödəmir', async () => {
+      const booking = await book().expect(201);
+      await http().post(`/api/v1/bookings/${booking.body.publicId}/cancel`).set(auth()).send({}).expect(201);
+      const res = await http().post(`/api/v1/bookings/${booking.body.publicId}/pay`).set(auth())
+        .send({ paymentMethod: cardId }).expect(400);
+      expect(res.body.code).toBe('CONFLICT');
+    });
+
+    it('başlama vaxtı keçmiş rezervasiyanı ödəmir', async () => {
+      const booking = await book().expect(201);
+      await prisma.booking.update({
+        where: { publicId: booking.body.publicId },
+        data: { startAt: new Date(Date.now() - 3600_000) },
+      });
+      const res = await http().post(`/api/v1/bookings/${booking.body.publicId}/pay`).set(auth())
+        .send({ paymentMethod: cardId }).expect(400);
+      expect(res.body.message).toBe('Başlama vaxtı keçmiş rezervasiya ödənilə bilməz');
+      await prisma.booking.update({ where: { publicId: booking.body.publicId }, data: { status: 'cancelled' } });
+    });
+
+    it('ödəniş vaxtı (30 dəq) bitmiş rezervasiya ləğv olunur və yer boşalır', async () => {
+      const booking = await book({ adults: 2 }).expect(201);
+      const held = await seatsOf();
+      await prisma.booking.update({
+        where: { publicId: booking.body.publicId },
+        data: { createdAt: new Date(Date.now() - 31 * 60_000) },
+      });
+
+      const res = await http().get(`/api/v1/bookings/${booking.body.publicId}`).set(auth()).expect(200);
+      expect(res.body.status).toBe('cancelled');
+      const row = await prisma.booking.findUniqueOrThrow({ where: { publicId: booking.body.publicId } });
+      expect(row.cancelReason).toBe('payment_timeout');
+      expect(await seatsOf()).toBe(held - 2);
+    });
+
+    it('bitmiş təcrübə tamamlanır və +800 XP bir dəfə verilir', async () => {
+      const booking = await book({ paymentMethod: cardId }).expect(201);
+      expect(booking.body.status).toBe('confirmed');
+      await prisma.booking.update({
+        where: { publicId: booking.body.publicId },
+        data: { startAt: new Date(Date.now() - 5 * 3600_000) }, // yarım gün = 4 saat
+      });
+
+      const before = await xpOf();
+      const past = await http().get('/api/v1/bookings?filter=past').set(auth()).expect(200);
+      const done = past.body.data.find((b: { publicId: string }) => b.publicId === booking.body.publicId);
+      expect(done.status).toBe('completed');
+      expect(await xpOf()).toBe(before + 800);
+
+      await http().get('/api/v1/bookings?filter=past').set(auth()).expect(200);
+      expect(await xpOf()).toBe(before + 800);
+
+      const stats = await http().get('/api/v1/me/stats').set(auth()).expect(200);
+      expect(stats.body.experiences).toBeGreaterThanOrEqual(1);
+    });
+
+    it('slotsuz bronda qrup həddi və eyni vaxta düşən bronların cəmi yoxlanılır', async () => {
+      const startAt = new Date(Date.now() + 40 * 86400_000).toISOString();
+      const body = { type: 'experience', target: 'kend-metbexi-masterklassi', startAt };
+
+      const tooBig = await http().post('/api/v1/bookings').set(auth()).send({ ...body, adults: 9 }).expect(400);
+      expect(tooBig.body.code).toBe('BOOKING_SLOT_TAKEN');
+
+      await http().post('/api/v1/bookings').set(auth()).send({ ...body, adults: 5 }).expect(201);
+      const rest = await http().post('/api/v1/bookings').set(auth()).send({ ...body, adults: 4 }).expect(400);
+      expect(rest.body.message).toBe('Bu tarixdə yalnız 3 yer qalıb');
+      await http().post('/api/v1/bookings').set(auth()).send({ ...body, adults: 2, children: 1 }).expect(201);
+    });
+
+    it('açıq sessiya başqa kartladırsa köhnəsi ləğv olunur, yeni kartla ödənilir', async () => {
+      const tds = await addCard(CARDS.threeDs);
+      const booking = await book().expect(201);
+      await http().post(`/api/v1/bookings/${booking.body.publicId}/pay`).set(auth())
+        .send({ paymentMethod: tds }).expect(201);
+
+      const done = await http().post(`/api/v1/bookings/${booking.body.publicId}/pay`).set(auth())
+        .send({ paymentMethod: cardId }).expect(201);
+      expect(done.body.status).toBe('confirmed');
+
+      const payments = await prisma.payment.findMany({
+        where: { booking: { publicId: booking.body.publicId } },
+        orderBy: { createdAt: 'asc' },
+        include: { method: { select: { publicId: true } } },
+      });
+      expect(payments).toHaveLength(2);
+      expect(payments[0]).toMatchObject({ status: 'failed', failureCode: 'method_changed' });
+      expect(payments[1].status).toBe('succeeded');
+      expect(payments[1].method!.publicId).toBe(cardId);
+    });
+
+    it('təsdiqlənmiş rezervasiyanın ləğvi komissiyanı, sayğacı və +50 XP-ni geri alır', async () => {
+      const count0 = await experienceBookingCount();
+      const xp0 = await xpOf();
+      const booking = await book({ paymentMethod: cardId }).expect(201);
+      expect(await experienceBookingCount()).toBe(count0 + 1);
+      expect(await xpOf()).toBe(xp0 + 50);
+
+      await http().post(`/api/v1/bookings/${booking.body.publicId}/cancel`).set(auth()).send({}).expect(201);
+
+      const row = await prisma.booking.findUniqueOrThrow({
+        where: { publicId: booking.body.publicId },
+        include: { commission: true },
+      });
+      expect(row.commission).toBeNull();
+      expect(await experienceBookingCount()).toBe(count0);
+      expect(await xpOf()).toBe(xp0);
+    });
+
+    it('webhook uğurlu ödənişi `pay` ilə eyni yoldan təsdiqləyir', async () => {
+      const tds = await addCard(CARDS.threeDs);
+      const booking = await book().expect(201);
+      await http().post(`/api/v1/bookings/${booking.body.publicId}/pay`).set(auth())
+        .send({ paymentMethod: tds }).expect(201);
+      const payment = await prisma.payment.findFirstOrThrow({ where: { booking: { publicId: booking.body.publicId } } });
+
+      const count0 = await experienceBookingCount();
+      const xp0 = await xpOf();
+      const event = { type: 'payment.succeeded', intentId: payment.providerIntentId, paymentId: `mock_pay_${tag}` };
+      const signature = createHmac('sha256', 'mock-webhook-secret').update(JSON.stringify(event)).digest('hex');
+      await http().post('/api/v1/payments/webhook').set('x-signature', signature).send(event).expect(200);
+      // Təkrar bildiriş ikinci dəfə təsdiqləmir
+      await http().post('/api/v1/payments/webhook').set('x-signature', signature).send(event).expect(200);
+
+      const row = await prisma.booking.findUniqueOrThrow({
+        where: { publicId: booking.body.publicId },
+        include: { commission: true },
+      });
+      expect(row.status).toBe('confirmed');
+      expect(row.commission).toBeTruthy();
+      expect(await experienceBookingCount()).toBe(count0 + 1);
+      expect(await xpOf()).toBe(xp0 + 50);
+    });
+
+    it('"Gələcək" sayğacı siyahı ilə eyni şərtlə sayılır', async () => {
+      const res = await http().get('/api/v1/bookings?filter=upcoming&limit=50').set(auth()).expect(200);
+      expect(res.body.counts.upcoming).toBe(res.body.data.length);
+      const past = await http().get('/api/v1/bookings?filter=past&limit=50').set(auth()).expect(200);
+      expect(past.body.counts.past).toBe(past.body.data.length);
     });
   });
 

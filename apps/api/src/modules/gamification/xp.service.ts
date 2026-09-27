@@ -53,8 +53,9 @@ export class XpService {
 
     const since = new Date();
     since.setHours(0, 0, 0, 0);
+    // Yalnız XP gətirən sətirlər sayılır — geri alma (mənfi) sətirləri limiti doldurmamalıdır
     const used = await this.prisma.xpTransaction.count({
-      where: { userId, action, createdAt: { gte: since } },
+      where: { userId, action, createdAt: { gte: since }, xp: { gt: 0 } },
     });
     return used >= rule.dailyCap;
   }
@@ -236,6 +237,56 @@ export class XpService {
     };
   }
 
+  /**
+   * Verilmiş XP-ni geri alır (məs. təsdiqlənmiş rezervasiya ləğv olunanda).
+   *
+   * Həmin hədəf üçün yazılmış bütün sətirlərin cəmi qədər mənfi sətir yazılır —
+   * təkrar çağırış ikinci dəfə çıxmır. XP 0-dan aşağı düşmür; level və
+   * Gezgin Score yenidən hesablanır. Qazanılmış badge-lər geri alınmır.
+   */
+  async revoke(
+    userId: bigint,
+    action: XpAction,
+    target: { type: string; id: bigint; note?: string },
+  ): Promise<{ xpRevoked: number; xpTotal: number; levelAfter: number }> {
+    const granted = await this.prisma.xpTransaction.aggregate({
+      where: { userId, action, targetType: target.type, targetId: target.id },
+      _sum: { xp: true },
+    });
+    const before = await this.prisma.user.findUniqueOrThrow({
+      where: { id: userId },
+      select: { xp: true, level: true, gezginScore: true },
+    });
+
+    const owed = granted._sum.xp ?? 0;
+    if (owed <= 0) return { xpRevoked: 0, xpTotal: before.xp, levelAfter: before.level };
+
+    const xpRevoked = Math.min(owed, before.xp);
+    const xpTotal = before.xp - xpRevoked;
+    const levelAfter = levelForXp(xpTotal);
+    const scoreTotal = await this.recomputeScore(userId);
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { xp: xpTotal, level: levelAfter, gezginScore: scoreTotal },
+    });
+    await this.prisma.xpTransaction.create({
+      data: {
+        userId,
+        action,
+        xp: -owed,
+        scoreDelta: scoreTotal - before.gezginScore,
+        targetType: target.type,
+        targetId: target.id,
+        levelAfter,
+        note: (target.note ?? 'XP geri alındı').slice(0, 190),
+      },
+    });
+    await this.syncBadges(userId, levelAfter);
+
+    return { xpRevoked, xpTotal, levelAfter };
+  }
+
   /** Ekran 29 — Gezgin Score kartı. */
   async score(userId: bigint) {
     const user = await this.prisma.user.findUniqueOrThrow({
@@ -286,7 +337,14 @@ export class XpService {
         byAction: thisMonth.map((a) => ({ action: a.action, count: a._count, xp: a._sum.xp ?? 0 })),
       },
       /** Ekran 29 "Xal qazanma yolları" */
-      earnRules: Object.entries(XP_RULES).map(([action, r]) => ({
+      earnRules: this.rules().rules,
+    };
+  }
+
+  /** Ekran 29 "Xal qazanma yolları" — `@gezgin/shared` qaydalarının açıq siyahısı. */
+  rules() {
+    return {
+      rules: Object.entries(XP_RULES).map(([action, r]) => ({
         action,
         name: r.nameAz,
         xp: r.xp,

@@ -4,6 +4,7 @@ import { PrismaService } from '@/common/prisma/prisma.service';
 import { StorageService } from '@/modules/storage/storage.service';
 import { distanceMeters, formatDistanceKm } from '@/common/search/geo';
 import { toBooleanQuery } from '@/common/search/normalize';
+import { translationJoin } from '@/common/search/translation';
 
 type Lang = 'az' | 'en' | 'ru';
 export type SearchType = 'place' | 'route' | 'experience' | 'event' | 'user' | 'business';
@@ -65,9 +66,9 @@ export class SearchService {
                ${hasGeo ? distanceMeters('p.geo', opts.lng!, opts.lat!) : Prisma.sql`NULL`} AS distance_m,
                MATCH(t.search_text) AGAINST(${bq} IN BOOLEAN MODE) AS score
         FROM places p
-        JOIN place_translations t ON t.place_id = p.id AND t.lang = ${lang}
+        ${translationJoin({ table: 'place_translations', fk: 'place_id', alias: 't', owner: 'p', lang })}
         JOIN regions r ON r.id = p.region_id
-        LEFT JOIN region_translations rt ON rt.region_id = r.id AND rt.lang = ${lang}
+        ${translationJoin({ table: 'region_translations', fk: 'region_id', alias: 'rt', owner: 'r', lang, left: true })}
         WHERE p.deleted_at IS NULL AND p.status = 'published'
           AND MATCH(t.search_text) AGAINST(${bq} IN BOOLEAN MODE)
           ${opts.region ? Prisma.sql`AND r.slug = ${opts.region}` : Prisma.empty}
@@ -93,9 +94,9 @@ export class SearchService {
                ro.rating_avg, ro.rating_count,
                MATCH(t.search_text) AGAINST(${bq} IN BOOLEAN MODE) AS score
         FROM routes ro
-        JOIN route_translations t ON t.route_id = ro.id AND t.lang = ${lang}
+        ${translationJoin({ table: 'route_translations', fk: 'route_id', alias: 't', owner: 'ro', lang })}
         JOIN regions r ON r.id = ro.region_id
-        LEFT JOIN region_translations rt ON rt.region_id = r.id AND rt.lang = ${lang}
+        ${translationJoin({ table: 'region_translations', fk: 'region_id', alias: 'rt', owner: 'r', lang, left: true })}
         LEFT JOIN media_assets m ON m.id = ro.cover_id
         WHERE ro.deleted_at IS NULL AND ro.status = 'published' AND ro.visibility <> 'private'
           AND MATCH(t.search_text) AGAINST(${bq} IN BOOLEAN MODE)
@@ -126,7 +127,7 @@ export class SearchService {
                MATCH(e.search_text) AGAINST(${bq} IN BOOLEAN MODE) AS score
         FROM experiences e
         JOIN regions r ON r.id = e.region_id
-        LEFT JOIN region_translations rt ON rt.region_id = r.id AND rt.lang = ${lang}
+        ${translationJoin({ table: 'region_translations', fk: 'region_id', alias: 'rt', owner: 'r', lang, left: true })}
         WHERE e.deleted_at IS NULL AND e.status = 'published'
           AND MATCH(e.search_text) AGAINST(${bq} IN BOOLEAN MODE)
           ${opts.region ? Prisma.sql`AND r.slug = ${opts.region}` : Prisma.empty}
@@ -152,7 +153,7 @@ export class SearchService {
                MATCH(ev.search_text) AGAINST(${bq} IN BOOLEAN MODE) AS score
         FROM events ev
         JOIN regions r ON r.id = ev.region_id
-        LEFT JOIN region_translations rt ON rt.region_id = r.id AND rt.lang = ${lang}
+        ${translationJoin({ table: 'region_translations', fk: 'region_id', alias: 'rt', owner: 'r', lang, left: true })}
         LEFT JOIN media_assets m ON m.id = ev.cover_id
         WHERE ev.deleted_at IS NULL AND ev.end_date >= CURDATE()
           AND MATCH(ev.search_text) AGAINST(${bq} IN BOOLEAN MODE)
@@ -181,6 +182,13 @@ export class SearchService {
         LEFT JOIN media_assets m ON m.id = u.avatar_id
         WHERE u.deleted_at IS NULL AND u.status = 'active' AND u.is_public = 1
           AND MATCH(u.search_text) AGAINST(${bq} IN BOOLEAN MODE)
+          ${userId !== undefined
+            ? Prisma.sql`AND NOT EXISTS (
+                SELECT 1 FROM blocks b
+                WHERE (b.blocker_id = ${userId} AND b.blocked_id = u.id)
+                   OR (b.blocker_id = u.id AND b.blocked_id = ${userId})
+              )`
+            : Prisma.empty}
         ORDER BY score DESC, u.gezgin_score DESC LIMIT ${perType}
       `;
       hits.push(...rows.map((r) => ({
@@ -217,13 +225,13 @@ export class SearchService {
     const rows = await this.prisma.$queryRaw<Array<{ kind: string; slug: string; label: string; score: number }>>`
       (SELECT 'place' AS kind, p.slug, t.name AS label,
               MATCH(t.search_text) AGAINST(${bq} IN BOOLEAN MODE) AS score
-       FROM places p JOIN place_translations t ON t.place_id = p.id AND t.lang = ${lang}
+       FROM places p ${translationJoin({ table: 'place_translations', fk: 'place_id', alias: 't', owner: 'p', lang })}
        WHERE p.deleted_at IS NULL AND MATCH(t.search_text) AGAINST(${bq} IN BOOLEAN MODE)
        ORDER BY score DESC LIMIT ${limit})
       UNION ALL
       (SELECT 'region', r.slug, rt.name,
               MATCH(rt.search_text) AGAINST(${bq} IN BOOLEAN MODE)
-       FROM regions r JOIN region_translations rt ON rt.region_id = r.id AND rt.lang = ${lang}
+       FROM regions r ${translationJoin({ table: 'region_translations', fk: 'region_id', alias: 'rt', owner: 'r', lang })}
        WHERE r.parent_id IS NOT NULL AND MATCH(rt.search_text) AGAINST(${bq} IN BOOLEAN MODE)
        ORDER BY 4 DESC LIMIT ${limit})
       ORDER BY score DESC

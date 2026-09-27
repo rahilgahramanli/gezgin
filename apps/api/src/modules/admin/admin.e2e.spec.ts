@@ -147,6 +147,13 @@ describe('Admin paneli — moderasiya minimumu (e2e)', () => {
       expect(res.body).toMatchObject({ contentDeleted: true, userSuspended: true });
       await http().get(`/api/v1/posts/${post}`).expect(404);
 
+      // Birbaşa dayandırma ilə eyni: sessiyalar bağlanır, audit izi yazılır
+      expect(await prisma.refreshToken.count({ where: { userId: u.author.id, revokedAt: null } })).toBe(0);
+      const audit = await prisma.auditLog.findFirst({
+        where: { actorId: u.admin.id, action: 'user.suspend', targetId: u.author.id },
+      });
+      expect(audit).toBeTruthy();
+
       // Dayandırılmış istifadəçinin mövcud tokeni də dərhal etibarsızdır
       await http().get('/api/v1/me').set(as('author')).expect(401);
       await prisma.user.update({ where: { id: u.author.id }, data: { status: 'active' } });
@@ -155,6 +162,27 @@ describe('Admin paneli — moderasiya minimumu (e2e)', () => {
         .send({ identifier: u.author.username, password: 'Sifre12345' })
         .expect(200);
       u.author.token = back.body.accessToken;
+    });
+
+    it('`suspend_user` admini dayandırmır və heç nəyə toxunmur', async () => {
+      const post = await http().post('/api/v1/posts').set(as('admin')).send({ body: 'Admin paylaşımı' }).expect(201);
+      const report = await http()
+        .post(`/api/v1/posts/${post.body.publicId}/report`)
+        .set(as('reporter'))
+        .send({ reason: 'spam' })
+        .expect(201);
+
+      const res = await http()
+        .post(`/api/v1/admin/reports/${report.body.publicId}/resolve`)
+        .set(as('admin'))
+        .send({ action: 'suspend_user' })
+        .expect(400);
+      expect(res.body.code).toBe('FORBIDDEN');
+
+      await http().get(`/api/v1/posts/${post.body.publicId}`).expect(200);
+      const detail = await http().get(`/api/v1/admin/reports/${report.body.publicId}`).set(as('admin')).expect(200);
+      expect(detail.body.status).toBe('open');
+      await http().get('/api/v1/me').set(as('admin')).expect(200);
     });
 
     it('bağlanmış şikayət ikinci dəfə həll edilmir', async () => {

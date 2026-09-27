@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { Prisma, type ReportTargetType, type ReviewTargetType } from '@prisma/client';
+import { Prisma, type ReportTargetType, type ReviewTargetType, type UserStatus } from '@prisma/client';
 import { ERROR_CODES } from '@gezgin/shared';
 import { PrismaService } from '@/common/prisma/prisma.service';
 import { AuditService } from './audit.service';
@@ -178,10 +178,8 @@ export class AdminService {
     let contentDeleted = false;
     let userSuspended = false;
 
-    if (dto.action !== 'dismiss') {
-      contentDeleted = await this.softDeleteTarget(report.targetType, report.targetId);
-    }
-
+    // Dayandırma şərtləri kontentə toxunmadan ƏVVƏL yoxlanılır — 400 halında heç nə dəyişməməlidir
+    let suspendTarget: { id: bigint; status: UserStatus } | null = null;
     if (dto.action === 'suspend_user') {
       if (!report.reportedUserId) {
         throw new BadRequestException({
@@ -189,7 +187,24 @@ export class AdminService {
           message: 'Bu şikayətin müəllifi yoxdur — istifadəçi dayandırıla bilməz',
         });
       }
-      await this.prisma.user.update({ where: { id: report.reportedUserId }, data: { status: 'suspended' } });
+      const target = await this.prisma.user.findUnique({
+        where: { id: report.reportedUserId },
+        select: { id: true, status: true, role: true },
+      });
+      if (!target) throw new NotFoundException({ code: ERROR_CODES.NOT_FOUND, message: 'İstifadəçi tapılmadı' });
+      if (target.role === 'admin') {
+        throw new BadRequestException({ code: ERROR_CODES.FORBIDDEN, message: 'Admin hesabı dayandırıla bilməz' });
+      }
+      suspendTarget = target;
+    }
+
+    if (dto.action !== 'dismiss') {
+      contentDeleted = await this.softDeleteTarget(report.targetType, report.targetId);
+    }
+
+    if (suspendTarget) {
+      // Birbaşa dayandırma ilə eyni yol: sessiyalar bağlanır, audit izi yazılır
+      await this.applySuspension(admin, suspendTarget, `report:${report.publicId}${dto.note ? ` · ${dto.note}` : ''}`, meta);
       userSuspended = true;
     }
 
@@ -348,6 +363,17 @@ export class AdminService {
       throw new BadRequestException({ code: ERROR_CODES.CONFLICT, message: 'Hesab onsuz da dayandırılıb' });
     }
 
+    await this.applySuspension(admin, user, dto.reason, meta);
+    return { suspended: true, username };
+  }
+
+  /** Dayandırma — birbaşa (`/admin/users/:u/suspend`) və şikayət qərarı (`suspend_user`) eyni yoldan keçir. */
+  private async applySuspension(
+    admin: { id: bigint },
+    user: { id: bigint; status: UserStatus },
+    reason: string | undefined,
+    meta: RequestMeta,
+  ) {
     await this.prisma.user.update({ where: { id: user.id }, data: { status: 'suspended' } });
     // Aktiv sessiyalar da bağlanır — JwtStrategy `status`-u hər sorğuda yoxlayır,
     // amma refresh tokenləri silinməsə, istifadəçi yenidən giriş cəhdi edə bilər
@@ -362,11 +388,9 @@ export class AdminService {
       targetType: 'user',
       targetId: user.id,
       before: { status: user.status },
-      after: { status: 'suspended', reason: dto.reason },
+      after: { status: 'suspended', reason: reason ?? null },
       ...meta,
     });
-
-    return { suspended: true, username };
   }
 
   async restoreUser(admin: { id: bigint }, username: string, meta: RequestMeta) {

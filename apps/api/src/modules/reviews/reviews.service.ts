@@ -92,7 +92,8 @@ export class ReviewsService {
       targetId,
       deletedAt: null,
       isVisible: true,
-      ...(dto.rating ? { rating: dto.rating } : {}),
+      // Ekran 47 "4+" çipi — minimal ulduz, dəqiq bərabərlik deyil
+      ...(dto.rating ? { rating: { gte: dto.rating } } : {}),
       ...(dto.withPhotos === 'true' ? { photos: { some: {} } } : {}),
     };
 

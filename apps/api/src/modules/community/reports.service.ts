@@ -3,7 +3,6 @@ import type { ReportTargetType } from '@prisma/client';
 import { ulid } from 'ulid';
 import { ERROR_CODES } from '@gezgin/shared';
 import { PrismaService } from '@/common/prisma/prisma.service';
-import type { ReportDto } from './dto/community.dto';
 
 @Injectable()
 export class ReportsService {
@@ -16,7 +15,8 @@ export class ReportsService {
   async report(
     reporterId: bigint,
     target: { type: ReportTargetType; id: bigint; ownerId: bigint | null },
-    dto: ReportDto,
+    // Səbəb siyahısı hədəfə görə fərqlənir (paylaşım/məkan) — yoxlama DTO-dadır
+    dto: { reason: string; details?: string },
   ) {
     if (target.ownerId === reporterId) {
       throw new BadRequestException({

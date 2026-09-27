@@ -148,6 +148,42 @@ describe('Marşrut + Təcrübə (e2e)', () => {
       expect(res.body.itinerary[0].stops[0].order).toBe(0);
     });
 
+    it('dayanacağı marşrutda olmayan günə köçürmür (yenilə və sırala)', async () => {
+      const before = await http().get(`/api/v1/routes/${routeSlug}`).set(auth()).expect(200);
+      const stopId = before.body.itinerary[0].stops[0].stopId;
+
+      const res = await http().patch(`/api/v1/routes/${routeSlug}/stops/${stopId}`).set(auth())
+        .send({ day: 3 }).expect(400);
+      expect(res.body.message).toBe('Marşrut 2 günlükdür — 3-ci gün yoxdur');
+
+      await http().put(`/api/v1/routes/${routeSlug}/stops/reorder`).set(auth())
+        .send({ stops: [{ stopId, day: 3, order: 0 }] }).expect(400);
+    });
+
+    it('dayanacağı mövcud başqa günə köçürür', async () => {
+      const before = await http().get(`/api/v1/routes/${routeSlug}`).set(auth()).expect(200);
+      const stopId = before.body.itinerary[0].stops[0].stopId;
+
+      const res = await http().patch(`/api/v1/routes/${routeSlug}/stops/${stopId}`).set(auth())
+        .send({ day: 2 }).expect(200);
+      expect(res.body.itinerary[0].stops).toHaveLength(0);
+      expect(res.body.itinerary[1].stops[0]).toMatchObject({ stopId, order: 0 });
+    });
+
+    it('dayanacağı olan günü gün sayını azaltmaqla silmir', async () => {
+      const res = await http().patch(`/api/v1/routes/${routeSlug}`).set(auth()).send({ days: 1 }).expect(400);
+      expect(res.body.code).toBe('VALIDATION_FAILED');
+      expect(res.body.message).toContain('2. günündə dayanacaq var');
+
+      // Dayanacaq 1-ci günə qayıdanda azaltmaq olur
+      const before = await http().get(`/api/v1/routes/${routeSlug}`).set(auth()).expect(200);
+      await http().patch(`/api/v1/routes/${routeSlug}/stops/${before.body.itinerary[1].stops[0].stopId}`).set(auth())
+        .send({ day: 1 }).expect(200);
+      const ok = await http().patch(`/api/v1/routes/${routeSlug}`).set(auth()).send({ days: 1 }).expect(200);
+      expect(ok.body.itinerary).toHaveLength(1);
+      expect(ok.body.stopCount).toBe(1);
+    });
+
     it('şəxsi marşrut anonimə görünmür', async () => {
       await http().get(`/api/v1/routes/${routeSlug}`).expect(404);
       await http().get(`/api/v1/routes/${routeSlug}`).set(auth()).expect(200);

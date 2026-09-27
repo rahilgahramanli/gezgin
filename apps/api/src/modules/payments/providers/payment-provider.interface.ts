@@ -61,6 +61,9 @@ export interface PaymentProvider {
 
   confirm(intentId: string, payload?: Record<string, unknown>): Promise<PaymentResult>;
 
+  /** Açıq (hələ ödənilməmiş) sessiyanı ləğv edir — kart dəyişəndə və ya vaxt bitəndə. */
+  cancelIntent(intentId: string): Promise<void>;
+
   refund(providerPaymentId: string, amountAzn: number): Promise<RefundResult>;
 
   tokenizeCard(input: {

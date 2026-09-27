@@ -168,6 +168,17 @@ describe('Planım + Saxlanılanlar (e2e)', () => {
       expect(res.body.code).toBe('CONFLICT');
     });
 
+    it('ləğv edilmiş səyahəti tamamlamır', async () => {
+      const t = await http().post('/api/v1/trips').set(auth()).send({ title: 'Ləğv' }).expect(201);
+      await prisma.trip.update({ where: { publicId: t.body.publicId }, data: { status: 'cancelled' } });
+
+      const res = await http().post(`/api/v1/trips/${t.body.publicId}/complete`).set(auth()).expect(400);
+      expect(res.body.code).toBe('CONFLICT');
+      const row = await prisma.trip.findUniqueOrThrow({ where: { publicId: t.body.publicId } });
+      expect(row.status).toBe('cancelled');
+      expect(row.completedAt).toBeNull();
+    });
+
     it('qeyd əlavə edir', async () => {
       const res = await http().post(`/api/v1/trips/${tripId}/notes`).set(auth())
         .send({ body: 'Yanacaq Qubada doldurulmalıdır' }).expect(201);
@@ -210,6 +221,27 @@ describe('Planım + Saxlanılanlar (e2e)', () => {
 
     it('tokensiz giriş bağlıdır', async () => {
       await http().get('/api/v1/trips').expect(401);
+    });
+
+    it('başqasının şəxsi marşrutunu plana idxal etmir və saxlamır', async () => {
+      const otherEmail = `priv.${tag}@gezgin.test`;
+      const other = await http().post('/api/v1/auth/register').send({
+        fullName: 'Şəxsi', username: `priv.${tag}`, email: otherEmail, password: 'Sifre12345',
+      });
+      const otherAuth = { Authorization: `Bearer ${other.body.accessToken}` };
+      const route = await http().post('/api/v1/routes').set(otherAuth)
+        .send({ title: `Şəxsi marşrut ${tag}`, region: 'quba' }).expect(201);
+      expect(route.body.visibility).toBe('private');
+
+      await http().post('/api/v1/trips').set(auth()).send({ title: 'İdxal', fromRoute: route.body.slug }).expect(404);
+      await http().post('/api/v1/saved').set(auth()).send({ type: 'route', target: route.body.slug }).expect(404);
+      // Sahib özü üçün hər ikisi işləyir
+      await http().post('/api/v1/trips').set(otherAuth).send({ title: 'Öz', fromRoute: route.body.slug }).expect(201);
+      await http().post('/api/v1/saved').set(otherAuth).send({ type: 'route', target: route.body.slug }).expect(201);
+
+      const row = await prisma.user.findUniqueOrThrow({ where: { email: otherEmail }, select: { id: true } });
+      await prisma.route.deleteMany({ where: { authorId: row.id } });
+      await prisma.user.delete({ where: { id: row.id } });
     });
   });
 
@@ -282,6 +314,17 @@ describe('Planım + Saxlanılanlar (e2e)', () => {
       const res = await http().get(`/api/v1/saved?collection=${collectionId}`).set(auth()).expect(200);
       expect(res.body.data).toHaveLength(1);
       expect(res.body.data[0].slug).toBe('goygol');
+    });
+
+    it('olmayan kolleksiya ilə saxlamır — heç nə yazılmır', async () => {
+      const before = await http().get('/api/v1/saved').set(auth()).expect(200);
+      const res = await http().post('/api/v1/saved').set(auth())
+        .send({ type: 'place', target: 'lahic', collection: '01ZZZZZZZZZZZZZZZZZZZZZZZZ' }).expect(404);
+      expect(res.body.code).toBe('NOT_FOUND');
+
+      const after = await http().get('/api/v1/saved').set(auth()).expect(200);
+      expect(after.body.counts.all).toBe(before.body.counts.all);
+      expect(after.body.data.some((i: { slug: string }) => i.slug === 'lahic')).toBe(false);
     });
 
     it('kolleksiyanı siləndə saxlanılanlar qalır', async () => {

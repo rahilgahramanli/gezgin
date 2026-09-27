@@ -333,6 +333,26 @@ describe('Sosial lent — Sprint 7 (e2e)', () => {
       expect(other.body.data[0].viewed).toBe(true);
     });
 
+    it('qapalı hesabın hekayəsinə izləməyən "baxa" bilmir', async () => {
+      await http().patch('/api/v1/me').set(as('a')).send({ isPublic: false }).expect(200);
+      try {
+        await http().post(`/api/v1/stories/${story}/view`).set(as('c')).expect(404);
+        // İzləyici baxa bilir
+        await http().post(`/api/v1/stories/${story}/view`).set(as('b')).expect(201);
+      } finally {
+        await http().patch('/api/v1/me').set(as('a')).send({ isPublic: true }).expect(200);
+      }
+    });
+
+    it('bloklama əlaqəsində hekayəyə baxmaq olmur', async () => {
+      await http().post(`/api/v1/me/blocked/${u.c.username}`).set(as('a')).send({}).expect(201);
+      try {
+        await http().post(`/api/v1/stories/${story}/view`).set(as('c')).expect(404);
+      } finally {
+        await http().delete(`/api/v1/me/blocked/${u.c.username}`).set(as('a')).expect(200);
+      }
+    });
+
     it('vaxtı bitmiş hekayə görünmür', async () => {
       await prisma.story.update({ where: { publicId: story }, data: { expiresAt: new Date(Date.now() - 1000) } });
       expect(await ringOf('b')).toBeUndefined();
@@ -536,6 +556,23 @@ describe('Sosial lent — Sprint 7 (e2e)', () => {
       }
       await http().get(`/api/v1/posts/${publicPost}`).set(as('c')).expect(200);
     });
+
+    it('istifadəçi axtarışında bloklama əlaqəsi olanlar hər iki tərəfdən görünmür', async () => {
+      const found = async (key: Key) => {
+        const res = await http().get(`/api/v1/search?q=${tag}&types=user`).set(as(key)).expect(200);
+        return res.body.results.map((r: { slug: string }) => r.slug);
+      };
+      expect(await found('c')).toContain(u.a.username);
+
+      await http().post(`/api/v1/me/blocked/${u.a.username}`).set(as('c')).send({}).expect(201);
+      try {
+        expect(await found('c')).not.toContain(u.a.username);
+        expect(await found('a')).not.toContain(u.c.username);
+        expect(await found('b')).toContain(u.a.username);
+      } finally {
+        await http().delete(`/api/v1/me/blocked/${u.a.username}`).set(as('c')).expect(200);
+      }
+    });
   });
 
   describe('saxla, paylaş, şikayət, sil — ekran 33, 43', () => {
@@ -561,6 +598,13 @@ describe('Sosial lent — Sprint 7 (e2e)', () => {
 
       await http().post(`/api/v1/posts/${publicPost}/report`).set(as('a')).send({ reason: 'spam' }).expect(400);
       await http().post(`/api/v1/posts/${publicPost}/report`).set(as('c')).send({ reason: 'bilmirem' }).expect(400);
+    });
+
+    it('məkan şikayəti də təkrarlanmır', async () => {
+      const first = await http().post('/api/v1/places/lahic/report').set(as('c')).send({ reason: 'wrong_info' }).expect(201);
+      expect(first.body.duplicate).toBe(false);
+      const again = await http().post('/api/v1/places/lahic/report').set(as('c')).send({ reason: 'closed' }).expect(201);
+      expect(again.body).toMatchObject({ duplicate: true, publicId: first.body.publicId });
     });
 
     it('silinən paylaşım saxlanılanlardan da çıxır — ekran 33 sınmır', async () => {

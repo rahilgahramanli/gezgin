@@ -165,6 +165,40 @@ describe('Auth + Me (e2e)', () => {
       expect(res.body.homeRegion.slug).toBe('quba');
     });
 
+    it('ev regionunu null və ya boş sətirlə götürür (500 yox)', async () => {
+      const cleared = await http()
+        .patch('/api/v1/me')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ homeRegionSlug: null })
+        .expect(200);
+      expect(cleared.body.homeRegion).toBeNull();
+
+      await http().patch('/api/v1/me').set('Authorization', `Bearer ${accessToken}`)
+        .send({ homeRegionSlug: 'quba' }).expect(200);
+      const empty = await http()
+        .patch('/api/v1/me')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ homeRegionSlug: '' })
+        .expect(200);
+      expect(empty.body.homeRegion).toBeNull();
+    });
+
+    it('profil görünürlüyü ayarı isPublic ilə uyğun qalır', async () => {
+      const auth = { Authorization: `Bearer ${accessToken}` };
+
+      await http().patch('/api/v1/me/settings').set(auth).send({ profileVisibility: 'followers' }).expect(200);
+      expect((await http().get('/api/v1/me').set(auth).expect(200)).body.isPublic).toBe(false);
+
+      await http().patch('/api/v1/me').set(auth).send({ isPublic: true }).expect(200);
+      expect((await http().get('/api/v1/me/settings').set(auth).expect(200)).body.profileVisibility).toBe('public');
+
+      await http().patch('/api/v1/me').set(auth).send({ isPublic: false }).expect(200);
+      expect((await http().get('/api/v1/me/settings').set(auth).expect(200)).body.profileVisibility).toBe('followers');
+
+      await http().patch('/api/v1/me/settings').set(auth).send({ profileVisibility: 'public' }).expect(200);
+      expect((await http().get('/api/v1/me').set(auth).expect(200)).body.isPublic).toBe(true);
+    });
+
     it('tutulmuş istifadəçi adını qəbul etmir', async () => {
       const res = await http()
         .patch('/api/v1/me')
@@ -191,6 +225,40 @@ describe('Auth + Me (e2e)', () => {
       expect(blocked.body.code).toBe('FORBIDDEN');
 
       await prisma.user.deleteMany({ where: { publicId: guest.body.user.publicId } });
+    });
+
+    it('refresh-dən sonra da qonaq qalır', async () => {
+      const guest = await http().post('/api/v1/auth/guest').expect(200);
+      const refreshed = await http()
+        .post('/api/v1/auth/refresh')
+        .send({ refreshToken: guest.body.refreshToken })
+        .expect(200);
+
+      const blocked = await http()
+        .put('/api/v1/me/interests')
+        .set('Authorization', `Bearer ${refreshed.body.accessToken}`)
+        .send({ slugs: ['tebiet'] })
+        .expect(403);
+      expect(blocked.body.code).toBe('FORBIDDEN');
+
+      await prisma.user.deleteMany({ where: { publicId: guest.body.user.publicId } });
+    });
+
+    it('adi istifadəçi refresh-dən sonra qonaqa çevrilmir', async () => {
+      const login = await http().post('/api/v1/auth/login').send({ identifier: username, password }).expect(200);
+      const refreshed = await http()
+        .post('/api/v1/auth/refresh')
+        .send({ refreshToken: login.body.refreshToken })
+        .expect(200);
+      await http()
+        .get('/api/v1/me/interests')
+        .set('Authorization', `Bearer ${refreshed.body.accessToken}`)
+        .expect(200);
+      await http()
+        .put('/api/v1/me/interests')
+        .set('Authorization', `Bearer ${refreshed.body.accessToken}`)
+        .send({ slugs: ['tebiet'] })
+        .expect(200);
     });
   });
 

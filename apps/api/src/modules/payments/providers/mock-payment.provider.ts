@@ -96,6 +96,10 @@ export class MockPaymentProvider implements PaymentProvider {
     };
   }
 
+  async cancelIntent(intentId: string): Promise<void> {
+    this.intents.delete(intentId);
+  }
+
   async refund(providerPaymentId: string, amountAzn: number): Promise<RefundResult> {
     return { refundId: `mock_re_${randomUUID()}`, status: 'succeeded', amountAzn };
   }

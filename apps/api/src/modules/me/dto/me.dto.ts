@@ -25,9 +25,9 @@ export class UpdateMeDto {
   @ApiPropertyOptional({ example: '1996-03-12' }) @IsOptional() @IsDateString()
   birthDate?: string;
 
-  @ApiPropertyOptional({ description: 'Region slug — ekran 04, 54' })
+  @ApiPropertyOptional({ description: 'Region slug — ekran 04, 54. `null` və ya boş sətir ev regionunu götürür', nullable: true })
   @IsOptional() @IsString() @MaxLength(80)
-  homeRegionSlug?: string;
+  homeRegionSlug?: string | null;
 
   @ApiPropertyOptional() @IsOptional() @IsBoolean()
   isPublic?: boolean;

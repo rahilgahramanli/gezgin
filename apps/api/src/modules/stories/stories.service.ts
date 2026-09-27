@@ -201,13 +201,17 @@ export class StoriesService {
   async view(viewerId: bigint, publicId: string) {
     const story = await this.prisma.story.findFirst({
       where: { publicId, ...this.activeWhere() },
-      select: { id: true, userId: true },
+      select: { id: true, userId: true, user: { select: { isPublic: true } } },
     });
-    if (!story || (await this.graph.isBlockedBetween(viewerId, story.userId))) {
-      throw new NotFoundException({ code: ERROR_CODES.NOT_FOUND, message: 'Hekayə tapılmadı və ya vaxtı bitib' });
-    }
+    const notFound = () =>
+      new NotFoundException({ code: ERROR_CODES.NOT_FOUND, message: 'Hekayə tapılmadı və ya vaxtı bitib' });
+    if (!story) throw notFound();
     // Müəllifin öz baxışı sayılmır
     if (story.userId === viewerId) return { viewed: true };
+
+    // `forUser` ilə eyni görünürlük: bloklama və ya izlənməyən qapalı hesab — hekayə "yoxdur"
+    if (await this.graph.isBlockedBetween(viewerId, story.userId)) throw notFound();
+    if (!story.user.isPublic && !(await this.graph.isFollowing(viewerId, story.userId))) throw notFound();
 
     const { count } = await this.prisma.storyView.createMany({
       data: [{ storyId: story.id, userId: viewerId }],

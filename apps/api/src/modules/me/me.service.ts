@@ -79,7 +79,10 @@ export class MeService {
     }
 
     let homeRegionId: bigint | null | undefined;
-    if (dto.homeRegionSlug !== undefined) {
+    if (dto.homeRegionSlug === null || dto.homeRegionSlug === '') {
+      // Ev regionunu götürmək — ekran 54
+      homeRegionId = null;
+    } else if (dto.homeRegionSlug !== undefined) {
       const region = await this.prisma.region.findUnique({ where: { slug: dto.homeRegionSlug }, select: { id: true } });
       if (!region) throw new NotFoundException({ code: ERROR_CODES.NOT_FOUND, message: `Region tapılmadı: ${dto.homeRegionSlug}` });
       homeRegionId = region.id;
@@ -97,6 +100,17 @@ export class MeService {
         ...(homeRegionId !== undefined ? { homeRegionId } : {}),
       },
     });
+
+    // `isPublic` və ayarlardakı `profileVisibility` eyni şeyi deyir — uyğun saxlanılır
+    if (dto.isPublic !== undefined) {
+      const current = await this.settings(userId);
+      const profileVisibility = dto.isPublic
+        ? 'public'
+        : current.profileVisibility === 'public' ? 'followers' : current.profileVisibility;
+      if (profileVisibility !== current.profileVisibility) {
+        await this.prisma.userSettings.update({ where: { userId }, data: { profileVisibility } });
+      }
+    }
     return this.profile(userId);
   }
 
@@ -166,11 +180,20 @@ export class MeService {
   }
 
   async updateSettings(userId: bigint, dto: UpdateSettingsDto) {
-    return this.prisma.userSettings.upsert({
+    const settings = await this.prisma.userSettings.upsert({
       where: { userId },
       update: dto,
       create: { userId, ...dto },
     });
+    // Görünürlük faktiki olaraq `users.isPublic` ilə tətbiq olunur (lent, hekayə, profil):
+    // "İzləyicilər" və "Yalnız mən" qapalı hesab deməkdir
+    if (dto.profileVisibility !== undefined) {
+      await this.prisma.user.update({
+        where: { id: userId },
+        data: { isPublic: dto.profileVisibility === 'public' },
+      });
+    }
+    return settings;
   }
 
   // ─────────────────── statistika ───────────────────

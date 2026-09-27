@@ -150,7 +150,8 @@ export class AuthService {
         username,
         fullName: 'Qonaq',
         isPublic: false,
-        settings: { create: {} },
+        // `isPublic` ilə ayarlar uyğun qalsın — bax MeService.updateSettings
+        settings: { create: { profileVisibility: 'followers' } },
         notificationPrefs: { create: {} },
       },
     });

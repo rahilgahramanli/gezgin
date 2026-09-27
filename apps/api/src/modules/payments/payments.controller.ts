@@ -4,6 +4,7 @@ import type { Request } from 'express';
 import { Public } from '@/common/decorators/public.decorator';
 import { CurrentUser, type AuthUser } from '@/common/decorators/current-user.decorator';
 import { GuestBlockedGuard } from '@/common/guards/guest-blocked.guard';
+import { Roles } from '@/common/decorators/roles.decorator';
 import { PaymentsService } from './payments.service';
 import { AddPaymentMethodDto, RefundDto } from './dto/payments.dto';
 
@@ -37,8 +38,13 @@ export class PaymentsController {
     return this.payments.handleWebhook(raw, signature);
   }
 
-  @ApiBearerAuth() @UseGuards(GuestBlockedGuard) @Post(':publicId/refund')
-  @ApiOperation({ summary: 'Geri qaytarma (admin/dəstək axını)' })
+  /**
+   * Yalnız admin/dəstək üçün. İstifadəçi pulu yalnız rezervasiyanı ləğv etməklə
+   * (POST /bookings/:id/cancel) və ləğv siyasətinə görə geri alır — əks halda
+   * istənilən kəs istənilən ödənişi (başqasınınkını da) geri qaytara bilirdi.
+   */
+  @ApiBearerAuth() @Roles('admin') @Post(':publicId/refund')
+  @ApiOperation({ summary: 'Geri qaytarma — yalnız admin (istifadəçi üçün: rezervasiyanı ləğv et)' })
   refund(@Param('publicId') publicId: string, @Body() dto: RefundDto) {
     return this.payments.refund(publicId, dto);
   }

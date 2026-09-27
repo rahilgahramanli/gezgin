@@ -5,6 +5,7 @@ import { ERROR_CODES, PLATFORM_COMMISSION_RATE, EXPERT_PAYOUT_RATE, XP_RULES } f
 import { PrismaService } from '@/common/prisma/prisma.service';
 import { StorageService } from '@/modules/storage/storage.service';
 import { toBooleanQuery } from '@/common/search/normalize';
+import { BookingLifecycleService } from '@/modules/bookings/booking-lifecycle.service';
 import type {
   AvailabilityDto, CreateExperienceDto, CreateSlotsDto, ListExperiencesDto, UpdateExperienceDto,
 } from './dto/experiences.dto';
@@ -27,6 +28,7 @@ export class ExperiencesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly storage: StorageService,
+    private readonly lifecycle: BookingLifecycleService,
   ) {}
 
   private url(key?: string | null): string | null {
@@ -295,6 +297,9 @@ export class ExperiencesService {
 
   /** Ekran 18 tarix seçici — boş yerlərlə birlikdə. */
   async availability(slug: string, dto: AvailabilityDto) {
+    // Ödəniş vaxtı bitmiş bronların yerləri əvvəlcə boşalsın — əks halda slot "dolu" görünür
+    await this.lifecycle.sweep();
+
     const exp = await this.prisma.experience.findFirst({
       where: { slug, deletedAt: null },
       select: { id: true, maxGroup: true, priceAzn: true },

@@ -1,10 +1,11 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Prisma } from '@prisma/client';
 import { ERROR_CODES, levelProgress, tierForLevel } from '@gezgin/shared';
 import { PrismaService } from '@/common/prisma/prisma.service';
 import { StorageService } from '@/modules/storage/storage.service';
 import { distanceMeters } from '@/common/search/geo';
+import { bakuDayStart } from '@/common/time';
 import { XpService, type XpResult } from './xp.service';
 import type { CheckinDto, LeaderboardDto } from './dto/gamification.dto';
 
@@ -31,8 +32,9 @@ export class GamificationService {
   /**
    * Ekran 51 → 52: "Çatdım — check-in".
    *
-   * Mövqe göndərilirsə məkana yaxınlıq yoxlanılır. İlk dəfə gəlirsə XP verilir,
-   * təkrar check-in qeydə alınır, amma XP vermir.
+   * Mövqe məcburidir və məkana yaxınlıq yoxlanılır. İlk dəfə gəlirsə XP verilir.
+   * Eyni məkanda gündə (Bakı vaxtı ilə) yalnız bir check-in — təkrar 409-dur;
+   * sonrakı günlərdə təkrar check-in qeydə alınır, amma XP vermir.
    */
   async checkin(userId: bigint, dto: CheckinDto) {
     const place = await this.prisma.place.findFirst({
@@ -44,26 +46,25 @@ export class GamificationService {
     });
     if (!place) throw new NotFoundException({ code: ERROR_CODES.NOT_FOUND, message: `Məkan tapılmadı: ${dto.place}` });
 
-    let distanceM: number | null = null;
-    if (dto.lat !== undefined && dto.lng !== undefined) {
-      const rows = await this.prisma.$queryRaw<Array<{ d: number }>>`
-        SELECT ${distanceMeters('geo', dto.lng, dto.lat)} AS d FROM places WHERE id = ${place.id}
-      `;
-      distanceM = Math.round(Number(rows[0]?.d ?? 0));
-      if (distanceM > this.checkinRadiusM) {
-        throw new BadRequestException({
-          code: ERROR_CODES.VALIDATION_FAILED,
-          message: `Check-in üçün məkana ${this.checkinRadiusM} m-dən yaxın olmalısınız (hazırda ${(distanceM / 1000).toFixed(1)} km)`,
-          details: { distanceM, maxDistanceM: this.checkinRadiusM },
-        });
-      }
+    // Mövqesiz check-in yaxınlıq yoxlamasını keçirdi — istənilən yerdən XP toplamaq olurdu
+    if (dto.lat === undefined || dto.lng === undefined) {
+      throw new BadRequestException({
+        code: ERROR_CODES.VALIDATION_FAILED,
+        message: 'Check-in üçün yerləşmə lazımdır — yerləşmə icazəsi verin',
+      });
     }
 
-    const previous = await this.prisma.checkin.findFirst({ where: { userId, placeId: place.id } });
-    const isFirst = !previous;
-
-    // İlk regional ziyarətdirsə ekran 32-dəki region tərəqqisi artır
-    const firstInRegion = !(await this.prisma.checkin.findFirst({ where: { userId, regionId: place.regionId } }));
+    const rows = await this.prisma.$queryRaw<Array<{ d: number }>>`
+      SELECT ${distanceMeters('geo', dto.lng, dto.lat)} AS d FROM places WHERE id = ${place.id}
+    `;
+    const distanceM = Math.round(Number(rows[0]?.d ?? 0));
+    if (distanceM > this.checkinRadiusM) {
+      throw new BadRequestException({
+        code: ERROR_CODES.VALIDATION_FAILED,
+        message: `Check-in üçün məkana ${this.checkinRadiusM} m-dən yaxın olmalısınız (hazırda ${(distanceM / 1000).toFixed(1)} km)`,
+        details: { distanceM, maxDistanceM: this.checkinRadiusM },
+      });
+    }
 
     let trip: { id: bigint; publicId: string } | null = null;
     if (dto.trip) {
@@ -78,20 +79,44 @@ export class GamificationService {
     // SIRA VACİBDİR: check-in sətri əvvəlcə yazılır, sonra XP verilir.
     // `award()` Gezgin Score-u və badge tərəqqisini bazadan yenidən hesablayır —
     // əks halda bu check-in hesaba daxil olmaz və nəticə bir addım geri qalar.
-    const checkin = await this.prisma.checkin.create({
-      data: {
-        userId,
-        placeId: place.id,
-        regionId: place.regionId,
-        tripId: trip?.id ?? null,
-        lat: dto.lat === undefined ? null : new Prisma.Decimal(dto.lat),
-        lng: dto.lng === undefined ? null : new Prisma.Decimal(dto.lng),
-        xpAwarded: 0,
-        isFirst,
-      },
-    });
+    //
+    // Yoxlama + yazma istifadəçi sətri kilidlənmiş tranzaksiyadadır ki, eyni anda
+    // gələn iki sorğu "bu gün hələ yoxdur" görüb ikisi də yazmasın.
+    const lat = dto.lat;
+    const lng = dto.lng;
+    const { checkin, isFirst, firstInRegion } = await this.prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT id FROM users WHERE id = ${userId} FOR UPDATE`;
 
-    await this.prisma.place.update({ where: { id: place.id }, data: { checkinCount: { increment: 1 } } });
+      const today = await tx.checkin.findFirst({
+        where: { userId, placeId: place.id, createdAt: { gte: bakuDayStart() } },
+        select: { id: true },
+      });
+      if (today) {
+        throw new ConflictException({
+          code: ERROR_CODES.CONFLICT,
+          message: 'Bu məkanda bu gün artıq check-in etmisən',
+        });
+      }
+
+      const previous = await tx.checkin.findFirst({ where: { userId, placeId: place.id }, select: { id: true } });
+      // İlk regional ziyarətdirsə ekran 32-dəki region tərəqqisi artır
+      const inRegion = await tx.checkin.findFirst({ where: { userId, regionId: place.regionId }, select: { id: true } });
+
+      const created = await tx.checkin.create({
+        data: {
+          userId,
+          placeId: place.id,
+          regionId: place.regionId,
+          tripId: trip?.id ?? null,
+          lat: new Prisma.Decimal(lat),
+          lng: new Prisma.Decimal(lng),
+          xpAwarded: 0,
+          isFirst: !previous,
+        },
+      });
+      await tx.place.update({ where: { id: place.id }, data: { checkinCount: { increment: 1 } } });
+      return { checkin: created, isFirst: !previous, firstInRegion: !inRegion };
+    });
 
     const current = await this.prisma.user.findUniqueOrThrow({
       where: { id: userId },
@@ -291,19 +316,23 @@ export class GamificationService {
             )
           : user.gezginScore;
 
+        // Sıra siyahı ilə eyni filtrlərlə (region, "Dostlarım") sayılır — əks halda
+        // "Dostlarım"da 3 nəfər arasında 1500-cü yer kimi mənasız rəqəm çıxır
         const ahead = since
           ? await this.prisma.$queryRaw<Array<{ n: bigint }>>`
               SELECT COUNT(*) AS n FROM (
                 SELECT u.id, COALESCE(SUM(x.xp), 0) AS pts
                 FROM users u
+                LEFT JOIN regions r ON r.id = u.home_region_id
                 LEFT JOIN xp_transactions x ON x.user_id = u.id AND x.created_at >= ${since}
-                WHERE u.deleted_at IS NULL AND u.status = 'active'
+                WHERE ${where}
                 GROUP BY u.id HAVING pts > ${myPoints}
               ) t
             `
           : await this.prisma.$queryRaw<Array<{ n: bigint }>>`
-              SELECT COUNT(*) AS n FROM users
-              WHERE deleted_at IS NULL AND status = 'active' AND gezgin_score > ${myPoints}
+              SELECT COUNT(*) AS n FROM users u
+              LEFT JOIN regions r ON r.id = u.home_region_id
+              WHERE ${where} AND u.gezgin_score > ${myPoints}
             `;
 
         me = {

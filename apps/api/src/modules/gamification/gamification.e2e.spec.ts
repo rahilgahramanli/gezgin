@@ -12,6 +12,7 @@ const COORDS = {
   laza: { lat: 41.2833, lng: 47.9333 },
   lahic: { lat: 40.8494, lng: 48.3839 },
   goygol: { lat: 40.4083, lng: 46.3306 },
+  nohurgol: { lat: 41.35, lng: 48.47 },
 } as const;
 
 describe('Gamification + Offline (e2e)', () => {
@@ -100,7 +101,28 @@ describe('Gamification + Offline (e2e)', () => {
       expect(badge).toBeTruthy();
     });
 
-    it('təkrar check-in XP vermir, amma qeydə alınır', async () => {
+    it('eyni gün eyni məkanda təkrar check-in 409-dur və heç nə yazmır', async () => {
+      const user = await prisma.user.findUniqueOrThrow({ where: { email }, select: { id: true } });
+      const rowsBefore = await prisma.checkin.count({ where: { userId: user.id } });
+      const placeBefore = await prisma.place.findUniqueOrThrow({ where: { slug: 'xinaliq-kendi' }, select: { checkinCount: true } });
+
+      const res = await checkin('xinaliq-kendi').expect(409);
+      expect(res.body.code).toBe('CONFLICT');
+      expect(res.body.message).toBe('Bu məkanda bu gün artıq check-in etmisən');
+
+      expect(await prisma.checkin.count({ where: { userId: user.id } })).toBe(rowsBefore);
+      const placeAfter = await prisma.place.findUniqueOrThrow({ where: { slug: 'xinaliq-kendi' }, select: { checkinCount: true } });
+      expect(placeAfter.checkinCount).toBe(placeBefore.checkinCount);
+    });
+
+    it('sonrakı gün təkrar check-in qeydə alınır, amma XP vermir', async () => {
+      const user = await prisma.user.findUniqueOrThrow({ where: { email }, select: { id: true } });
+      // Dünənki ziyarəti simulyasiya edirik
+      await prisma.checkin.updateMany({
+        where: { userId: user.id, place: { slug: 'xinaliq-kendi' } },
+        data: { createdAt: new Date(Date.now() - 26 * 3600_000) },
+      });
+
       const before = await http().get('/api/v1/me/score').set(auth()).expect(200);
       const res = await checkin('xinaliq-kendi').expect(201);
 
@@ -111,10 +133,18 @@ describe('Gamification + Offline (e2e)', () => {
       expect(after.body.xp).toBe(before.body.xp);
     });
 
-    it('mövqe göndərilməzsə məsafə yoxlanılmır', async () => {
+    it('mövqe göndərilməzsə check-in olmur', async () => {
       const res = await http().post('/api/v1/checkins').set(auth())
-        .send({ place: 'laza' }).expect(201);
-      expect(res.body.distanceM).toBeNull();
+        .send({ place: 'laza' }).expect(400);
+      expect(res.body.code).toBe('VALIDATION_FAILED');
+      expect(res.body.message).toBe('Check-in üçün yerləşmə lazımdır — yerləşmə icazəsi verin');
+
+      await http().post('/api/v1/checkins').set(auth()).send({ place: 'laza', lat: COORDS.laza.lat }).expect(400);
+    });
+
+    it('mövqe ilə ikinci yeni məkan XP verir', async () => {
+      const res = await checkin('laza').expect(201);
+      expect(res.body.distanceM).toBeLessThan(100);
       expect(res.body.rewards.xpGained).toBe(XP_RULES.place_checkin.xp);
     });
 
@@ -146,9 +176,7 @@ describe('Gamification + Offline (e2e)', () => {
         .send({ title: `Check-in səyahəti ${tag}`, fromRoute: 'quba-daglar-turu', startDate: '2026-07-05' })
         .expect(201);
 
-      const res = await http().post('/api/v1/checkins').set(auth())
-        .send({ place: 'laza', trip: trip.body.publicId })
-        .expect(201);
+      const res = await checkin('nohurgol', { trip: trip.body.publicId }).expect(201);
 
       expect(res.body.trip.completedItems).toBe(1);
       expect(res.body.trip.done).toBe(1);
@@ -163,8 +191,7 @@ describe('Gamification + Offline (e2e)', () => {
         .set({ Authorization: `Bearer ${other.body.accessToken}` })
         .send({ title: 'Yad səyahət' }).expect(201);
 
-      await http().post('/api/v1/checkins').set(auth())
-        .send({ place: 'lahic', trip: trip.body.publicId }).expect(404);
+      await checkin('lahic', { trip: trip.body.publicId }).expect(404);
 
       await prisma.user.deleteMany({ where: { email: `oth.${tag}@gezgin.test` } });
     });
@@ -193,6 +220,13 @@ describe('Gamification + Offline (e2e)', () => {
   });
 
   describe('score və badge-lər', () => {
+    it('/xp-rules XP qaydalarını qaytarır (level nərdivanı deyil)', async () => {
+      const res = await http().get('/api/v1/xp-rules').expect(200);
+      expect(res.body.rules).toHaveLength(Object.keys(XP_RULES).length);
+      const checkinRule = res.body.rules.find((r: { action: string }) => r.action === 'place_checkin');
+      expect(checkinRule).toEqual({ action: 'place_checkin', name: XP_RULES.place_checkin.nameAz, xp: 600, dailyCap: 3 });
+    });
+
     it('Score kartında xal qazanma yolları var — ekran 29', async () => {
       const res = await http().get('/api/v1/me/score').set(auth()).expect(200);
       expect(res.body.earnRules.length).toBe(Object.keys(XP_RULES).length);
@@ -256,6 +290,24 @@ describe('Gamification + Offline (e2e)', () => {
       const res = await http().get('/api/v1/leaderboard?period=all_time').expect(200);
       const points = res.body.entries.map((e: { points: number }) => e.points);
       expect(points).toEqual([...points].sort((a, b) => b - a));
+    });
+
+    it('"Dostlarım" filtrində öz sıram siyahı ilə eyni çoxluqda sayılır', async () => {
+      const top = await http().get('/api/v1/leaderboard?period=all_time&limit=5').set(auth()).expect(200);
+      const leaders = top.body.entries
+        .filter((e: { isMe: boolean }) => !e.isMe)
+        .slice(0, 3)
+        .map((e: { username: string }) => e.username);
+      for (const username of leaders) {
+        await http().post(`/api/v1/users/${username}/follow`).set(auth()).expect(201);
+      }
+
+      const res = await http().get('/api/v1/leaderboard?period=all_time&following=true&limit=3').set(auth()).expect(200);
+      const names = res.body.entries.map((e: { username: string }) => e.username);
+      expect(names).toHaveLength(3);
+      expect(names).toEqual(expect.arrayContaining(leaders));
+      // Qlobal sıra deyil — izlədiyim 3 nəfərdən sonra
+      expect(res.body.me.rank).toBe(4);
     });
 
     it('anonim baxışda "me" boşdur', async () => {

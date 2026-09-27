@@ -64,8 +64,8 @@ export class GamificationController {
   }
 
   @Public() @Get('xp-rules')
-  @ApiOperation({ summary: 'XP qazanma qaydaları — ekran 29' })
+  @ApiOperation({ summary: 'XP qazanma qaydaları — ekran 29 (level nərdivanı: /levels)' })
   rules() {
-    return this.xp.levels();
+    return this.xp.rules();
   }
 }

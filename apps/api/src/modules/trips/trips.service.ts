@@ -300,7 +300,8 @@ export class TripsService {
           include: { stops: { orderBy: [{ dayNumber: 'asc' }, { sortOrder: 'asc' }] }, cover: true },
         })
       : null;
-    if (dto.fromRoute && !route) {
+    // GET /routes/:slug ilə eyni qayda: başqasının şəxsi marşrutu mövcud deyilmiş kimi görünür
+    if (dto.fromRoute && (!route || (route.visibility === 'private' && route.authorId !== userId))) {
       throw new NotFoundException({ code: ERROR_CODES.NOT_FOUND, message: `Marşrut tapılmadı: ${dto.fromRoute}` });
     }
 
@@ -587,6 +588,9 @@ export class TripsService {
     if (trip.status === 'completed') {
       throw new BadRequestException({ code: ERROR_CODES.CONFLICT, message: 'Səyahət artıq tamamlanıb' });
     }
+    if (trip.status === 'cancelled') {
+      throw new BadRequestException({ code: ERROR_CODES.CONFLICT, message: 'Ləğv edilmiş səyahət başladıla bilməz' });
+    }
 
     // Eyni anda yalnız bir aktiv səyahət — ekran 23 tək "Aktiv" nişanı göstərir
     await this.prisma.trip.updateMany({
@@ -603,6 +607,9 @@ export class TripsService {
 
   async complete(userId: bigint, publicId: string, lang: Lang) {
     const trip = await this.loadOwned(publicId, userId);
+    if (trip.status === 'cancelled') {
+      throw new BadRequestException({ code: ERROR_CODES.CONFLICT, message: 'Ləğv edilmiş səyahət tamamlana bilməz' });
+    }
     await this.prisma.trip.update({
       where: { id: trip.id },
       data: { status: 'completed', completedAt: new Date() },

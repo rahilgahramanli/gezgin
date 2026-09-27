@@ -6,14 +6,30 @@ import { PrismaService } from '@/common/prisma/prisma.service';
 import { PAYMENT_PROVIDER, type PaymentProvider } from './providers/payment-provider.interface';
 import type { AddPaymentMethodDto, RefundDto } from './dto/payments.dto';
 
+/** Uğurlu ödənişdən sonra rezervasiyanı təsdiqləyən funksiya — bax `registerBookingConfirmer`. */
+export type BookingConfirmer = (payment: { id: bigint; publicId: string; bookingId: bigint }) => Promise<unknown>;
+
+const OPEN_STATUSES = ['created', 'requires_action'] as const;
+
 @Injectable()
 export class PaymentsService {
   private readonly logger = new Logger(PaymentsService.name);
+  private bookingConfirmer?: BookingConfirmer;
 
   constructor(
     private readonly prisma: PrismaService,
     @Inject(PAYMENT_PROVIDER) private readonly provider: PaymentProvider,
   ) {}
+
+  /**
+   * Webhook-la gələn uğurlu ödəniş də `POST /bookings/:id/pay` ilə eyni yoldan
+   * təsdiqlənməlidir (komissiya, XP, bookingCount). BookingsModule bu modulu idxal
+   * edir, əksinə yox — dairəvi asılılıq yaranmasın deyə təsdiq funksiyası
+   * BookingsService işə düşəndə buradan qeydiyyatdan keçir.
+   */
+  registerBookingConfirmer(fn: BookingConfirmer): void {
+    this.bookingConfirmer = fn;
+  }
 
   get providerCode() {
     return this.provider.code;
@@ -102,24 +118,68 @@ export class PaymentsService {
 
   // ─────────────────── ödəniş axını ───────────────────
 
-  /** Rezervasiya üçün ödəniş sessiyası açır. */
-  async createIntent(
+  /**
+   * Rezervasiya üçün ödəniş sessiyası. Açıq sessiya eyni kartladırsa təkrar
+   * istifadə olunur (3-D Secure qayıdışı); başqa kartladırsa köhnəsi ləğv edilir
+   * və yenisi açılır — əks halda yeni kart seçilsə də köhnə kartdan çəkilirdi.
+   */
+  async openIntent(
     booking: { id: bigint; code: string; totalAzn: Prisma.Decimal },
-    methodPublicId: string | null,
+    methodPublicId: string,
     userId: bigint,
   ) {
-    const method = methodPublicId
-      ? await this.prisma.paymentMethod.findFirst({ where: { publicId: methodPublicId, userId, deletedAt: null } })
-      : null;
-    if (methodPublicId && !method) {
-      throw new NotFoundException({ code: ERROR_CODES.NOT_FOUND, message: 'Ödəniş üsulu tapılmadı' });
-    }
+    const method = await this.prisma.paymentMethod.findFirst({
+      where: { publicId: methodPublicId, userId, deletedAt: null },
+    });
+    if (!method) throw new NotFoundException({ code: ERROR_CODES.NOT_FOUND, message: 'Ödəniş üsulu tapılmadı' });
 
+    const open = await this.prisma.payment.findFirst({
+      where: { bookingId: booking.id, status: { in: [...OPEN_STATUSES] } },
+      orderBy: { createdAt: 'desc' },
+    });
+    if (open && open.methodId === method.id) return open;
+
+    await this.voidOpenIntents(booking.id, 'method_changed', 'Başqa ödəniş üsulu seçildi');
+    return (await this.createIntent(booking, method)).payment;
+  }
+
+  /**
+   * Rezervasiyanın açıq (ödənilməmiş) sessiyalarını bağlayır — kart dəyişəndə,
+   * ödəniş vaxtı bitəndə və ya rezervasiya ləğv olunanda. Sxemdə `cancelled`
+   * statusu yoxdur, səbəb `failureCode`-da saxlanılır.
+   */
+  async voidOpenIntents(bookingId: bigint, failureCode: string, failureMessage: string): Promise<number> {
+    const open = await this.prisma.payment.findMany({
+      where: { bookingId, status: { in: [...OPEN_STATUSES] } },
+      select: { id: true, providerIntentId: true },
+    });
+    let voided = 0;
+    for (const p of open) {
+      const { count } = await this.prisma.payment.updateMany({
+        where: { id: p.id, status: { in: [...OPEN_STATUSES] } },
+        data: { status: 'failed', failureCode, failureMessage },
+      });
+      if (!count) continue;
+      voided += 1;
+      if (p.providerIntentId) {
+        await this.provider.cancelIntent(p.providerIntentId).catch((e: unknown) =>
+          this.logger.warn(`Sessiya provayderdə ləğv olunmadı: ${p.providerIntentId} · ${String(e)}`),
+        );
+      }
+    }
+    return voided;
+  }
+
+  /** Yeni ödəniş sessiyası açır. */
+  private async createIntent(
+    booking: { id: bigint; code: string; totalAzn: Prisma.Decimal },
+    method: { id: bigint; providerToken: string },
+  ) {
     const amount = Number(booking.totalAzn);
     const intent = await this.provider.createIntent({
       amountAzn: amount,
       bookingCode: booking.code,
-      methodToken: method?.providerToken,
+      methodToken: method.providerToken,
       returnUrl: 'gezgin://payment/return',
     });
 
@@ -131,7 +191,7 @@ export class PaymentsService {
         status: intent.status === 'requires_action' ? 'requires_action' : 'created',
         amountAzn: booking.totalAzn,
         providerIntentId: intent.providerIntentId,
-        methodId: method?.id ?? null,
+        methodId: method.id,
       },
     });
 
@@ -222,28 +282,38 @@ export class PaymentsService {
 
     const payment = await this.prisma.payment.findFirst({
       where: { providerIntentId: event.providerIntentId },
-      include: { booking: true },
     });
     if (!payment) return { received: true, handled: false };
 
-    if (event.type === 'payment.succeeded' && payment.status !== 'succeeded') {
-      await this.prisma.payment.update({
-        where: { id: payment.id },
+    if (event.type === 'payment.succeeded') {
+      // Şərtli yeniləmə — geri qaytarılmış ödəniş yenidən "uğurlu" olmur
+      const { count } = await this.prisma.payment.updateMany({
+        where: { id: payment.id, status: { in: [...OPEN_STATUSES, 'failed'] } },
         data: {
           status: 'succeeded',
           providerPaymentId: event.providerPaymentId,
+          failureCode: null,
+          failureMessage: null,
           paidAt: new Date(),
           rawPayload: event.raw as Prisma.InputJsonValue,
         },
       });
-      if (payment.bookingId) {
-        await this.prisma.booking.updateMany({
-          where: { id: payment.bookingId, status: { in: ['pending', 'awaiting_payment'] } },
-          data: { status: 'confirmed', confirmedAt: new Date() },
-        });
+      // Təsdiq idempotentdir (təkrar bildiriş 'already' qaytarır). Əvvəlki cəhd yarımçıq
+      // qalıbsa (məs. xəta ilə), provayderin təkrar göndərişi rezervasiyanı yenə təsdiqləyir.
+      const succeeded = count > 0 || payment.status === 'succeeded';
+      if (succeeded && payment.bookingId) {
+        if (this.bookingConfirmer) {
+          await this.bookingConfirmer({ id: payment.id, publicId: payment.publicId, bookingId: payment.bookingId });
+        } else {
+          this.logger.error(`Rezervasiya təsdiqləyicisi qeydiyyatda deyil — ${payment.publicId} təsdiqlənmədi`);
+        }
       }
     } else if (event.type === 'payment.failed') {
-      await this.prisma.payment.update({ where: { id: payment.id }, data: { status: 'failed' } });
+      // Gecikmiş "failed" bildirişi artıq uğurlu ödənişi pozmamalıdır
+      await this.prisma.payment.updateMany({
+        where: { id: payment.id, status: { in: [...OPEN_STATUSES] } },
+        data: { status: 'failed' },
+      });
     }
 
     return { received: true, handled: true, type: event.type };

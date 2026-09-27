@@ -1,11 +1,12 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import { ulid } from 'ulid';
 import { ERROR_CODES } from '@gezgin/shared';
 import { PrismaService } from '@/common/prisma/prisma.service';
 import { StorageService } from '@/modules/storage/storage.service';
+import { ReportsService } from '@/modules/community/reports.service';
 import { clusterPrecision, distanceMeters, formatDistanceKm, withinBox, withinRadius } from '@/common/search/geo';
 import { toBooleanQuery } from '@/common/search/normalize';
+import { translationJoin } from '@/common/search/translation';
 import type { AddPlacePhotoDto, ListPlacesDto, MapPlacesDto, NearbyDto, ReportPlaceDto } from './dto/places.dto';
 
 type Lang = 'az' | 'en' | 'ru';
@@ -42,6 +43,7 @@ export class PlacesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly storage: StorageService,
+    private readonly reports: ReportsService,
   ) {}
 
   private url(key?: string | null): string | null {
@@ -145,8 +147,8 @@ export class PlacesService {
              ${distanceSelect}
       FROM places p
       JOIN regions r ON r.id = p.region_id
-      LEFT JOIN region_translations rt ON rt.region_id = r.id AND rt.lang = ${lang}
-      JOIN place_translations t ON t.place_id = p.id AND t.lang = ${lang}
+      ${translationJoin({ table: 'region_translations', fk: 'region_id', alias: 'rt', owner: 'r', lang, left: true })}
+      ${translationJoin({ table: 'place_translations', fk: 'place_id', alias: 't', owner: 'p', lang })}
       WHERE ${where}
       ORDER BY ${relevance} ${orderBy}
       LIMIT ${limit + 1} OFFSET ${offset}
@@ -201,7 +203,7 @@ export class PlacesService {
                 WHERE pc.place_id = p.id ORDER BY pc.is_primary DESC LIMIT 1) AS category_slug
         FROM places p
         JOIN regions r ON r.id = p.region_id
-        JOIN place_translations t ON t.place_id = p.id AND t.lang = ${lang}
+        ${translationJoin({ table: 'place_translations', fk: 'place_id', alias: 't', owner: 'p', lang })}
         WHERE ${where}
         LIMIT 300
       `;
@@ -226,7 +228,7 @@ export class PlacesService {
              MIN(t.name) AS sample
       FROM places p
       JOIN regions r ON r.id = p.region_id
-      JOIN place_translations t ON t.place_id = p.id AND t.lang = ${lang}
+      ${translationJoin({ table: 'place_translations', fk: 'place_id', alias: 't', owner: 'p', lang })}
       WHERE ${where}
       GROUP BY FLOOR(p.lat / ${precision}), FLOOR(p.lng / ${precision})
       LIMIT 200
@@ -398,8 +400,8 @@ export class PlacesService {
              ${distanceMeters('p.geo', lng, lat)} AS distance_m
       FROM places p
       JOIN regions r ON r.id = p.region_id
-      LEFT JOIN region_translations rt ON rt.region_id = r.id AND rt.lang = ${lang}
-      JOIN place_translations t ON t.place_id = p.id AND t.lang = ${lang}
+      ${translationJoin({ table: 'region_translations', fk: 'region_id', alias: 'rt', owner: 'r', lang, left: true })}
+      ${translationJoin({ table: 'place_translations', fk: 'place_id', alias: 't', owner: 'p', lang })}
       WHERE p.id <> ${place.id} AND p.deleted_at IS NULL AND p.status = 'published'
         AND ${withinRadius('p.geo', lng, lat, radiusM)}
       ORDER BY distance_m ASC
@@ -476,16 +478,7 @@ export class PlacesService {
     const place = await this.prisma.place.findFirst({ where: { slug, deletedAt: null }, select: { id: true } });
     if (!place) throw new NotFoundException({ code: ERROR_CODES.NOT_FOUND, message: `Məkan tapılmadı: ${slug}` });
 
-    await this.prisma.report.create({
-      data: {
-        publicId: ulid(),
-        reporterId: userId,
-        targetType: 'place',
-        targetId: place.id,
-        reason: dto.reason,
-        details: dto.details ?? null,
-      },
-    });
-    return { reported: true };
+    // Paylaşımlardakı kimi: açıq şikayət varkən təkrar yazılmır, `duplicate: true` qayıdır
+    return this.reports.report(userId, { type: 'place', id: place.id, ownerId: null }, dto);
   }
 }

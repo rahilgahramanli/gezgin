@@ -31,8 +31,11 @@ export class SavedService {
   /**
    * Saxlanılanlar polimorfikdir — hər tip üçün slug-dan ID və göstəriləcək
    * məlumat çıxarılır. Ekran 33-də hamısı eyni sətir formatında görünür.
+   *
+   * `viewerId` verilərsə (yeni saxlama) görünürlük də yoxlanılır: başqasının
+   * şəxsi marşrutu və dərc olunmamış təcrübə detal endpointlərindəki kimi 404-dür.
    */
-  private async resolve(type: SavedItemType, target: string, lang: Lang): Promise<ResolvedTarget> {
+  private async resolve(type: SavedItemType, target: string, lang: Lang, viewerId?: bigint): Promise<ResolvedTarget> {
     const notFound = () =>
       new NotFoundException({ code: ERROR_CODES.NOT_FOUND, message: `Tapılmadı: ${type}/${target}` });
 
@@ -73,6 +76,7 @@ export class SavedService {
         },
       });
       if (!row) throw notFound();
+      if (viewerId !== undefined && row.visibility === 'private' && row.authorId !== viewerId) throw notFound();
       const t = row.translations.find((x) => x.lang === lang) ?? row.translations.find((x) => x.lang === 'az');
       const rt = row.region.translations.find((x) => x.lang === lang) ?? row.region.translations.find((x) => x.lang === 'az');
       return {
@@ -99,6 +103,7 @@ export class SavedService {
         },
       });
       if (!row) throw notFound();
+      if (viewerId !== undefined && row.status !== 'published' && row.expertId !== viewerId) throw notFound();
       const rt = row.region.translations.find((x) => x.lang === lang) ?? row.region.translations.find((x) => x.lang === 'az');
       return {
         id: row.id,
@@ -271,7 +276,16 @@ export class SavedService {
   }
 
   async save(userId: bigint, dto: SaveItemDto, lang: Lang) {
-    const target = await this.resolve(dto.type, dto.target, lang);
+    const target = await this.resolve(dto.type, dto.target, lang, userId);
+
+    // Kolleksiya əvvəlcə yoxlanılır — 404 olarsa heç nə yazılmamalıdır
+    const collection = dto.collection
+      ? await this.prisma.collection.findFirst({ where: { publicId: dto.collection, userId } })
+      : null;
+    if (dto.collection && !collection) {
+      throw new NotFoundException({ code: ERROR_CODES.NOT_FOUND, message: 'Kolleksiya tapılmadı' });
+    }
+
     const existedBefore =
       (await this.prisma.savedItem.count({
         where: { userId, targetType: dto.type, targetId: target.id },
@@ -283,12 +297,7 @@ export class SavedService {
       create: { userId, targetType: dto.type, targetId: target.id },
     });
 
-    if (dto.collection) {
-      const collection = await this.prisma.collection.findFirst({
-        where: { publicId: dto.collection, userId },
-      });
-      if (!collection) throw new NotFoundException({ code: ERROR_CODES.NOT_FOUND, message: 'Kolleksiya tapılmadı' });
-
+    if (collection) {
       await this.prisma.collectionItem.upsert({
         where: { collectionId_savedItemId: { collectionId: collection.id, savedItemId: saved.id } },
         update: {},

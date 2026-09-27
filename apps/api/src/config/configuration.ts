@@ -37,6 +37,9 @@ export const envSchema = z.object({
   PAYMENT_PROVIDER: z.enum(['mock', 'kapital', 'azericard', 'pasha']).default('mock'),
   IAP_PROVIDER: z.enum(['mock', 'store']).default('mock'),
 
+  /** Ödənilməmiş rezervasiya neçə dəqiqədən sonra ləğv olunur və yeri boşaldır. */
+  BOOKING_PAYMENT_TTL_MIN: z.coerce.number().int().positive().default(30),
+
   /** Check-in üçün məkana maksimum məsafə (metr). Dev-də böyük saxlanılır. */
   CHECKIN_RADIUS_M: z.coerce.number().int().positive().default(1000),
 

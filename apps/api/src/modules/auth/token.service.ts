@@ -13,6 +13,15 @@ export interface JwtPayload {
   guest?: boolean;
 }
 
+/**
+ * Qonaq hesabı heç bir giriş vasitəsi olmadan yaradılır (bax AuthService.guest):
+ * e-mail, telefon və şifrə yoxdur. Qeydiyyat və sosial giriş həmişə e-mail yazır,
+ * ona görə bu əlamət istifadəçi adının prefiksindən etibarlıdır.
+ */
+export function isGuestAccount(user: { email: string | null; phone: string | null; passwordHash: string | null }): boolean {
+  return user.email === null && user.phone === null && user.passwordHash === null;
+}
+
 export interface TokenPair {
   accessToken: string;
   refreshToken: string;
@@ -83,7 +92,14 @@ export class TokenService {
     const tokenHash = this.hash(refreshToken);
     const stored = await this.prisma.refreshToken.findUnique({
       where: { tokenHash },
-      include: { user: { select: { id: true, publicId: true, username: true, role: true, status: true } } },
+      include: {
+        user: {
+          select: {
+            id: true, publicId: true, username: true, role: true, status: true,
+            email: true, phone: true, passwordHash: true,
+          },
+        },
+      },
     });
 
     if (!stored) {
@@ -109,7 +125,12 @@ export class TokenService {
       throw new UnauthorizedException({ code: ERROR_CODES.FORBIDDEN, message: 'Hesab aktiv deyil' });
     }
 
-    const pair = await this.issue(stored.user, { ...ctx, family: stored.family });
+    // Qonaq refresh-dən sonra da qonaq qalır — əks halda yeni access token `guest` iddiasını itirir
+    const pair = await this.issue(stored.user, {
+      ...ctx,
+      family: stored.family,
+      isGuest: isGuestAccount(stored.user),
+    });
     await this.prisma.refreshToken.update({
       where: { id: stored.id },
       data: { revokedAt: new Date() },

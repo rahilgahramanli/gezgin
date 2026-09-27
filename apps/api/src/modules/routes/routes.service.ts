@@ -5,6 +5,7 @@ import { ERROR_CODES } from '@gezgin/shared';
 import { PrismaService } from '@/common/prisma/prisma.service';
 import { StorageService } from '@/modules/storage/storage.service';
 import { toBooleanQuery } from '@/common/search/normalize';
+import { translationJoin } from '@/common/search/translation';
 import { XpService } from '@/modules/gamification/xp.service';
 import type {
   AddStopDto, CreateRouteDto, ListRoutesDto, ReorderStopsDto, UpdateRouteDto, UpdateStopDto,
@@ -38,6 +39,16 @@ export class RoutesService {
       throw new ForbiddenException({ code: ERROR_CODES.FORBIDDEN, message: 'Bu marşrut sizə aid deyil' });
     }
     return route;
+  }
+
+  /** Dayanacaq yalnız marşrutun mövcud günlərinə qoyula bilər — yarat, yenilə və sırala eyni qayda. */
+  private assertDay(route: { days: number }, day: number): void {
+    if (day > route.days) {
+      throw new BadRequestException({
+        code: ERROR_CODES.VALIDATION_FAILED,
+        message: `Marşrut ${route.days} günlükdür — ${day}-ci gün yoxdur`,
+      });
+    }
   }
 
   private async uniqueSlug(base: string): Promise<string> {
@@ -112,9 +123,11 @@ export class RoutesService {
     if (dto.q) {
       const bq = toBooleanQuery(dto.q);
       if (bq) {
+        // Tərcüməsi olmayan marşrut (istifadəçi marşrutları yalnız AZ-dır) AZ mətnində axtarılır
         const ids = await this.prisma.$queryRaw<Array<{ route_id: bigint }>>`
-          SELECT route_id FROM route_translations
-          WHERE lang = ${lang} AND MATCH(search_text) AGAINST(${bq} IN BOOLEAN MODE)
+          SELECT ro.id AS route_id FROM routes ro
+          ${translationJoin({ table: 'route_translations', fk: 'route_id', alias: 't', owner: 'ro', lang })}
+          WHERE MATCH(t.search_text) AGAINST(${bq} IN BOOLEAN MODE)
           LIMIT 200
         `;
         where.id = { in: ids.map((i) => i.route_id) };
@@ -389,6 +402,21 @@ export class RoutesService {
       coverId = media.id;
     }
 
+    // Gün sayı azalırsa, kəsilən günlərdə dayanacaq qalmamalıdır — əks halda itib görünməz olurlar
+    if (dto.days !== undefined && dto.days < route.days) {
+      const beyond = await this.prisma.routeStop.aggregate({
+        where: { routeId: route.id, dayNumber: { gt: dto.days } },
+        _max: { dayNumber: true },
+      });
+      const lastDay = beyond._max.dayNumber;
+      if (lastDay !== null) {
+        throw new BadRequestException({
+          code: ERROR_CODES.VALIDATION_FAILED,
+          message: `Marşrutun ${lastDay}. günündə dayanacaq var — gün sayını ${dto.days} etməzdən əvvəl onları başqa günə köçürün və ya silin`,
+        });
+      }
+    }
+
     await this.prisma.route.update({
       where: { id: route.id },
       data: {
@@ -419,6 +447,10 @@ export class RoutesService {
       if (missing.length) {
         await this.prisma.routeDay.createMany({ data: missing.map((dayNumber) => ({ routeId: route.id, dayNumber })) });
       }
+      // Azalıbsa artıq günlər silinir (yuxarıdakı yoxlamaya görə onlarda dayanacaq yoxdur)
+      await this.prisma.routeDay.deleteMany({
+        where: { routeId: route.id, dayNumber: { gt: dto.days }, stops: { none: {} } },
+      });
     }
 
     return this.detail(slug, lang, userId);
@@ -438,12 +470,7 @@ export class RoutesService {
     if (!place) throw new NotFoundException({ code: ERROR_CODES.NOT_FOUND, message: `Məkan tapılmadı: ${dto.place}` });
 
     const day = dto.day ?? 1;
-    if (day > route.days) {
-      throw new BadRequestException({
-        code: ERROR_CODES.VALIDATION_FAILED,
-        message: `Marşrut ${route.days} günlükdür — ${day}-ci gün yoxdur`,
-      });
-    }
+    this.assertDay(route, day);
 
     const order =
       dto.order ??
@@ -484,16 +511,34 @@ export class RoutesService {
     const route = await this.loadOwned(slug, userId);
     const stop = await this.prisma.routeStop.findFirst({ where: { id: BigInt(stopId), routeId: route.id } });
     if (!stop) throw new NotFoundException({ code: ERROR_CODES.NOT_FOUND, message: 'Dayanacaq tapılmadı' });
+    if (dto.day !== undefined) this.assertDay(route, dto.day);
+
+    const moving = dto.day !== undefined && dto.day !== stop.dayNumber;
+    let dayMove: { dayNumber: number; sortOrder: number; routeDayId: bigint | null } | null = null;
+    if (moving) {
+      // Yeni günün sonuna keçir — UNIQUE(route_id, day_number, sort_order) toqquşmasın
+      const [max, routeDay] = await Promise.all([
+        this.prisma.routeStop.aggregate({ where: { routeId: route.id, dayNumber: dto.day }, _max: { sortOrder: true } }),
+        this.prisma.routeDay.findUnique({ where: { routeId_dayNumber: { routeId: route.id, dayNumber: dto.day! } } }),
+      ]);
+      dayMove = { dayNumber: dto.day!, sortOrder: (max._max.sortOrder ?? -1) + 1, routeDayId: routeDay?.id ?? null };
+    }
 
     await this.prisma.routeStop.update({
       where: { id: stop.id },
       data: {
-        ...(dto.day !== undefined ? { dayNumber: dto.day } : {}),
+        ...(dayMove ?? {}),
         ...(dto.arriveTime !== undefined ? { arriveTime: dto.arriveTime } : {}),
         ...(dto.durationMin !== undefined ? { durationMin: dto.durationMin } : {}),
         ...(dto.note !== undefined ? { noteAz: dto.note } : {}),
       },
     });
+
+    if (dayMove) {
+      await this.renumberDay(route.id, stop.dayNumber);
+      await this.renumberDay(route.id, dayMove.dayNumber);
+      await this.recomputeDistance(route.id);
+    }
     return this.detail(slug, lang, userId);
   }
 
@@ -512,6 +557,7 @@ export class RoutesService {
   /** Ekran 50 — sürüklə-burax sıralaması. */
   async reorderStops(userId: bigint, slug: string, dto: ReorderStopsDto, lang: Lang) {
     const route = await this.loadOwned(slug, userId);
+    for (const s of dto.stops) this.assertDay(route, s.day);
     const ids = dto.stops.map((s) => BigInt(s.stopId));
     const owned = await this.prisma.routeStop.count({ where: { routeId: route.id, id: { in: ids } } });
     if (owned !== ids.length) {

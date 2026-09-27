@@ -7,11 +7,13 @@ export class CheckinDto {
   @IsString() @MaxLength(120)
   place!: string;
 
-  @ApiPropertyOptional({ description: 'Cari mövqe — məsafə yoxlaması üçün' })
+  // Məcburidir, amma yoxlama servisdədir ki, mobil tərəf aydın mesaj alsın
+  // ("yerləşmə icazəsi verin"), ümumi "Validasiya xətası" yox — bax GamificationService.checkin
+  @ApiProperty({ description: 'Cari mövqe — məsafə yoxlaması üçün (məcburi)' })
   @IsOptional() @Type(() => Number) @IsLatitude()
   lat?: number;
 
-  @ApiPropertyOptional()
+  @ApiProperty({ description: 'Cari mövqe (məcburi)' })
   @IsOptional() @Type(() => Number) @IsLongitude()
   lng?: number;
 
