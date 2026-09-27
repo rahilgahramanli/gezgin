@@ -2,10 +2,11 @@ import { useState } from 'react';
 import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { launchImageLibrary, type Asset } from 'react-native-image-picker';
 import { REVIEW_TAGS, XP_RULES } from '@gezgin/shared';
-import { Button, Card, Chip, Icon, Photo, Screen, Text, TopBar } from '@/components';
+import { Button, Card, Chip, Icon, Loading, Photo, Screen, Text, TopBar, type IconName } from '@/components';
 import { ApiError } from '@/api/client';
-import { useWriteReview } from '@/api/hooks/social';
+import { useMyReview, useWriteReview, type WrittenReview } from '@/api/hooks/social';
 import { PICKER_OPTIONS, uploadImage } from '@/api/upload';
+import { isGuestBlocked, promptGuestSignup } from '@/lib/errors';
 import { t } from '@/theme';
 import type { AppScreenProps } from '@/navigation/types';
 
@@ -13,19 +14,50 @@ const RATING_LABEL = ['', 'Pis', 'Orta', 'Yaxşı', 'Çox yaxşı', 'Möhtəşə
 const MAX_BODY = 500;
 const MAX_PHOTOS = 6;
 
-/** Ekran 27 — rəy yaz. Eyni obyektə ikinci rəy 409 qaytarır → mövcud rəy redaktə olunur. */
-export function WriteReviewScreen({ route, navigation }: AppScreenProps<'WriteReview'>) {
+const TARGET_ICON: Record<AppScreenProps<'WriteReview'>['route']['params']['targetType'], IconName> = {
+  place: 'pin',
+  route: 'route',
+  experience: 'sparkle',
+  business: 'landmark',
+};
+
+/**
+ * Ekran 27 — rəy yaz.
+ *
+ * Açılanda `GET /reviews/mine` yoxlanılır: rəy varsa form redaktə rejimində,
+ * köhnə ulduz, mətn və teqlərlə açılır. Əvvəl form həmişə boş açılırdı və
+ * boş teq çipləri ilə göndərilən yeniləmə köhnə teqləri silirdi.
+ * `mine` alınmasa (şəbəkə) 409 cavabı yenə redaktəyə keçirir.
+ */
+export function WriteReviewScreen(props: AppScreenProps<'WriteReview'>) {
+  const { targetType, target } = props.route.params;
+  const mine = useMyReview(targetType, target);
+
+  if (mine.isLoading) {
+    return (
+      <Screen padded={false} scroll={false}>
+        <TopBar title="Rəy yaz" onBack={props.navigation.goBack} />
+        <Loading label="Yüklənir…" />
+      </Screen>
+    );
+  }
+  return <ReviewForm {...props} initial={mine.data?.review ?? null} />;
+}
+
+function ReviewForm({ route, navigation, initial }: AppScreenProps<'WriteReview'> & { initial: WrittenReview | null }) {
   const { targetType, target, name, subtitle } = route.params;
   const write = useWriteReview();
 
-  const [rating, setRating] = useState(0);
-  const [tags, setTags] = useState<string[]>([]);
-  const [body, setBody] = useState('');
+  const [rating, setRating] = useState(initial?.rating ?? 0);
+  const [tags, setTags] = useState<string[]>(initial?.tags ?? []);
+  const [body, setBody] = useState(initial?.body ?? '');
   const [photos, setPhotos] = useState<Asset[]>([]);
-  /** 409-dan sonra mövcud rəyin id-si — göndərəndə PATCH gedir. */
-  const [existing, setExisting] = useState<string | null>(null);
+  /** Mövcud rəyin id-si (`mine` və ya 409-dan) — göndərəndə PATCH gedir. */
+  const [existing, setExisting] = useState<string | null>(initial?.publicId ?? null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const existingPhotos = initial?.photos.filter((p) => p.url) ?? [];
 
   const toggleTag = (slug: string) =>
     setTags((prev) => (prev.includes(slug) ? prev.filter((x) => x !== slug) : [...prev, slug]));
@@ -35,6 +67,8 @@ export function WriteReviewScreen({ route, navigation }: AppScreenProps<'WriteRe
     if (res.didCancel || res.errorCode) return;
     setPhotos((prev) => [...prev, ...(res.assets ?? [])].slice(0, MAX_PHOTOS));
   };
+
+  const removePhoto = (index: number) => setPhotos((prev) => prev.filter((_, i) => i !== index));
 
   const submit = async () => {
     setBusy(true);
@@ -47,16 +81,28 @@ export function WriteReviewScreen({ route, navigation }: AppScreenProps<'WriteRe
         targetType,
         target,
         rating,
-        body: body.trim() || undefined,
+        // Redaktədə boş mətn də göndərilir — istifadəçi mətni silibsə server də silsin
+        body: existing ? body.trim() : body.trim() || undefined,
         tags,
         ...(existing ? { publicId: existing } : { photos: uploaded }),
       });
+
+      const xp = res.rewards?.xpGained ?? 0;
+      const levelUp = res.rewards?.leveledUp ? ` Level ${res.rewards.levelAfter}-ə yüksəldin!` : '';
       Alert.alert(
         existing ? 'Rəy yeniləndi' : 'Təşəkkürlər!',
-        res.rewards?.xpGained ? `Rəyin üçün +${res.rewards.xpGained} XP qazandın` : 'Rəyin paylaşıldı',
+        xp > 0
+          ? `Rəyin üçün +${xp} XP qazandın.${levelUp}`
+          : existing
+            ? 'Dəyişikliklər yadda saxlanıldı.'
+            : `Rəyin paylaşıldı.${levelUp}`,
         [{ text: 'Bağla', onPress: () => navigation.goBack() }],
       );
     } catch (e) {
+      if (isGuestBlocked(e)) {
+        promptGuestSignup(e instanceof ApiError ? e.message : undefined);
+        return;
+      }
       const conflictId =
         e instanceof ApiError && e.status === 409 ? (e.details as { publicId?: string } | undefined)?.publicId : undefined;
       if (conflictId) {
@@ -80,15 +126,16 @@ export function WriteReviewScreen({ route, navigation }: AppScreenProps<'WriteRe
             disabled={rating === 0}
             loading={busy}
             onPress={() => void submit()}
+            style={styles.cta}
           />
         }
       >
-        <TopBar title="Rəy yaz" onBack={navigation.goBack} />
+        <TopBar title={initial ? 'Rəyi redaktə et' : 'Rəy yaz'} onBack={navigation.goBack} />
 
         <View style={styles.body}>
           <Card padded style={styles.target}>
             <View style={styles.targetIcon}>
-              <Icon name="pin" size={20} color={t.colors.green900} />
+              <Icon name={TARGET_ICON[targetType]} size={20} color={t.colors.green900} />
             </View>
             <View style={styles.flex}>
               <Text variant="h3">{name}</Text>
@@ -96,11 +143,24 @@ export function WriteReviewScreen({ route, navigation }: AppScreenProps<'WriteRe
             </View>
           </Card>
 
+          {initial ? (
+            <Text variant="small" color="brown700">
+              Bura artıq rəy yazmısan — dəyişiklikləri edib yenilə.
+            </Text>
+          ) : null}
+
           <View style={styles.center}>
             <Text variant="h2">Səyahətin necə keçdi?</Text>
             <View style={styles.stars}>
               {[1, 2, 3, 4, 5].map((n) => (
-                <Pressable key={n} onPress={() => setRating(n)} hitSlop={6} accessibilityLabel={`${n} ulduz`}>
+                <Pressable
+                  key={n}
+                  onPress={() => setRating(n)}
+                  hitSlop={6}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${n} ulduz`}
+                  accessibilityState={{ selected: n <= rating }}
+                >
                   <Icon name="star" size={38} color={n <= rating ? t.colors.star : t.colors.line} filled />
                 </Pressable>
               ))}
@@ -112,7 +172,7 @@ export function WriteReviewScreen({ route, navigation }: AppScreenProps<'WriteRe
 
           <View style={styles.tags}>
             {Object.entries(REVIEW_TAGS).map(([slug, label]) => (
-              <Chip key={slug} label={label} active={tags.includes(slug)} onPress={() => toggleTag(slug)} />
+              <Chip key={slug} label={label as string} active={tags.includes(slug)} onPress={() => toggleTag(slug)} />
             ))}
           </View>
 
@@ -131,13 +191,41 @@ export function WriteReviewScreen({ route, navigation }: AppScreenProps<'WriteRe
             </Text>
           </View>
 
-          {existing ? null : (
+          {existing ? (
+            // Fotolar yalnız yaradarkən əlavə olunur — redaktədə mövcudları göstəririk
+            existingPhotos.length ? (
+              <View style={styles.existingPhotos}>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.photos}>
+                  {existingPhotos.map((p, i) => (
+                    <Photo key={`${p.url}-${i}`} uri={p.url} style={styles.photo} radius={t.radius.md} />
+                  ))}
+                </ScrollView>
+                <Text variant="caption">Fotolar redaktədə dəyişdirilmir.</Text>
+              </View>
+            ) : null
+          ) : (
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.photos}>
               {photos.map((p, i) => (
-                <Photo key={`${p.uri}-${i}`} uri={p.uri} style={styles.photo} radius={t.radius.md} />
+                <View key={`${p.uri}-${i}`}>
+                  <Photo uri={p.uri} style={styles.photo} radius={t.radius.md} />
+                  <Pressable
+                    style={styles.remove}
+                    hitSlop={8}
+                    accessibilityRole="button"
+                    accessibilityLabel="Fotonu sil"
+                    onPress={() => removePhoto(i)}
+                  >
+                    <Icon name="x" size={12} color="#fff" strokeWidth={3} />
+                  </Pressable>
+                </View>
               ))}
               {photos.length < MAX_PHOTOS ? (
-                <Pressable style={[styles.photo, styles.addPhoto]} onPress={() => void pickPhotos()}>
+                <Pressable
+                  style={[styles.photo, styles.addPhoto]}
+                  onPress={() => void pickPhotos()}
+                  accessibilityRole="button"
+                  accessibilityLabel="Foto əlavə et"
+                >
                   <Icon name="camera" size={22} color={t.colors.green900} />
                   <Text variant="caption" color="green900">
                     Foto əlavə et
@@ -182,10 +270,16 @@ const styles = StyleSheet.create({
   },
   counter: { alignSelf: 'flex-end', marginTop: 4 },
   photos: { gap: t.spacing.sm },
+  existingPhotos: { gap: t.spacing.sm },
   photo: { width: 96, height: 96, backgroundColor: t.colors.bg2 },
+  remove: {
+    position: 'absolute', top: 6, right: 6, width: 22, height: 22, borderRadius: 11,
+    backgroundColor: 'rgba(0,0,0,0.55)', alignItems: 'center', justifyContent: 'center',
+  },
   addPhoto: {
     borderRadius: t.radius.md, borderWidth: 1.5, borderStyle: 'dashed', borderColor: t.colors.green900,
     alignItems: 'center', justifyContent: 'center', gap: 4,
   },
   xp: { flexDirection: 'row', alignItems: 'center', gap: t.spacing.sm, backgroundColor: t.colors.brown100, borderColor: t.colors.brown100 },
+  cta: { width: '100%' },
 });

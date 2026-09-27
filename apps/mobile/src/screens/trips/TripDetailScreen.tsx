@@ -1,48 +1,119 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, View } from 'react-native';
+import { XP_RULES } from '@gezgin/shared';
 import {
-  Button, Card, EmptyState, Icon, Loading, Photo, Pill, Progress, Screen, Text, TopBar,
+  Button, Card, ErrorState, Icon, Loading, Photo, Pill, Progress, Screen, Text, TopBar,
 } from '@/components';
-import { useStartTrip, useToggleTripItem, useTripDetail, type TripItem } from '@/api/hooks/tripDetail';
+import {
+  useCompleteTrip, useDeleteTrip, useStartTrip, useToggleTripItem, useTripDetail, type TripItem,
+} from '@/api/hooks/tripDetail';
+import { alertError } from '@/lib/errors';
 import { TRIP_STATUS_LABEL, label } from '@/lib/labels';
 import { t } from '@/theme';
 import type { AppScreenProps } from '@/navigation/types';
 
-/** Ekran 23 detalı — gün-gün plan, tamamlandı işarəsi, check-in keçidi. */
+/** Ekran 23 detalı — gün-gün plan, tamamlandı işarəsi, check-in keçidi, tamamla/sil. */
 export function TripDetailScreen({ route, navigation }: AppScreenProps<'TripDetail'>) {
   const { publicId } = route.params;
   const trip = useTripDetail(publicId);
   const toggle = useToggleTripItem(publicId);
   const start = useStartTrip(publicId);
+  const complete = useCompleteTrip(publicId);
+  const remove = useDeleteTrip(publicId);
 
-  if (trip.isLoading) return <Loading label="Səyahət yüklənir…" />;
   if (!trip.data) {
+    if (trip.error && !trip.isFetching) {
+      return <ErrorState error={trip.error} onRetry={() => void trip.refetch()} onBack={navigation.goBack} />;
+    }
     return (
-      <Screen padded={false}>
+      <Screen padded={false} scroll={false}>
         <TopBar title="Səyahət" onBack={navigation.goBack} />
-        <EmptyState title="Səyahət tapılmadı" />
+        <Loading label="Səyahət yüklənir…" />
       </Screen>
     );
   }
   const tr = trip.data;
+  const canComplete = tr.status === 'planned' || tr.status === 'active';
+
+  const confirmDelete = () =>
+    Alert.alert('Səyahət silinsin?', `“${tr.title}” planı və qeydləri silinəcək.`, [
+      { text: 'İmtina', style: 'cancel' },
+      {
+        text: 'Sil',
+        style: 'destructive',
+        onPress: () =>
+          remove.mutate(undefined, {
+            onSuccess: () => navigation.goBack(),
+            onError: (error) => alertError(error, 'Səyahət silinmədi'),
+          }),
+      },
+    ]);
+
+  const confirmComplete = () =>
+    Alert.alert(
+      'Səyahəti tamamla',
+      `Səyahət tamamlanmış kimi işarələnəcək. İlk tamamlama +${XP_RULES.trip_completed.xp} XP qazandırır.`,
+      [
+        { text: 'İmtina', style: 'cancel' },
+        {
+          text: 'Tamamla',
+          onPress: () =>
+            complete.mutate(undefined, {
+              onSuccess: ({ rewards }) => {
+                const xp = rewards?.xpGained ?? 0;
+                Alert.alert(
+                  xp > 0 ? `+${xp} XP` : 'Səyahət tamamlandı',
+                  rewards?.leveledUp
+                    ? `Level ${rewards.levelAfter}-ə yüksəldin!`
+                    : xp > 0
+                      ? 'Təbriklər, səyahət tamamlandı!'
+                      : 'Səyahət yenidən tamamlandı — XP yalnız ilk dəfə verilir.',
+                );
+              },
+              onError: (error) => alertError(error, 'Səyahət tamamlanmadı'),
+            }),
+        },
+      ],
+    );
+
+  const busy = start.isPending || complete.isPending;
 
   return (
     <Screen
       padded={false}
-      // Tamamlanmış səyahətdə başlatmağa bir şey qalmır
       footer={
-        tr.status !== 'completed' ? (
-          <Button
-            label={tr.status === 'active' ? 'Səyahət davam edir' : 'Səyahəti başlat'}
-            disabled={tr.status === 'active'}
-            loading={start.isPending}
-            onPress={() => start.mutate()}
-            left={<Icon name="navigation" size={18} color="#fff" />}
-            style={styles.ctaButton}
-          />
+        canComplete ? (
+          <View style={styles.footer}>
+            {tr.status === 'planned' ? (
+              <Button
+                label="Səyahəti başlat"
+                loading={start.isPending}
+                disabled={busy}
+                onPress={() => start.mutate(undefined, { onError: (error) => alertError(error, 'Səyahət başladılmadı') })}
+                left={<Icon name="navigation" size={18} color="#fff" />}
+                style={styles.ctaButton}
+              />
+            ) : null}
+            <Button
+              label="Səyahəti tamamla"
+              variant={tr.status === 'active' ? 'primary' : 'ghost'}
+              size={tr.status === 'active' ? 'lg' : 'sm'}
+              loading={complete.isPending}
+              disabled={busy}
+              onPress={confirmComplete}
+              left={
+                <Icon name="flag" size={18} color={tr.status === 'active' ? '#fff' : t.colors.green900} />
+              }
+              style={styles.ctaButton}
+            />
+          </View>
         ) : null
       }
     >
-      <TopBar title={tr.title} onBack={navigation.goBack} />
+      <TopBar
+        title={tr.title}
+        onBack={navigation.goBack}
+        actions={[{ icon: 'trash', label: 'Səyahəti sil', onPress: confirmDelete }]}
+      />
 
       <View style={styles.head}>
         <View style={styles.headRow}>
@@ -80,7 +151,20 @@ export function TripDetailScreen({ route, navigation }: AppScreenProps<'TripDeta
                 <ItemRow
                   key={item.itemId}
                   item={item}
-                  onToggle={() => toggle.mutate({ itemId: item.itemId, isDone: !item.isDone })}
+                  onToggle={() =>
+                    toggle.mutate(
+                      { itemId: item.itemId, isDone: !item.isDone },
+                      { onError: (error) => alertError(error, 'Element yenilənmədi') },
+                    )
+                  }
+                  onOpen={
+                    item.target.slug && (item.type === 'place' || item.type === 'experience')
+                      ? () =>
+                          item.type === 'place'
+                            ? navigation.navigate('PlaceDetail', { slug: item.target.slug as string })
+                            : navigation.navigate('ExperienceDetail', { slug: item.target.slug as string })
+                      : undefined
+                  }
                   onCheckin={
                     item.type === 'place' && item.target.slug && !item.isDone
                       ? () =>
@@ -116,15 +200,23 @@ export function TripDetailScreen({ route, navigation }: AppScreenProps<'TripDeta
 function ItemRow({
   item,
   onToggle,
+  onOpen,
   onCheckin,
 }: {
   item: TripItem;
   onToggle: () => void;
+  onOpen?: () => void;
   onCheckin?: () => void;
 }) {
   return (
     <Card padded style={styles.item}>
-      <Pressable onPress={onToggle} hitSlop={8}>
+      <Pressable
+        onPress={onToggle}
+        hitSlop={8}
+        accessibilityRole="checkbox"
+        accessibilityLabel={`Tamamlandı işarəsi: ${item.target.name}`}
+        accessibilityState={{ checked: item.isDone }}
+      >
         <View style={[styles.checkbox, item.isDone && styles.checkboxOn]}>
           {item.isDone ? <Icon name="check" size={15} color="#fff" strokeWidth={2.6} /> : null}
         </View>
@@ -132,7 +224,7 @@ function ItemRow({
 
       <Photo uri={item.target.imageUrl} style={styles.itemThumb} radius={10} />
 
-      <View style={styles.flex}>
+      <Pressable style={styles.flex} onPress={onOpen} disabled={!onOpen}>
         <Text variant="h3" numberOfLines={1} style={item.isDone ? styles.done : undefined}>
           {item.target.name}
         </Text>
@@ -146,7 +238,7 @@ function ItemRow({
           {item.durationMin ? <Text variant="caption">· {item.durationMin} dəq</Text> : null}
           {item.target.priceAzn ? <Text variant="caption">· {item.target.priceAzn} AZN</Text> : null}
         </View>
-      </View>
+      </Pressable>
 
       {onCheckin ? (
         <Button label="Check-in" variant="soft" size="xs" onPress={onCheckin} />
@@ -174,5 +266,6 @@ const styles = StyleSheet.create({
   itemMeta: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 },
   done: { textDecorationLine: 'line-through', color: t.colors.muted },
   flex: { flex: 1, minWidth: 0 },
+  footer: { gap: t.spacing.sm, alignItems: 'center' },
   ctaButton: { width: '100%' },
 });

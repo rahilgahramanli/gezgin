@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import { Button, Card, EmptyState, Icon, Loading, Pill, Screen, Text, TopBar } from '@/components';
+import { Button, Card, EmptyState, ErrorState, Icon, Loading, Pill, Screen, Text, TopBar } from '@/components';
 import { useAddTripItem } from '@/api/hooks/tripDetail';
 import { useTrips } from '@/api/hooks/trips';
 import { ApiError } from '@/api/client';
 import { TRIP_STATUS_LABEL, label } from '@/lib/labels';
+import { isGuestBlocked, promptGuestSignup } from '@/lib/errors';
 import { t } from '@/theme';
 import type { AppScreenProps } from '@/navigation/types';
 
@@ -31,9 +32,35 @@ export function AddToPlanScreen({ route, navigation }: AppScreenProps<'AddToPlan
     );
   };
 
-  if (trips.isLoading) return <Loading label="Səyahətlər yüklənir…" />;
+  const typeLabel = type === 'experience' ? 'Təcrübə' : type === 'event' ? 'Tədbir' : 'Məkan';
 
-  const list = trips.data?.data ?? [];
+  if (!trips.data) {
+    if (isGuestBlocked(trips.error)) {
+      return (
+        <Screen padded={false} scroll={false}>
+          <TopBar title="Plana əlavə et" onBack={navigation.goBack} />
+          <EmptyState
+            icon="lock"
+            title="Hesab lazımdır"
+            message="Səyahət planı qurmaq üçün qeydiyyatdan keç."
+            action={<Button label="Qeydiyyatdan keç" onPress={() => promptGuestSignup()} />}
+          />
+        </Screen>
+      );
+    }
+    if (trips.error && !trips.isFetching) {
+      return <ErrorState error={trips.error} onRetry={() => void trips.refetch()} onBack={navigation.goBack} />;
+    }
+    return (
+      <Screen padded={false} scroll={false}>
+        <TopBar title="Plana əlavə et" onBack={navigation.goBack} />
+        <Loading label="Səyahətlər yüklənir…" />
+      </Screen>
+    );
+  }
+
+  // Tamamlanmış və ləğv edilmiş səyahətə yeni element əlavə etməyin mənası yoxdur
+  const list = trips.data.data.filter((tr) => tr.status === 'planned' || tr.status === 'active');
 
   return (
     <Screen
@@ -60,13 +87,13 @@ export function AddToPlanScreen({ route, navigation }: AppScreenProps<'AddToPlan
             <Text variant="h3" numberOfLines={1}>
               {name}
             </Text>
-            <Text variant="caption">{type === 'experience' ? 'Təcrübə' : 'Məkan'}</Text>
+            <Text variant="caption">{typeLabel}</Text>
           </View>
         </Card>
 
         {list.length === 0 ? (
           <EmptyState
-            title="Hələ səyahətin yoxdur"
+            title="Aktiv səyahətin yoxdur"
             message="Əvvəlcə səyahət yarat, sonra bura əlavə et."
             action={
               <Button label="Səyahət yarat" onPress={() => navigation.replace('CreateTrip')} />

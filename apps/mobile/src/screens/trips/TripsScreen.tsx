@@ -3,6 +3,7 @@ import {
   Button, Card, EmptyState, GuestEmpty, Icon, Loading, Photo, Pill, Progress, Screen, Text,
 } from '@/components';
 import { useUser } from '@/store/auth';
+import { errorText } from '@/lib/errors';
 import { useTrips } from '@/api/hooks/trips';
 import { TRIP_STATUS_LABEL, label } from '@/lib/labels';
 import { t } from '@/theme';
@@ -40,6 +41,13 @@ export function TripsScreen({ navigation }: TabScreenProps<'Trips'>) {
           icon="route"
           title="Səyahətini planla"
           message="Gün-gün plan qurmaq, marşrut izləmək və check-in etmək üçün hesab yarat."
+        />
+      ) : trips.isError && list.length === 0 ? (
+        <EmptyState
+          icon="wifiOff"
+          title="Səyahətlər yüklənmədi"
+          message={errorText(trips.error, 'Bir az sonra yenidən cəhd et.')}
+          action={<Button label="Yenidən cəhd et" variant="soft" onPress={() => void trips.refetch()} />}
         />
       ) : list.length === 0 ? (
         <EmptyState

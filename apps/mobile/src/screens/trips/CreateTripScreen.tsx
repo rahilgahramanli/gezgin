@@ -4,11 +4,10 @@ import { Button, Card, Icon, Input, Loading, Photo, Screen, Text, TopBar } from 
 import { useCreateTrip } from '@/api/hooks/tripDetail';
 import { useRoutes } from '@/api/hooks/content';
 import { ApiError } from '@/api/client';
+import { addLocalDays, localIsoDate } from '@/lib/date';
 import { t } from '@/theme';
 import type { AppScreenProps } from '@/navigation/types';
 
-/** ISO tarix — API `YYYY-MM-DD` gözləyir. */
-const iso = (d: Date): string => d.toISOString().slice(0, 10);
 
 /** Ekran 24 — yeni səyahət: sıfırdan və ya hazır marşrutdan. */
 export function CreateTripScreen({ route, navigation }: AppScreenProps<'CreateTrip'>) {
@@ -20,7 +19,9 @@ export function CreateTripScreen({ route, navigation }: AppScreenProps<'CreateTr
   const routes = useRoutes({ sort: 'popular', limit: 6 });
   const create = useCreateTrip();
 
-  const startDate = new Date(Date.now() + startsIn * 86400_000);
+  // Çipdə göstərilən YERLİ gün göndərilir — `toISOString()` UTC-dir və Bakıda
+  // 00:00–04:00 arası "5 okt" seçimi 4 oktyabr kimi gedirdi
+  const startDate = addLocalDays(startsIn);
   const error = create.error instanceof ApiError ? create.error.message : null;
 
   const submit = () =>
@@ -28,7 +29,7 @@ export function CreateTripScreen({ route, navigation }: AppScreenProps<'CreateTr
       {
         title: title.trim(),
         travelers,
-        startDate: iso(startDate),
+        startDate: localIsoDate(startDate),
         ...(fromRoute ? { fromRoute } : {}),
       },
       { onSuccess: (trip) => navigation.replace('TripDetail', { publicId: trip.publicId }) },
@@ -65,7 +66,7 @@ export function CreateTripScreen({ route, navigation }: AppScreenProps<'CreateTr
           </Text>
           <View style={styles.dateRow}>
             {[0, 7, 14, 30].map((days) => {
-              const d = new Date(Date.now() + days * 86400_000);
+              const d = addLocalDays(days);
               const active = startsIn === days;
               return (
                 <Pressable

@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/client';
 import { meKeys } from './me';
+import { qs, type Place } from './content';
 
 /** Ekran 29 — Gezgin Score kartı. */
 export interface ScoreData {
@@ -91,14 +92,32 @@ export interface CheckinResult {
 export function useCheckin() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (body: { place: string; lat?: number; lng?: number; trip?: string }) =>
+    mutationFn: (body: { place: string; lat: number; lng: number; trip?: string }) =>
       api<CheckinResult>('/checkins', { method: 'POST', body }),
-    onSuccess: () => {
-      // Check-in profil statistikasını, score-u və səyahət tərəqqisini dəyişir
+    onSuccess: (_data, body) => {
+      // Check-in profil statistikasını, score-u, nailiyyətləri, region tərəqqisini
+      // və səyahət tərəqqisini dəyişir. `['trip', id]` ayrıca açardır — yalnız
+      // `['trips']` yenilənəndə TripDetail elementi köhnə (tamamlanmamış) göstərirdi.
       void qc.invalidateQueries({ queryKey: meKeys.profile });
       void qc.invalidateQueries({ queryKey: meKeys.stats });
       void qc.invalidateQueries({ queryKey: meKeys.score });
+      void qc.invalidateQueries({ queryKey: meKeys.badges });
+      void qc.invalidateQueries({ queryKey: meKeys.regions });
       void qc.invalidateQueries({ queryKey: ['trips'] });
+      void qc.invalidateQueries({ queryKey: ['trip'] });
+      void qc.invalidateQueries({ queryKey: ['place', body.place] });
+      void qc.invalidateQueries({ queryKey: ['leaderboard'] });
     },
   });
 }
+
+/** Check-in seçicisi — cihazın mövqeyinə ən yaxın məkanlar, məsafə ilə. */
+export const useCheckinCandidates = (coords: { lat: number; lng: number } | null) =>
+  useQuery({
+    queryKey: ['places', 'checkin-nearby', coords ? `${coords.lat.toFixed(4)},${coords.lng.toFixed(4)}` : null],
+    queryFn: () =>
+      api<{ data: Place[]; nextOffset: number | null }>(
+        `/places${qs({ lat: coords?.lat, lng: coords?.lng, sort: 'distance', limit: 20 })}`,
+      ),
+    enabled: coords !== null,
+  });

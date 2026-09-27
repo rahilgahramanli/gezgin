@@ -249,6 +249,8 @@ export interface WrittenReview {
   body: string | null;
   tags: string[];
   isMine: boolean;
+  /** Fotolar yalnız yaradarkən əlavə olunur — redaktədə yalnız göstərilir. */
+  photos: Array<{ url: string | null; blurhash: string | null }>;
   rewards?: XpReward | null;
 }
 
@@ -748,10 +750,31 @@ export function useWriteReview() {
             body: { rating: input.rating, body: input.body, tags: input.tags },
           })
         : api<WrittenReview>('/reviews', { method: 'POST', body: input }),
-    onSuccess: (_r, v) => {
+    onSuccess: (r, v) => {
+      // `['reviews', type, target]` prefiksi siyahını, xülasəni və `mine`-ı da əhatə edir
       void qc.invalidateQueries({ queryKey: ['reviews', v.targetType, v.target] });
       void qc.invalidateQueries({ queryKey: [v.targetType, v.target] });
       void qc.invalidateQueries({ queryKey: meKeys.stats });
+      if (r.rewards?.xpGained) {
+        void qc.invalidateQueries({ queryKey: meKeys.profile });
+        void qc.invalidateQueries({ queryKey: meKeys.score });
+      }
     },
   });
 }
+
+/**
+ * Bu obyektə öz rəyim — form redaktə rejimində, köhnə ulduz/mətn/teqlərlə açılsın.
+ * Əks halda boş teq çipləri ilə göndərilən yeniləmə köhnə teqləri silirdi.
+ */
+export const useMyReview = (targetType: ReviewTargetType, target: string, enabled = true) =>
+  useQuery({
+    queryKey: ['reviews', targetType, target, 'mine'],
+    queryFn: () =>
+      api<{ review: WrittenReview | null }>(`/reviews/mine${qs({ targetType, target })}`),
+    enabled,
+    // Form açılanda həmişə təzə vəziyyət — köhnə keşlə doldurulmuş form yanlış teqləri göndərərdi
+    staleTime: 0,
+    gcTime: 0,
+    retry: false,
+  });

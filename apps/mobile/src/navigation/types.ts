@@ -81,6 +81,8 @@ export type AppStackParamList = {
   };
   FilterSheet: { region?: string; value?: import('@/screens/list/FilterSheetScreen').PlaceFilterValue };
   Legal: { slug: 'terms' | 'privacy' | 'expert-terms' };
+  /** "Yarat" → "Check-in et": yaxınlıqdakı məkanlardan seçim. */
+  CheckinPicker: undefined;
 };
 
 export type AuthScreenProps<T extends keyof AuthStackParamList> = NativeStackScreenProps<

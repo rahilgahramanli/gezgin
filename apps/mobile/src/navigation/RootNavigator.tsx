@@ -52,6 +52,7 @@ import { ReviewsAllScreen } from '@/screens/detail/ReviewsAllScreen';
 import { FilterSheetScreen } from '@/screens/list/FilterSheetScreen';
 import { LegalScreen } from '@/screens/profile/LegalScreen';
 import { RealtimeBridge } from '@/realtime/RealtimeBridge';
+import { CheckinPickerScreen } from '@/screens/gamification/CheckinPickerScreen';
 import type { AppStackParamList, AuthStackParamList } from './types';
 
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
@@ -129,6 +130,7 @@ function AppFlow() {
         <AppStack.Screen name="ReviewsAll" component={ReviewsAllScreen} />
         <AppStack.Screen name="FilterSheet" component={FilterSheetScreen} options={{ presentation: 'modal' }} />
         <AppStack.Screen name="Legal" component={LegalScreen} />
+        <AppStack.Screen name="CheckinPicker" component={CheckinPickerScreen} />
       </AppStack.Navigator>
     </>
   );

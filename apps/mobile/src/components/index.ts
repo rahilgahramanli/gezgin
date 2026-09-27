@@ -13,3 +13,4 @@ export * from './TopBar';
 export * from './PostCard';
 export * from './Skeleton';
 export * from './GuestEmpty';
+export * from './HeroScreen';

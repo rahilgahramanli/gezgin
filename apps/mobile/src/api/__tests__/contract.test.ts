@@ -520,6 +520,157 @@ describe('API kontraktı — mobil ekranların asılı olduğu sahələr', () =>
     });
   });
 
+  /** QA düzəlişləri — check-in seçicisi, rəy bloku, səyahət tamamla/sil, marşrut sahibi. */
+  describe('QA düzəlişləri (Sprint 7.5)', () => {
+    t('/search `types=place` yalnız məkan qaytarır (`type` parametri oxunmur)', async () => {
+      const res = await call<{ results: Array<{ type: string }> }>('/search?q=quba&types=place&limit=10');
+      expect(res.results.length).toBeGreaterThan(0);
+      expect(res.results.filter((r) => r.type !== 'place')).toEqual([]);
+    });
+
+    t('/places `lat/lng/sort=distance` ən yaxından sıralayır və məsafə verir', async () => {
+      const res = await call<{ data: Array<{ distanceKm: number | null }> }>(
+        '/places?lat=41.1897&lng=48.0169&sort=distance&limit=5',
+      );
+      expectKeys(res.data[0], ['slug', 'name', 'coverUrl', 'rating', 'region', 'distanceKm'], 'checkinCandidate');
+      const km = res.data.map((p) => p.distanceKm);
+      expect(km.every((d) => typeof d === 'number')).toBe(true);
+      expect(km).toEqual([...km].sort((a, b) => (a ?? 0) - (b ?? 0)));
+    });
+
+    t('check-in mövqesiz 400 qaytarır — mobil mövqe olmadan API-yə getmir', async () => {
+      const res = await call<{ statusCode: number; code: string; message: string }>('/checkins', {
+        method: 'POST',
+        body: JSON.stringify({ place: 'laza' }),
+      });
+      expect(res.statusCode).toBe(400);
+      expect(res.message).toMatch(/yerləşmə/i);
+    });
+
+    t('rəy xülasəsi və siyahısı təcrübə və marşrut üçün də işləyir', async () => {
+      const targets = [
+        ['experience', 'kend-metbexi-masterklassi'],
+        ['route', 'quba-daglar-turu'],
+      ] as const;
+      for (const [type, slug] of targets) {
+        const summary = await call(`/reviews/summary?targetType=${type}&target=${slug}`);
+        expectKeys(summary, ['average', 'total', 'breakdown'], `${type}ReviewSummary`);
+        const list = await call<{ data: unknown[] }>(`/reviews?targetType=${type}&target=${slug}&limit=5`);
+        expectKeys(list, ['data'], `${type}Reviews`);
+        if (list.data.length) {
+          expectKeys(list.data[0], ['publicId', 'rating', 'body', 'createdAt', 'author'], `${type}Review`);
+        }
+      }
+    });
+
+    t('/routes/:slug sahib sahələrini verir (Redaktə et / Sil)', async () => {
+      const r = await call('/routes/quba-daglar-turu');
+      expectKeys(r, ['isOwner', 'visibility', 'region', 'rating', 'ratingCount'], 'routeOwnerFields');
+    });
+
+    /**
+     * XP və rəy yazan yoxlamalar müvəqqəti hesabla aparılır — demo hesabın
+     * XP-si hər test işində +500 artmasın. Sonda hesab silinir (anonimləşir).
+     */
+    describe('müvəqqəti hesabla', () => {
+      let temp: string | null = null;
+
+      const callAs = async <T>(path: string, init: RequestInit = {}): Promise<T> => {
+        const res = await fetch(`${BASE}${path}`, {
+          ...init,
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${temp}`, ...init.headers },
+        });
+        return (await res.json()) as T;
+      };
+
+      beforeAll(async () => {
+        if (!apiUp) return;
+        const username = `ct_${Date.now().toString(36)}`;
+        const session = await call<{ accessToken?: string }>('/auth/register', {
+          method: 'POST',
+          body: JSON.stringify({
+            fullName: 'Kontrakt Testi',
+            username,
+            email: `${username}@example.com`,
+            password: 'Sifre12345',
+          }),
+        });
+        temp = session.accessToken ?? null;
+      });
+
+      afterAll(async () => {
+        if (temp) await callAs('/me', { method: 'DELETE' });
+      });
+
+      const tt = (name: string, fn: () => Promise<void>) =>
+        t(name, async () => {
+          if (!temp) {
+            console.warn('Müvəqqəti hesab yaradılmadı — yoxlama atlanıldı');
+            return;
+          }
+          await fn();
+        });
+
+      tt('səyahət: təcrübə elementi → tamamla (+XP) → təkrar tamamla (null) → sil', async () => {
+        const trip = await callAs<{ publicId: string; startDate: string | null }>('/trips', {
+          method: 'POST',
+          body: JSON.stringify({ title: 'Kontrakt səyahəti', startDate: '2026-10-05' }),
+        });
+        // Yerli təqvim günü olduğu kimi saxlanılır — mobil `slice(0, 10)` ilə göstərir
+        expect(trip.startDate?.slice(0, 10)).toBe('2026-10-05');
+
+        const withItem = await callAs<{ itinerary: Array<{ items: Array<{ type: string; target: { slug: string | null } }> }> }>(
+          `/trips/${trip.publicId}/items`,
+          { method: 'POST', body: JSON.stringify({ type: 'experience', slug: 'kend-metbexi-masterklassi', day: 1 }) },
+        );
+        const item = withItem.itinerary[0]?.items[0];
+        expect(item?.type).toBe('experience');
+        expect(item?.target.slug).toBe('kend-metbexi-masterklassi');
+
+        const done = await callAs<{ status: string; rewards: Record<string, unknown> | null }>(
+          `/trips/${trip.publicId}/complete`,
+          { method: 'POST' },
+        );
+        expect(done.status).toBe('completed');
+        expectKeys(done.rewards, ['xpGained', 'leveledUp', 'levelBefore', 'levelAfter', 'newBadges'], 'tripRewards');
+        expect(done.rewards?.xpGained).toBe(500);
+
+        const again = await callAs<{ rewards: unknown }>(`/trips/${trip.publicId}/complete`, { method: 'POST' });
+        expect(again.rewards).toBeNull();
+
+        const removed = await callAs<{ deleted: boolean }>(`/trips/${trip.publicId}`, { method: 'DELETE' });
+        expect(removed.deleted).toBe(true);
+        const gone = await callAs<{ statusCode: number }>(`/trips/${trip.publicId}`);
+        expect(gone.statusCode).toBe(404);
+      });
+
+      tt('/reviews/mine: yoxdursa null, yazandan sonra teqlərlə rəy', async () => {
+        const q = 'targetType=experience&target=kend-metbexi-masterklassi';
+        const none = await callAs<{ review: unknown }>(`/reviews/mine?${q}`);
+        expect(none).toEqual({ review: null });
+
+        const written = await callAs<{ publicId: string; rewards: Record<string, unknown> | null }>('/reviews', {
+          method: 'POST',
+          body: JSON.stringify({
+            targetType: 'experience',
+            target: 'kend-metbexi-masterklassi',
+            rating: 5,
+            body: 'Kontrakt testi',
+            tags: ['tebiet', 'fotogenik'],
+          }),
+        });
+        try {
+          expectKeys(written.rewards, ['xpGained', 'leveledUp', 'levelAfter'], 'reviewRewards');
+          const mine = await callAs<{ review: Record<string, unknown> }>(`/reviews/mine?${q}`);
+          expectKeys(mine.review, ['publicId', 'rating', 'body', 'tags', 'photos'], 'myReview');
+          expect(mine.review.tags).toEqual(['tebiet', 'fotogenik']);
+        } finally {
+          await callAs(`/reviews/${written.publicId}`, { method: 'DELETE' });
+        }
+      });
+    });
+  });
+
   /** Ekran 12 xəritə rejimi. */
   describe('xəritə (ekran 12)', () => {
     t('yüksək zoom fərdi pinlər qaytarır', async () => {

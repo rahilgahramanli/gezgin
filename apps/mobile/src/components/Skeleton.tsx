@@ -1,6 +1,8 @@
 import { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, View, type DimensionValue, type ViewStyle } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { t } from '@/theme';
+import { TopBar } from './TopBar';
 
 /**
  * Yüklənmə vəziyyəti — spinner əvəzinə gələcək kontentin formasını göstərir.
@@ -64,12 +66,19 @@ export function PostSkeleton({ width }: { width: number }) {
 /**
  * Detal ekranının skeleti — ekran 13, 15, 17.
  * Hero fotonun hündürlüyü real ekranla eynidir (300), ona görə kontent gələndə
- * səhifə tərpənmir.
+ * səhifə tərpənmir. `onBack` verilsə yüklənmə zamanı da geri düyməsi olur —
+ * yavaş şəbəkədə istifadəçi skeletdə ilişib qalmasın.
  */
-export function DetailSkeleton() {
+export function DetailSkeleton({ onBack }: { onBack?: () => void } = {}) {
+  const insets = useSafeAreaInsets();
   return (
     <View style={styles.detail}>
       <Skeleton width="100%" height={300} radius={0} />
+      {onBack ? (
+        <View style={[styles.detailBar, { top: insets.top }]}>
+          <TopBar transparent onBack={onBack} />
+        </View>
+      ) : null}
       <View style={styles.detailBody}>
         <Skeleton width={90} height={16} radius={t.radius.pill} />
         <View style={styles.statRow}>
@@ -110,6 +119,7 @@ const styles = StyleSheet.create({
   headText: { gap: 6 },
   actions: { flexDirection: 'row', gap: t.spacing.lg },
   detail: { flex: 1, backgroundColor: t.colors.bg },
+  detailBar: { position: 'absolute', left: 0, right: 0 },
   detailBody: { padding: t.spacing.lg, gap: t.spacing.md },
   statRow: { flexDirection: 'row', justifyContent: 'space-between', marginVertical: t.spacing.sm },
   list: { padding: t.spacing.lg, gap: t.spacing.lg },
