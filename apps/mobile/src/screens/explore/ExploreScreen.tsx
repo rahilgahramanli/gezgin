@@ -5,9 +5,23 @@ import {
   Chip, ExperienceCard, Icon, Loading, PhotoCard, RowCard, SectionHead, Text,
 } from '@/components';
 import { useExperiences, usePlaces, useRegions, useRoutes } from '@/api/hooks/content';
+import { useBusinesses } from '@/api/hooks/business';
+import { BUSINESS_TYPE_LABEL, label } from '@/lib/labels';
 import { useUser } from '@/store/auth';
 import { t } from '@/theme';
 import type { TabScreenProps } from '@/navigation/types';
+
+/** Yerləşmə təklif etməyən biznes növləri "Otellər və qonaq evləri" bölməsinə düşmür. */
+const NOT_LODGING = new Set(['restoran', 'tur_sirketi']);
+
+/** Seçilmiş regionda bölmə boşdursa yalnız başlıq qalmasın — qısa izah göstərilir. */
+function EmptyLine({ children }: { children: string }) {
+  return (
+    <Text variant="meta" color="muted" style={styles.emptyLine}>
+      {children}
+    </Text>
+  );
+}
 
 /** Ekran 10 — Kəşf et. Region seçici, populyar məkanlar və seçilmiş təcrübələr. */
 export function ExploreScreen({ navigation }: TabScreenProps<'Explore'>) {
@@ -18,6 +32,10 @@ export function ExploreScreen({ navigation }: TabScreenProps<'Explore'>) {
   const places = usePlaces({ region, sort: 'popular', limit: 6 });
   const experiences = useExperiences({ region, sort: 'popular', limit: 6 });
   const routes = useRoutes({ region, sort: 'rating', limit: 4 });
+  const businesses = useBusinesses({ region });
+  const lodging = (businesses.data?.data ?? []).filter((b) => !NOT_LODGING.has(b.type));
+  const regionName = regions.data?.find((r) => r.slug === region)?.name;
+  const where = regionName ? `${regionName} regionunda` : 'Hələ';
 
   if (regions.isLoading) return <Loading label="Yüklənir…" />;
 
@@ -62,9 +80,11 @@ export function ExploreScreen({ navigation }: TabScreenProps<'Explore'>) {
           />
           {places.isLoading ? (
             <Loading />
+          ) : !places.data?.data.length ? (
+            <EmptyLine>{`${where} məkan yoxdur`}</EmptyLine>
           ) : (
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.hscroll}>
-              {(places.data?.data ?? []).map((p) => (
+              {places.data.data.map((p) => (
                 <PhotoCard
                   key={p.slug}
                   uri={p.coverUrl}
@@ -86,22 +106,55 @@ export function ExploreScreen({ navigation }: TabScreenProps<'Explore'>) {
             actionLabel="Daha çox"
             onAction={() => navigation.navigate('Experiences')}
           />
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.hscroll}>
-            {(experiences.data?.data ?? []).map((e) => (
-              <ExperienceCard
-                key={e.slug}
-                uri={e.coverUrl}
-                title={e.title}
-                subtitle={e.region.name}
-                priceAzn={e.priceAzn}
-                rating={e.rating || undefined}
-                ratingCount={e.ratingCount || undefined}
-                width={210}
-                onPress={() => navigation.navigate('ExperienceDetail', { slug: e.slug })}
-              />
-            ))}
-          </ScrollView>
+          {experiences.isLoading ? (
+            <Loading />
+          ) : !experiences.data?.data.length ? (
+            <EmptyLine>{`${where} təcrübə yoxdur`}</EmptyLine>
+          ) : (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.hscroll}>
+              {experiences.data.data.map((e) => (
+                <ExperienceCard
+                  key={e.slug}
+                  uri={e.coverUrl}
+                  title={e.title}
+                  subtitle={e.region.name}
+                  priceAzn={e.priceAzn}
+                  rating={e.rating || undefined}
+                  ratingCount={e.ratingCount || undefined}
+                  width={210}
+                  onPress={() => navigation.navigate('ExperienceDetail', { slug: e.slug })}
+                />
+              ))}
+            </ScrollView>
+          )}
         </View>
+
+        {/* Otel və qonaq evi paketləri — biznes profili (ekran 22) → otel rezervasiyası (ekran 49) */}
+        {lodging.length ? (
+          <View style={styles.section}>
+            <SectionHead title="Otellər və qonaq evləri" />
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.hscroll}>
+              {lodging.map((b) => (
+                <PhotoCard
+                  key={b.slug}
+                  uri={b.coverUrl}
+                  title={b.name}
+                  subtitle={b.region.name}
+                  rating={b.ratingCount > 0 ? b.rating : null}
+                  badge={
+                    b.packageCount > 0
+                      ? `${b.packageCount} paket`
+                      : label(BUSINESS_TYPE_LABEL, b.type)
+                  }
+                  width={220}
+                  height={160}
+                  accessibilityLabel={`Biznes ${b.name}`}
+                  onPress={() => navigation.navigate('BusinessProfile', { slug: b.slug })}
+                />
+              ))}
+            </ScrollView>
+          </View>
+        ) : null}
 
         <View style={styles.section}>
           <SectionHead
@@ -109,22 +162,28 @@ export function ExploreScreen({ navigation }: TabScreenProps<'Explore'>) {
             actionLabel="Daha çox"
             onAction={() => navigation.navigate('Routes')}
           />
-          <View style={styles.list}>
-            {(routes.data?.data ?? []).map((r) => (
-              <RowCard
-                key={r.slug}
-                uri={r.coverUrl}
-                title={r.title}
-                subtitle={`${r.days} gün · ${r.region.name}`}
-                meta={
-                  <Text variant="small" color="muted">
-                    {r.stopCount} dayanacaq{r.distanceKm ? ` · ${r.distanceKm} km` : ''}
-                  </Text>
-                }
-                onPress={() => navigation.navigate('RouteDetail', { slug: r.slug })}
-              />
-            ))}
-          </View>
+          {routes.isLoading ? (
+            <Loading />
+          ) : !routes.data?.data.length ? (
+            <EmptyLine>{`${where} marşrut yoxdur`}</EmptyLine>
+          ) : (
+            <View style={styles.list}>
+              {routes.data.data.map((r) => (
+                <RowCard
+                  key={r.slug}
+                  uri={r.coverUrl}
+                  title={r.title}
+                  subtitle={`${r.days} gün · ${r.region.name}`}
+                  meta={
+                    <Text variant="small" color="muted">
+                      {r.stopCount} dayanacaq{r.distanceKm ? ` · ${r.distanceKm} km` : ''}
+                    </Text>
+                  }
+                  onPress={() => navigation.navigate('RouteDetail', { slug: r.slug })}
+                />
+              ))}
+            </View>
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -151,4 +210,5 @@ const styles = StyleSheet.create({
   section: { marginTop: t.spacing.lg, paddingHorizontal: t.spacing.page },
   hscroll: { gap: t.spacing.md, paddingRight: t.spacing.page },
   list: { gap: t.spacing.md },
+  emptyLine: { paddingVertical: t.spacing.sm },
 });

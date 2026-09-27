@@ -28,6 +28,8 @@ import { BookingScreen } from '@/screens/booking/BookingScreen';
 import { BookingSuccessScreen } from '@/screens/booking/BookingSuccessScreen';
 import { HotelBookingScreen } from '@/screens/booking/HotelBookingScreen';
 import { MyBookingsScreen } from '@/screens/booking/MyBookingsScreen';
+import { BookingDetailScreen } from '@/screens/booking/BookingDetailScreen';
+import { PaymentMethodsScreen } from '@/screens/booking/PaymentMethodsScreen';
 import { BusinessProfileScreen } from '@/screens/business/BusinessProfileScreen';
 import { CreateTripScreen } from '@/screens/trips/CreateTripScreen';
 import { RouteBuilderScreen } from '@/screens/trips/RouteBuilderScreen';
@@ -99,6 +101,8 @@ function AppFlow() {
         <AppStack.Screen name="HotelBooking" component={HotelBookingScreen} />
         <AppStack.Screen name="BookingSuccess" component={BookingSuccessScreen} />
         <AppStack.Screen name="MyBookings" component={MyBookingsScreen} />
+        <AppStack.Screen name="BookingDetail" component={BookingDetailScreen} />
+        <AppStack.Screen name="PaymentMethods" component={PaymentMethodsScreen} />
         <AppStack.Screen name="BusinessProfile" component={BusinessProfileScreen} />
         <AppStack.Screen name="CreateTrip" component={CreateTripScreen} />
         <AppStack.Screen name="RouteBuilder" component={RouteBuilderScreen} />

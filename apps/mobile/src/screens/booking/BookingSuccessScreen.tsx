@@ -1,15 +1,20 @@
 import { StyleSheet, View } from 'react-native';
 import { Button, Card, Icon, Loading, Screen, Text } from '@/components';
 import { useTicket } from '@/api/hooks/booking';
+import { bakuDate, bakuTime } from '@/lib/time';
 import { t } from '@/theme';
 import type { AppScreenProps } from '@/navigation/types';
+import { errorText } from './parts';
 
-/** Ekran 19 — rezervasiya təsdiqi və bilet. */
+/**
+ * Ekran 19 — rezervasiya təsdiqi və bilet.
+ * Naviqasiya düymələri biletdən asılı deyil — əvvəl bilet sorğusu uğursuz
+ * olanda ekranda heç bir düymə qalmırdı və istifadəçi ilişirdi.
+ */
 export function BookingSuccessScreen({ route, navigation }: AppScreenProps<'BookingSuccess'>) {
   const { publicId } = route.params;
   const ticket = useTicket(publicId);
-
-  if (ticket.isLoading) return <Loading label="Bilet hazırlanır…" />;
+  const tk = ticket.data;
 
   return (
     <Screen padded={false}>
@@ -25,49 +30,68 @@ export function BookingSuccessScreen({ route, navigation }: AppScreenProps<'Book
         </Text>
       </View>
 
-      {ticket.data ? (
-        <View style={styles.body}>
+      <View style={styles.body}>
+        {ticket.isLoading ? (
+          <Loading label="Bilet hazırlanır…" />
+        ) : tk ? (
           <Card padded style={styles.ticket}>
-            <Text variant="h3">{ticket.data.title}</Text>
+            <Text variant="h3">{tk.title}</Text>
 
             <View style={styles.rows}>
-              <Row label="Tarix" value={ticket.data.startAt ? ticket.data.startAt.slice(0, 10) : '—'} />
-              <Row
-                label="Vaxt"
-                value={ticket.data.startAt ? ticket.data.startAt.slice(11, 16) : '—'}
-              />
+              <Row label={tk.endAt ? 'Giriş' : 'Tarix'} value={tk.startAt ? bakuDate(tk.startAt) : '—'} />
+              {tk.endAt ? (
+                <Row label="Çıxış" value={bakuDate(tk.endAt)} />
+              ) : (
+                <Row label="Vaxt" value={tk.startAt ? `${bakuTime(tk.startAt)} (Bakı vaxtı)` : '—'} />
+              )}
               <Row
                 label="Nəfər"
-                value={`${ticket.data.guests.adults} böyük${ticket.data.guests.children ? ` + ${ticket.data.guests.children} uşaq` : ''}`}
+                value={`${tk.guests.adults} böyük${tk.guests.children ? ` + ${tk.guests.children} uşaq` : ''}`}
               />
-              <Row label="Ödənilib" value={`${ticket.data.totalAzn} AZN`} />
-              {ticket.data.subtitle ? <Row label="Təqdim edir" value={ticket.data.subtitle} /> : null}
+              <Row label="Ödənilib" value={`${tk.totalAzn} AZN`} />
+              {tk.subtitle ? <Row label="Təqdim edir" value={tk.subtitle} /> : null}
             </View>
 
             <View style={styles.dashed} />
 
             <View style={styles.codeBlock}>
               <Text variant="caption">Bron kodu</Text>
-              <Text variant="titleLg" color="green900" style={styles.code}>
-                {ticket.data.code}
+              <Text variant="titleLg" color="green900" style={styles.code} accessibilityLabel={`Bron kodu ${tk.code}`}>
+                {tk.code}
               </Text>
             </View>
           </Card>
+        ) : (
+          <Card padded style={styles.errorCard}>
+            <Icon name="info" size={22} color={t.colors.brown700} />
+            <View style={styles.flex}>
+              <Text variant="h3">Bilet hələ yüklənmədi</Text>
+              <Text variant="small" color="ink2">
+                Rezervasiyan qeydə alınıb. Bileti bir az sonra "Rezervasiyalarım" bölməsində də aça bilərsən.
+              </Text>
+              <Text variant="caption" color="muted">
+                {errorText(ticket.error)}
+              </Text>
+            </View>
+            <Button label="Yenidən yüklə" size="sm" variant="soft" onPress={() => void ticket.refetch()} />
+          </Card>
+        )}
 
-          <View style={styles.actions}>
-            <Button
-              label="Rezervasiyalarım"
-              variant="soft"
-              onPress={() => navigation.replace('MyBookings')}
-            />
-            <Button
-              label="Ana səhifəyə qayıt"
-              variant="ghost"
-              onPress={() => navigation.navigate('Tabs')}
-            />
-          </View>
+        <View style={styles.actions}>
+          <Button
+            label="Bileti aç"
+            onPress={() => navigation.replace('BookingDetail', { publicId })}
+            style={styles.wide}
+          />
+          <Button
+            label="Rezervasiyalarım"
+            variant="soft"
+            onPress={() => navigation.replace('MyBookings')}
+            style={styles.wide}
+          />
+          <Button label="Ana səhifəyə qayıt" variant="ghost" onPress={() => navigation.navigate('Tabs')} style={styles.wide} />
         </View>
-      ) : null}
+      </View>
     </Screen>
   );
 }
@@ -98,5 +122,8 @@ const styles = StyleSheet.create({
   dashed: { borderTopWidth: 1.5, borderTopColor: t.colors.line, borderStyle: 'dashed', marginVertical: 4 },
   codeBlock: { alignItems: 'center', gap: 2 },
   code: { letterSpacing: 2 },
+  errorCard: { gap: t.spacing.md, alignItems: 'flex-start' },
+  flex: { gap: 4, alignSelf: 'stretch' },
   actions: { gap: t.spacing.sm },
+  wide: { width: '100%' },
 });

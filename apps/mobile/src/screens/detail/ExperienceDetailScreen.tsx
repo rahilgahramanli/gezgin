@@ -5,6 +5,7 @@ import {
 import { useExperienceDetail, useToggleSaved } from '@/api/hooks/details';
 import { durationLabel } from '@/lib/labels';
 import { shareItem } from '@/lib/share';
+import { bakuDate, bakuTime } from '@/lib/time';
 import { t } from '@/theme';
 import type { AppScreenProps } from '@/navigation/types';
 
@@ -24,7 +25,8 @@ export function ExperienceDetailScreen({ route, navigation }: AppScreenProps<'Ex
         <>
           {e.nextAvailable ? (
             <Text variant="caption" center style={styles.availability}>
-              Növbəti tarix: {e.nextAvailable.startAt.slice(0, 10)} · {e.nextAvailable.seatsLeft} yer qalıb
+              Növbəti tarix: {bakuDate(e.nextAvailable.startAt)}, {bakuTime(e.nextAvailable.startAt)} ·{' '}
+              {e.nextAvailable.seatsLeft} yer qalıb
             </Text>
           ) : null}
           <Button

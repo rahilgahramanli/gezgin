@@ -225,6 +225,126 @@ describe('API kontraktı — mobil ekranların asılı olduğu sahələr', () =>
     });
   });
 
+  /**
+   * Ödəniş axını (ekran 18, 49, 53) — QA-da tapılan boşluqların düzəlişi bu
+   * sahələrə söykənir: kart seçimi, rədd olunan kart, 3-D Secure, ləğv, sayğaclar.
+   */
+  describe('ödəniş axını və ləğv', () => {
+    const cardShape = ['publicId', 'brand', 'last4', 'expMonth', 'expYear', 'holderName', 'isDefault', 'isExpired'];
+
+    t('/config ödəniş provayderini bildirir (3-D Secure test kodu ipucu)', async () => {
+      const c = await call<{ payments: unknown }>('/config');
+      expectKeys(c.payments, ['provider', 'isMock'], 'configPayments');
+    });
+
+    t('/bookings siyahısı tab sayğaclarını verir', async () => {
+      const res = await call<{ counts: unknown; summary: unknown }>('/bookings?filter=upcoming');
+      expectKeys(res, ['counts', 'summary', 'data', 'nextOffset'], 'bookingList');
+      expectKeys(res.counts, ['upcoming', 'past', 'cancelled'], 'bookingCounts');
+    });
+
+    t('rədd → 3-D Secure (səhv kod) → ləğv: eyni rezervasiya, açar təkrar yaratmır', async () => {
+      const avail = await call<{ slots: Array<{ slotId: number; isFull: boolean; startAt: string }> }>(
+        '/experiences/kend-metbexi-masterklassi/availability?days=90',
+      );
+      const slot = avail.slots.find((s) => !s.isFull && Date.parse(s.startAt) > Date.now() + 3 * 86400_000);
+      if (!slot) return;
+
+      const before = await call<Array<{ publicId: string }>>('/payments/methods');
+      const add = (number: string) =>
+        call<{ publicId: string; brand: string; last4: string; isDefault: boolean }>('/payments/methods', {
+          method: 'POST',
+          body: JSON.stringify({ number, expMonth: 12, expYear: 2030, cvv: '123' }),
+        });
+      const declined = await add('4000000000000002');
+      const threeDs = await add('4000000000003220');
+      expectKeys(declined, ['publicId', 'brand', 'last4', 'isDefault'], 'addedCard');
+
+      const methods = await call<unknown[]>('/payments/methods');
+      expectKeys(methods[0], cardShape, 'paymentMethod');
+
+      const key = `contract-${Date.now()}`;
+      const create = () =>
+        call<Record<string, unknown> & { publicId: string; status: string; cancellation: unknown }>('/bookings', {
+          method: 'POST',
+          headers: { 'Idempotency-Key': key },
+          body: JSON.stringify({ type: 'experience', target: 'kend-metbexi-masterklassi', adults: 1, slotId: slot.slotId }),
+        });
+      const booking = await create();
+      let cancelled = false;
+      try {
+        expectKeys(booking, ['publicId', 'code', 'status', 'startAt', 'endAt', 'payment', 'cancellation'], 'createdBooking');
+        expectKeys(booking.cancellation, ['canCancel', 'hoursLeft', 'refundPercent', 'label'], 'cancellation');
+        expect(booking.status).toBe('awaiting_payment');
+
+        // Eyni açar — eyni rezervasiya (ikinci toxunuş dublikat yaratmır)
+        expect((await create()).publicId).toBe(booking.publicId);
+
+        const pay = (paymentMethod: string, otp?: string) =>
+          call<Record<string, unknown> & { status?: string; code?: string; payment?: Record<string, unknown> }>(
+            `/bookings/${booking.publicId}/pay`,
+            { method: 'POST', body: JSON.stringify({ paymentMethod, ...(otp ? { otp } : {}) }) },
+          );
+
+        const failed = await pay(declined.publicId);
+        expect(failed.code).toBe('PAYMENT_FAILED');
+        expect(failed.message).toBe('Kartda kifayət qədər vəsait yoxdur');
+
+        // Rədddən sonra EYNİ rezervasiya başqa kartla ödənilir
+        const action = await pay(threeDs.publicId);
+        expect(action.status).toBe('awaiting_payment');
+        expectKeys(action.payment, ['status', 'actionUrl', 'paymentPublicId'], 'paymentAction');
+        expect(action.payment?.status).toBe('requires_action');
+
+        const wrong = await pay(threeDs.publicId, '000000');
+        expect(wrong.payment?.status).toBe('requires_action');
+
+        const detail = await call<{ payment: unknown; cancellation: { canCancel: boolean } }>(
+          `/bookings/${booking.publicId}`,
+        );
+        expectKeys(detail.payment, ['publicId', 'status', 'amountAzn', 'refundedAzn', 'paidAt', 'failureMessage'], 'payment');
+        expect(detail.cancellation.canCancel).toBe(true);
+
+        const res = await call<{ policy: unknown; refund: unknown }>(`/bookings/${booking.publicId}/cancel`, {
+          method: 'POST',
+          body: '{}',
+        });
+        cancelled = true;
+        expectKeys(res, ['cancelled', 'policy', 'refund'], 'cancelResult');
+        expectKeys(res.policy, ['refundPercent', 'label'], 'cancelPolicy');
+        expectKeys(res.refund, ['refunded', 'amountAzn'], 'cancelRefund');
+
+        const after = await call<{ status: string; cancellation: { canCancel: boolean } }>(`/bookings/${booking.publicId}`);
+        expect(['cancelled', 'refunded']).toContain(after.status);
+        expect(after.cancellation.canCancel).toBe(false);
+      } finally {
+        if (!cancelled) await call(`/bookings/${booking.publicId}/cancel`, { method: 'POST', body: '{}' });
+        const keep = new Set(before.map((m) => m.publicId));
+        for (const id of [declined.publicId, threeDs.publicId]) {
+          if (!keep.has(id)) await call(`/payments/methods/${id}`, { method: 'DELETE' });
+        }
+      }
+    });
+
+    t('qonaq rezervasiya endpoint-lərində 403 alır', async () => {
+      const guest = await call<{ accessToken: string; user: { isGuest: boolean } }>('/auth/guest', { method: 'POST' });
+      expect(guest.user.isGuest).toBe(true);
+      const res = await call<{ code: string; message: string }>('/payments/methods', {
+        headers: { Authorization: `Bearer ${guest.accessToken}` },
+      });
+      expect(res.code).toBe('FORBIDDEN');
+      expect(res.message).toBe('Bu əməliyyat üçün hesab yaratmalısınız');
+    });
+
+    t('/businesses region filtrini qəbul edir (Kəşf et → Otellər)', async () => {
+      const res = await call<{ data: Array<{ region: { slug: string } }> }>('/businesses?region=qebele');
+      expectKeys(res, ['data', 'nextOffset'], 'businesses');
+      if (!res.data.length) return;
+      expectKeys(res.data[0], ['slug', 'name', 'type', 'region', 'coverUrl', 'packageCount', 'rating', 'ratingCount'], 'business');
+      expect(res.data.every((b) => b.region.slug === 'qebele')).toBe(true);
+    });
+  });
+
   /** Ekran 49 — otel paketi rezervasiyası. */
   describe('otel paketi (ekran 49)', () => {
     t('quote `nights` verir, komissiya isə `null`-dur', async () => {

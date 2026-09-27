@@ -1,13 +1,22 @@
+import { useEffect } from 'react';
 import { ImageBackground, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, LogoMark, Text } from '@/components';
 import { useGuestLogin } from '@/api/hooks/auth';
+import { useAuth } from '@/store/auth';
 import { t } from '@/theme';
 import type { AuthScreenProps } from '@/navigation/types';
 
 /** Ekran 01 — açılış. */
 export function SplashScreen({ navigation }: AuthScreenProps<'Splash'>) {
   const guest = useGuestLogin();
+  const consumeAuthEntry = useAuth((st) => st.consumeAuthEntry);
+
+  // Qonaq "Hesab yarat" ilə çıxıbsa birbaşa Qeydiyyata keçirik
+  useEffect(() => {
+    const entry = consumeAuthEntry();
+    if (entry) navigation.navigate(entry);
+  }, [consumeAuthEntry, navigation]);
 
   return (
     <ImageBackground

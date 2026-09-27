@@ -196,6 +196,7 @@ export function SettingsScreen({ navigation }: AppScreenProps<'Settings'>) {
             value={`${me.data?.interests.length ?? 0} seçim`}
             onPress={() => navigation.navigate('EditProfile')}
           />
+          <Row icon="coins" label="Ödəniş üsullarım" onPress={() => navigation.navigate('PaymentMethods')} />
           <Row icon="mail" label="E-mail" value={me.data?.email ?? '—'} last />
         </Group>
 

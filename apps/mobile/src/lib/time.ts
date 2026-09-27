@@ -52,3 +52,97 @@ export function dayLabel(value: string | Date, now = new Date()): string {
   if (isSameDay(date, yesterday)) return 'Dünən';
   return date.toLocaleDateString('az-AZ', { day: 'numeric', month: 'short' });
 }
+
+// ─────────────────── Bakı vaxtı ───────────────────
+//
+// Rezervasiya və slot vaxtları API-dən UTC ISO kimi gəlir. Ekranda isə
+// həmişə Bakı vaxtı göstərilməlidir: 2026-10-01T23:00Z → "2 okt 2026, 03:00".
+// Hermes-də `Intl` saat qurşağı dəstəyinə güvənmirik — Azərbaycan 2016-dan
+// yay vaxtına keçmir (sabit UTC+4), ona görə ofset əl ilə tətbiq olunur.
+
+/** Asia/Baku — UTC+4, yay vaxtı yoxdur. */
+export const BAKU_OFFSET_MS = 4 * 3_600_000;
+const DAY_MS = 86_400_000;
+
+/** Azərbaycanca qısa ay adları — "12 sen" (çat ayırıcısı) ilə eyni üslub. */
+export const AZ_MONTHS_SHORT = ['yan', 'fev', 'mar', 'apr', 'may', 'iyn', 'iyl', 'avq', 'sen', 'okt', 'noy', 'dek'] as const;
+
+/** Həftə günləri `getUTCDay()` sırası ilə (0 = bazar) — ekran 18 tarix zolağı. */
+export const AZ_WEEKDAYS_SHORT = ['Ba', 'Be', 'Ça', 'Çr', 'Ca', 'Cü', 'Şə'] as const;
+
+type Instant = string | number | Date;
+
+export interface BakuParts {
+  year: number;
+  /** 0–11 */
+  month: number;
+  day: number;
+  hour: number;
+  minute: number;
+  /** 0 = bazar */
+  weekday: number;
+}
+
+/** UTC anını Bakı divar saatının hissələrinə ayırır. */
+export function bakuParts(value: Instant): BakuParts {
+  const d = new Date(new Date(value).getTime() + BAKU_OFFSET_MS);
+  return {
+    year: d.getUTCFullYear(),
+    month: d.getUTCMonth(),
+    day: d.getUTCDate(),
+    hour: d.getUTCHours(),
+    minute: d.getUTCMinutes(),
+    weekday: d.getUTCDay(),
+  };
+}
+
+const pad2 = (n: number): string => String(n).padStart(2, '0');
+
+/** "2 okt 2026" */
+export function bakuDate(value: Instant): string {
+  const p = bakuParts(value);
+  return `${p.day} ${AZ_MONTHS_SHORT[p.month]} ${p.year}`;
+}
+
+/** "2 okt" */
+export function bakuShortDate(value: Instant): string {
+  const p = bakuParts(value);
+  return `${p.day} ${AZ_MONTHS_SHORT[p.month]}`;
+}
+
+/** "03:00" */
+export function bakuTime(value: Instant): string {
+  const p = bakuParts(value);
+  return `${pad2(p.hour)}:${pad2(p.minute)}`;
+}
+
+/** "2 okt 2026, 03:00" */
+export function bakuDateTime(value: Instant): string {
+  return `${bakuDate(value)}, ${bakuTime(value)}`;
+}
+
+/** "Cü" */
+export function bakuWeekday(value: Instant): string {
+  return AZ_WEEKDAYS_SHORT[bakuParts(value).weekday] ?? '';
+}
+
+/** Bakı təqvim günü — müqayisə və açar üçün: "2026-10-02". */
+export function bakuDayKey(value: Instant): string {
+  const p = bakuParts(value);
+  return `${p.year}-${pad2(p.month + 1)}-${pad2(p.day)}`;
+}
+
+/** Anın düşdüyü Bakı gününün başlanğıcı (00:00 Bakı), UTC millisaniyə ilə. */
+export function bakuStartOfDay(value: Instant): number {
+  const shifted = new Date(value).getTime() + BAKU_OFFSET_MS;
+  const intoDay = ((shifted % DAY_MS) + DAY_MS) % DAY_MS;
+  return shifted - intoDay - BAKU_OFFSET_MS;
+}
+
+/**
+ * Bu gündən `days` gün sonra, Bakı vaxtı ilə saat `hour:00` — UTC millisaniyə.
+ * Otel girişi (14:00) belə hesablanır; cihazın saat qurşağı rol oynamır.
+ */
+export function bakuDayAt(days: number, hour: number, now: number = Date.now()): number {
+  return bakuStartOfDay(now) + days * DAY_MS + hour * 3_600_000;
+}
