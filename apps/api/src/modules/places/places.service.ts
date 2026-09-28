@@ -285,6 +285,13 @@ export class PlacesService {
     const reviewCount = await this.prisma.review.count({
       where: { targetType: 'place', targetId: place.id, deletedAt: null, isVisible: true },
     });
+    // Qalereya ilə eyni say: məkan fotoları + məkana etiketlənmiş ictimai paylaşımların fotoları
+    const postPhotoCount = await this.prisma.postMedia.count({
+      where: {
+        media: { deletedAt: null, status: 'ready' },
+        post: { placeId: place.id, deletedAt: null, visibility: 'public', user: { status: 'active', isPublic: true } },
+      },
+    });
 
     return {
       slug: place.slug,
@@ -305,7 +312,7 @@ export class PlacesService {
       // Ekran 13 "saxla" düyməsi vəziyyəti göstərməlidir, əks halda yalnız saxlaya bilir
       isSaved: await this.isSaved(viewerId, 'place', place.id),
       checkinCount: place._count.checkins,
-      photoCount: place._count.photos,
+      photoCount: place._count.photos + postPhotoCount,
       isFeatured: place.isFeatured,
       region: { slug: place.region.slug, name: rt?.name ?? place.region.slug },
       categories: place.categories.map((c) => ({
@@ -325,56 +332,89 @@ export class PlacesService {
   }
 
   /** Ekran 46 — foto qalereyası. */
+  /**
+   * Məkanın foto qalereyası. "Gezginlərdən" iki mənbədən yığılır: məkana birbaşa
+   * yüklənmiş fotolar və həmin məkana etiketlənmiş ictimai paylaşımların fotoları —
+   * qalereyadakı "Foto əlavə et" paylaşım yaradır, o fotolar da burada görünməlidir.
+   * Qapalı hesabların, "İzləyicilər"/"Yalnız mən" paylaşımlarının fotoları daxil edilmir.
+   */
   async photos(slug: string, filter: 'all' | 'official' | 'community', offset = 0, limit = 30) {
     const place = await this.prisma.place.findFirst({ where: { slug, deletedAt: null }, select: { id: true } });
     if (!place) throw new NotFoundException({ code: ERROR_CODES.NOT_FOUND, message: `Məkan tapılmadı: ${slug}` });
 
-    const where = {
+    const ready = { deletedAt: null, status: 'ready' as const };
+    const placeWhere = {
       placeId: place.id,
-      media: { deletedAt: null, status: 'ready' as const },
+      media: ready,
       ...(filter === 'official' ? { isOfficial: true } : filter === 'community' ? { isOfficial: false } : {}),
     };
+    const postWhere = {
+      media: ready,
+      post: {
+        placeId: place.id,
+        deletedAt: null,
+        visibility: 'public' as const,
+        user: { status: 'active' as const, isPublic: true },
+      },
+    };
+    const userSelect = { username: true, fullName: true, avatar: { select: { storageKey: true } } };
+    const mediaSelect = { publicId: true, storageKey: true, blurhash: true, width: true, height: true };
+    // Qalereyalar kiçikdir — iki mənbəni yaddaşda birləşdirib səhifələyirik
+    const window = offset + limit + 1;
 
-    const [rows, counts] = await Promise.all([
+    const [placeRows, postRows, counts, postCount] = await Promise.all([
       this.prisma.placePhoto.findMany({
-        where,
-        include: {
-          media: { select: { publicId: true, storageKey: true, blurhash: true, width: true, height: true } },
-          uploadedBy: { select: { username: true, fullName: true, avatar: { select: { storageKey: true } } } },
-        },
+        where: placeWhere,
+        include: { media: { select: mediaSelect }, uploadedBy: { select: userSelect } },
         orderBy: [{ isCover: 'desc' }, { sortOrder: 'asc' }, { id: 'desc' }],
-        skip: offset,
-        take: limit + 1,
+        take: window,
       }),
+      filter === 'official'
+        ? Promise.resolve([])
+        : this.prisma.postMedia.findMany({
+            where: postWhere,
+            include: { media: { select: mediaSelect }, post: { select: { user: { select: userSelect } } } },
+            orderBy: [{ createdAt: 'desc' }, { sortOrder: 'asc' }],
+            take: window,
+          }),
       this.prisma.placePhoto.groupBy({
         by: ['isOfficial'],
-        where: { placeId: place.id, media: { deletedAt: null } },
+        where: { placeId: place.id, media: ready },
         _count: true,
       }),
+      this.prisma.postMedia.count({ where: postWhere }),
     ]);
 
     const official = counts.find((c) => c.isOfficial)?._count ?? 0;
-    const community = counts.find((c) => !c.isOfficial)?._count ?? 0;
-    const hasMore = rows.length > limit;
+    const community = (counts.find((c) => !c.isOfficial)?._count ?? 0) + postCount;
 
+    type Author = { username: string; fullName: string; avatar: { storageKey: string } | null } | null;
+    const shape = (
+      m: { publicId: string; storageKey: string; blurhash: string | null; width: number | null; height: number | null },
+      isOfficial: boolean,
+      by: Author,
+    ) => ({
+      mediaPublicId: m.publicId,
+      url: this.url(m.storageKey),
+      blurhash: m.blurhash,
+      width: m.width,
+      height: m.height,
+      isOfficial,
+      uploadedBy: by ? { username: by.username, fullName: by.fullName, avatarUrl: this.url(by.avatar?.storageKey) } : null,
+    });
+
+    // Rəsmi fotolar əvvəl, sonra gezginlərin fotoları; eyni media iki dəfə göstərilmir
+    const seen = new Set<string>();
+    const merged = [
+      ...placeRows.map((p) => shape(p.media, p.isOfficial, p.uploadedBy)),
+      ...postRows.map((pm) => shape(pm.media, false, pm.post.user)),
+    ].filter((x) => (seen.has(x.mediaPublicId) ? false : (seen.add(x.mediaPublicId), true)));
+
+    const page = merged.slice(offset, offset + limit);
     return {
       counts: { all: official + community, official, community },
-      data: rows.slice(0, limit).map((p) => ({
-        mediaPublicId: p.media.publicId,
-        url: this.url(p.media.storageKey),
-        blurhash: p.media.blurhash,
-        width: p.media.width,
-        height: p.media.height,
-        isOfficial: p.isOfficial,
-        uploadedBy: p.uploadedBy
-          ? {
-              username: p.uploadedBy.username,
-              fullName: p.uploadedBy.fullName,
-              avatarUrl: this.url(p.uploadedBy.avatar?.storageKey),
-            }
-          : null,
-      })),
-      nextOffset: hasMore ? offset + limit : null,
+      data: page,
+      nextOffset: merged.length > offset + limit ? offset + limit : null,
     };
   }
 

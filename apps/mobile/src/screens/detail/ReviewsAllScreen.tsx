@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
-import { Avatar, Button, Card, Chip, EmptyState, Icon, ListSkeleton, Pill, Rating, Screen, Text, TopBar } from '@/components';
-import { useAllReviews, useReviewSummary, type ReviewSort } from '@/api/hooks/details';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Avatar, Button, Card, Chip, EmptyState, Icon, ListSkeleton, Photo, Pill, Rating, Screen, Text, TopBar } from '@/components';
+import { useAllReviews, useReviewSummary, useToggleHelpful, type ReviewSort } from '@/api/hooks/details';
 import { timeAgo } from '@/lib/time';
 import { errorText } from '@/lib/errors';
 import { t } from '@/theme';
@@ -20,6 +20,7 @@ export function ReviewsAllScreen({ route, navigation }: AppScreenProps<'ReviewsA
   const [sort, setSort] = useState<ReviewSort>('newest');
   const summary = useReviewSummary(targetType, target);
   const reviews = useAllReviews(targetType, target, sort);
+  const helpful = useToggleHelpful(targetType, target);
 
   return (
     <Screen
@@ -111,6 +112,28 @@ export function ReviewsAllScreen({ route, navigation }: AppScreenProps<'ReviewsA
                   </Text>
                 </View>
                 {r.body ? <Text variant="body">{r.body}</Text> : null}
+                {r.photos?.length ? (
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.photos}>
+                    {r.photos.map((ph, i) => (
+                      <Photo key={`${r.publicId}-${i}`} uri={ph.url} style={styles.photo} radius={10} />
+                    ))}
+                  </ScrollView>
+                ) : null}
+                {!r.isMine ? (
+                  <Pressable
+                    style={styles.helpful}
+                    hitSlop={8}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: !!r.markedHelpful }}
+                    accessibilityLabel={`Faydalı${r.markedHelpful ? ' — işarələnib' : ''}: ${r.helpfulCount ?? 0}`}
+                    onPress={() => helpful.mutate({ publicId: r.publicId, helpful: !r.markedHelpful })}
+                  >
+                    <Icon name="check" size={14} color={r.markedHelpful ? t.colors.green900 : t.colors.muted} />
+                    <Text variant="meta" color={r.markedHelpful ? 'green900' : 'muted'}>
+                      Faydalı{r.helpfulCount ? ` · ${r.helpfulCount}` : ''}
+                    </Text>
+                  </Pressable>
+                ) : null}
               </View>
             </View>
           ))
@@ -137,4 +160,7 @@ const styles = StyleSheet.create({
   reviewHead: { flexDirection: 'row', alignItems: 'center', gap: t.spacing.sm },
   reviewName: { fontWeight: '600' },
   reviewMeta: { flexDirection: 'row', alignItems: 'center', gap: t.spacing.sm },
+  photos: { gap: t.spacing.sm, paddingVertical: 4 },
+  photo: { width: 72, height: 72 },
+  helpful: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-start', paddingVertical: 4 },
 });

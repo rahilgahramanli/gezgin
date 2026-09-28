@@ -220,6 +220,44 @@ export interface ReviewRow {
   tags?: string[];
   createdAt: string;
   author: { username: string; fullName: string; level: number; avatarUrl: string | null; isLocalExpert: boolean };
+  helpfulCount?: number;
+  markedHelpful?: boolean;
+  isMine?: boolean;
+  photos?: Array<{ url: string | null; blurhash: string | null }>;
+}
+
+/**
+ * Rəyi "faydalı" işarələ / geri al — optimistik: say və vəziyyət dərhal dəyişir,
+ * xəta olanda siyahı serverdən yenidən yüklənir.
+ */
+export function useToggleHelpful(targetType: string, target: string) {
+  const qc = useQueryClient();
+  const key = ['reviews', targetType, target];
+  return useMutation({
+    mutationFn: ({ publicId, helpful }: { publicId: string; helpful: boolean }) =>
+      api<{ markedHelpful: boolean; helpfulCount: number }>(`/reviews/${publicId}/helpful`, {
+        method: helpful ? 'POST' : 'DELETE',
+      }),
+    onMutate: ({ publicId, helpful }) => {
+      qc.setQueriesData<{ total: number; data: ReviewRow[] }>({ queryKey: key }, (d) =>
+        d && Array.isArray(d.data)
+          ? {
+              ...d,
+              data: d.data.map((r) =>
+                r.publicId === publicId
+                  ? { ...r, markedHelpful: helpful, helpfulCount: Math.max(0, (r.helpfulCount ?? 0) + (helpful ? 1 : -1)) }
+                  : r,
+              ),
+            }
+          : d,
+      );
+    },
+    onError: (e) => {
+      alertError(e, 'Alınmadı');
+      void qc.invalidateQueries({ queryKey: key });
+    },
+    onSuccess: () => void qc.invalidateQueries({ queryKey: [...key, 'all', 'helpful'] }),
+  });
 }
 
 /** Ekran 47 — bütün rəylər, sıralama və səhifələmə ilə. */
