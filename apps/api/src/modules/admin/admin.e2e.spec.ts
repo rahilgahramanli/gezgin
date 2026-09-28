@@ -124,6 +124,28 @@ describe('Admin paneli — moderasiya minimumu (e2e)', () => {
       await http().get(`/api/v1/posts/${post}`).expect(200);
     });
 
+    it('profil şikayətində `delete_content` rədd olunur — boş "həll olundu" yoxdur', async () => {
+      const report = await http()
+        .post(`/api/v1/users/${u.author.username}/report`)
+        .set(as('reporter'))
+        .send({ reason: 'spam' })
+        .expect(201);
+      const res = await http()
+        .post(`/api/v1/admin/reports/${report.body.publicId}/resolve`)
+        .set(as('admin'))
+        .send({ action: 'delete_content' })
+        .expect(400);
+      expect(res.body.code).toBe('VALIDATION_FAILED');
+
+      const detail = await http().get(`/api/v1/admin/reports/${report.body.publicId}`).set(as('admin')).expect(200);
+      expect(detail.body.status).toBe('open');
+      await http()
+        .post(`/api/v1/admin/reports/${report.body.publicId}/resolve`)
+        .set(as('admin'))
+        .send({ action: 'dismiss' })
+        .expect(201);
+    });
+
     it('`delete_content` paylaşımı gizlədir və şikayəti bağlayır', async () => {
       const { post, report } = await reportedPost('Silinəcək kontent');
       const res = await http()

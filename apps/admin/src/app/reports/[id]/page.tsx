@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { Shell } from '@/components/Shell';
-import { api } from '@/lib/api';
+import { api, attempt } from '@/lib/api';
 import { REASONS, TARGET_LABELS, when } from '@/lib/format';
 
 interface ReportDetail {
@@ -27,8 +27,15 @@ interface ReportDetail {
   otherReportCount: number;
 }
 
-export default async function ReportDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function ReportDetailPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ error?: string }>;
+}) {
   const { id } = await params;
+  const { error } = await searchParams;
   const report = await api<ReportDetail>(`/admin/reports/${id}`);
   const closed = report.status === 'resolved' || report.status === 'rejected';
 
@@ -36,13 +43,19 @@ export default async function ReportDetailPage({ params }: { params: Promise<{ i
     'use server';
     // `id` gizli sahə ilə gəlir — server action-ı closure-dan azad edir,
     // beləcə forma adi POST kimi yoxlana bilir
-    const reportId = String(form.get('id'));
-    const action = String(form.get('action'));
+    // Sahə adları `id`/`action` ola bilməz: `form.id`/`form.action` xassələrini kölgələyir və
+    // React basılan düymənin dəyərini FormData-ya qoşa bilmir — qərar itirdi
+    const reportId = String(form.get('reportId'));
+    const action = String(form.get('decision'));
     const note = String(form.get('note') ?? '').trim();
-    await api(`/admin/reports/${reportId}/resolve`, {
-      method: 'POST',
-      body: JSON.stringify({ action, ...(note ? { note } : {}) }),
-    });
+    const failed = await attempt(() =>
+      api(`/admin/reports/${reportId}/resolve`, {
+        method: 'POST',
+        body: JSON.stringify({ action, ...(note ? { note } : {}) }),
+      }),
+    );
+    // İki moderator eyni şikayətə baxanda ikincisi "artıq bağlanıb" alır — səhifə yıxılmır
+    if (failed) redirect(`/reports/${reportId}?error=${encodeURIComponent(failed)}`);
     revalidatePath('/reports');
     redirect('/reports');
   }
@@ -57,7 +70,7 @@ export default async function ReportDetailPage({ params }: { params: Promise<{ i
       </p>
 
       <div className="card">
-        <div className="label">Şikayət olunan kontent</div>
+        <div className="label">{report.target.type === 'user' ? 'Şikayət olunan profil' : 'Şikayət olunan kontent'}</div>
         <p style={{ fontSize: 15, whiteSpace: 'pre-wrap', margin: '8px 0 0' }}>
           {report.target.missing ? 'Kontent tapılmadı (silinib).' : (report.target.text ?? '—')}
         </p>
@@ -83,7 +96,7 @@ export default async function ReportDetailPage({ params }: { params: Promise<{ i
           </div>
         </div>
         <div className="card">
-          <div className="label">Kontentin müəllifi</div>
+          <div className="label">{report.target.type === 'user' ? 'Hesab' : 'Kontentin müəllifi'}</div>
           <div className="value" style={{ fontSize: 18 }}>
             {report.reportedUser ? (
               <Link href={`/users/${report.reportedUser.username}`}>@{report.reportedUser.username}</Link>
@@ -112,21 +125,27 @@ export default async function ReportDetailPage({ params }: { params: Promise<{ i
         </div>
       ) : (
         <form action={resolve} className="card" style={{ marginTop: 20, display: 'grid', gap: 12 }}>
-          <input type="hidden" name="id" value={report.publicId} />
+          <input type="hidden" name="reportId" value={report.publicId} />
           <div>
             <div className="label">Qeyd (audit izinə düşür)</div>
             <textarea name="note" rows={2} placeholder="Qərarın səbəbi" />
           </div>
+          {error ? <p className="error" style={{ margin: 0 }}>{error}</p> : null}
           <div className="row">
-            <button className="btn ghost" name="action" value="dismiss" type="submit">
+            <button className="btn ghost" name="decision" value="dismiss" type="submit">
               Şikayəti rədd et
             </button>
-            <button className="btn" name="action" value="delete_content" type="submit">
-              Kontenti sil
-            </button>
-            <button className="btn danger" name="action" value="suspend_user" type="submit">
-              Kontenti sil + hesabı dayandır
-            </button>
+            {/* Profil şikayətində silinəcək kontent yoxdur; yer/təcrübə kataloqdur — müəllifi yoxdur */}
+            {report.target.type !== 'user' ? (
+              <button className="btn" name="decision" value="delete_content" type="submit">
+                {report.reportedUser ? 'Kontenti sil' : 'Şikayəti qəbul et'}
+              </button>
+            ) : null}
+            {report.reportedUser ? (
+              <button className="btn danger" name="decision" value="suspend_user" type="submit">
+                {report.target.type === 'user' ? 'Hesabı dayandır' : 'Kontenti sil + hesabı dayandır'}
+              </button>
+            ) : null}
           </div>
         </form>
       )}

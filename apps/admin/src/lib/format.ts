@@ -1,4 +1,11 @@
-const DATE = new Intl.DateTimeFormat('az-AZ', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+// Server konteyneri UTC-dədir — moderator Bakı vaxtını görməlidir
+const DATE = new Intl.DateTimeFormat('az-AZ', {
+  day: '2-digit',
+  month: 'short',
+  hour: '2-digit',
+  minute: '2-digit',
+  timeZone: 'Asia/Baku',
+});
 
 export function when(value: string | Date | null | undefined): string {
   if (!value) return '—';
@@ -13,13 +20,21 @@ export function ageLabel(hours: number): { text: string; level: 'ok' | 'warn' | 
   return { text: days === 1 ? '1 gün' : `${days} gün`, level: 'late' };
 }
 
+/** API-nin `REPORT_REASONS` siyahısı ilə eyni (community.dto.ts). */
 export const REASONS: Record<string, string> = {
   spam: 'Spam',
+  inappropriate: 'Uyğunsuz kontent',
   harassment: 'Təhqir',
-  nudity: 'Uyğunsuz məzmun',
-  violence: 'Zorakılıq',
   false_info: 'Yanlış məlumat',
+  copyright: 'Müəllif hüququ',
   other: 'Digər',
+};
+
+export const REPORT_STATUS: Record<string, string> = {
+  open: 'açıq',
+  reviewing: 'baxılır',
+  resolved: 'həll olunub',
+  rejected: 'rədd edilib',
 };
 
 export const TARGET_LABELS: Record<string, string> = {

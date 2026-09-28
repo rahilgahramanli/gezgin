@@ -1,8 +1,9 @@
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { Shell } from '@/components/Shell';
-import { api } from '@/lib/api';
-import { REASONS, TARGET_LABELS, when } from '@/lib/format';
+import { api, attempt } from '@/lib/api';
+import { REASONS, REPORT_STATUS, TARGET_LABELS, when } from '@/lib/format';
 
 interface UserDetail {
   username: string;
@@ -20,23 +21,36 @@ interface UserDetail {
   recentReports: Array<{ publicId: string; reason: string; status: string; createdAt: string; targetType: string }>;
 }
 
-export default async function UserDetailPage({ params }: { params: Promise<{ username: string }> }) {
+export default async function UserDetailPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ username: string }>;
+  searchParams: Promise<{ error?: string }>;
+}) {
   const { username } = await params;
+  const { error } = await searchParams;
   const user = await api<UserDetail>(`/admin/users/${username}`);
 
   async function suspend(form: FormData) {
     'use server';
     const target = String(form.get('username'));
     const reason = String(form.get('reason') ?? '').trim();
-    await api(`/admin/users/${target}/suspend`, { method: 'POST', body: JSON.stringify({ reason }) });
+    const failed = await attempt(() =>
+      api(`/admin/users/${target}/suspend`, { method: 'POST', body: JSON.stringify({ reason }) }),
+    );
+    if (failed) redirect(`/users/${target}?error=${encodeURIComponent(failed)}`);
     revalidatePath(`/users/${target}`);
+    redirect(`/users/${target}`);
   }
 
   async function restore(form: FormData) {
     'use server';
     const target = String(form.get('username'));
-    await api(`/admin/users/${target}/restore`, { method: 'POST' });
+    const failed = await attempt(() => api(`/admin/users/${target}/restore`, { method: 'POST' }));
+    if (failed) redirect(`/users/${target}?error=${encodeURIComponent(failed)}`);
     revalidatePath(`/users/${target}`);
+    redirect(`/users/${target}`);
   }
 
   return (
@@ -82,6 +96,7 @@ export default async function UserDetailPage({ params }: { params: Promise<{ use
         <form action={suspend} className="card" style={{ marginTop: 14, display: 'grid', gap: 10 }}>
           <input type="hidden" name="username" value={user.username} />
           <div className="label">Hesabı dayandır — aktiv sessiyalar dərhal bağlanır</div>
+          {error ? <p className="error" style={{ margin: 0 }}>{error}</p> : null}
           <input type="text" name="reason" placeholder="Daxili səbəb (audit izinə düşür)" required minLength={3} />
           <div>
             <button className="btn danger" type="submit" disabled={user.role === 'admin'}>
@@ -93,6 +108,7 @@ export default async function UserDetailPage({ params }: { params: Promise<{ use
         <form action={restore} className="card" style={{ marginTop: 14 }}>
           <input type="hidden" name="username" value={user.username} />
           <div className="label">Hesab dayandırılıb</div>
+          {error ? <p className="error" style={{ margin: '8px 0 0' }}>{error}</p> : null}
           <button className="btn" type="submit" style={{ marginTop: 10 }}>
             Bərpa et
           </button>
@@ -120,7 +136,7 @@ export default async function UserDetailPage({ params }: { params: Promise<{ use
                 <td>{TARGET_LABELS[r.targetType] ?? r.targetType}</td>
                 <td>{REASONS[r.reason] ?? r.reason}</td>
                 <td>
-                  <span className={`tag ${r.status === 'open' ? 'warn' : 'muted'}`}>{r.status}</span>
+                  <span className={`tag ${r.status === 'open' ? 'warn' : 'muted'}`}>{REPORT_STATUS[r.status] ?? r.status}</span>
                 </td>
                 <td>
                   <Link href={`/reports/${r.publicId}`}>Bax →</Link>

@@ -206,6 +206,14 @@ export class AdminService {
     if (report.status === 'resolved' || report.status === 'rejected') {
       throw new BadRequestException({ code: ERROR_CODES.CONFLICT, message: 'Bu şikayət artıq bağlanıb' });
     }
+    // Profil şikayətində silinəcək kontent yoxdur — "həll olundu" heç nə etmədən
+    // müəllifin təsdiqlənmiş şikayət sayını artırardı
+    if (dto.action === 'delete_content' && report.targetType === 'user') {
+      throw new BadRequestException({
+        code: ERROR_CODES.VALIDATION_FAILED,
+        message: 'Profil şikayətində kontent silinmir — hesabı dayandır və ya şikayəti rədd et',
+      });
+    }
 
     let contentDeleted = false;
     let userSuspended = false;

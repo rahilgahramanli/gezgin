@@ -1,5 +1,5 @@
 import { cookies } from 'next/headers';
-import { redirect } from 'next/navigation';
+import { redirect, unstable_rethrow } from 'next/navigation';
 
 const BASE = process.env.GEZGIN_API_URL ?? 'http://localhost:3100/api/v1';
 export const TOKEN_COOKIE = 'gezgin_admin';
@@ -49,4 +49,18 @@ export async function login(identifier: string, password: string): Promise<{ acc
   const body = await res.json();
   if (!res.ok) throw new ApiError(res.status, body.code ?? 'UNAUTHORIZED', body.message ?? 'Giriş alınmadı');
   return body;
+}
+
+/**
+ * Server action-da API xətası bütün səhifəni "Application error" ilə yıxmasın —
+ * mesaj qaytarılır, çağıran onu `?error=` ilə formaya göstərir.
+ */
+export async function attempt(fn: () => Promise<unknown>): Promise<string | null> {
+  try {
+    await fn();
+    return null;
+  } catch (e) {
+    unstable_rethrow(e); // 401 → /login yönləndirməsi olduğu kimi keçsin
+    return e instanceof ApiError ? e.message : 'Əməliyyat alınmadı';
+  }
 }
