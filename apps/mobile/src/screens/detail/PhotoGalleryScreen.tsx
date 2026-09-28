@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Dimensions, Pressable, StyleSheet, View } from 'react-native';
 import { Avatar, Button, Chip, EmptyState, Icon, Photo, Pill, Screen, Skeleton, Text, TopBar } from '@/components';
 import { usePlacePhotos } from '@/api/hooks/details';
+import { useT } from '@/i18n';
 import { t } from '@/theme';
 import type { AppScreenProps } from '@/navigation/types';
 
@@ -9,14 +10,16 @@ const GUTTER = 2;
 const COLUMNS = 3;
 const SIZE = Math.floor((Dimensions.get('window').width - GUTTER * (COLUMNS - 1)) / COLUMNS);
 
+/** Çip mətni render zamanı tərcümə olunur — burada yalnız açarlar. */
 const TABS = [
-  { key: undefined, label: 'Hamısı' },
-  { key: 'official' as const, label: 'Rəsmi' },
-  { key: 'community' as const, label: 'Gezginlərdən' },
+  { key: undefined, labelKey: 'all' },
+  { key: 'official' as const, labelKey: 'gallery.official' },
+  { key: 'community' as const, labelKey: 'gallery.community' },
 ];
 
 /** Ekran 46 — məkanın bütün fotoları. Tam ekran baxış üçün toxunuş. */
 export function PhotoGalleryScreen({ route, navigation }: AppScreenProps<'PhotoGallery'>) {
+  const { t: tr } = useT('explore');
   const { slug, name } = route.params;
   const [filter, setFilter] = useState<'official' | 'community' | undefined>();
   const [zoom, setZoom] = useState<number | null>(null);
@@ -51,7 +54,7 @@ export function PhotoGalleryScreen({ route, navigation }: AppScreenProps<'PhotoG
         <Button
           block
           variant="soft"
-          label="Foto əlavə et"
+          label={tr('gallery.addPhoto')}
           left={<Icon name="camera" size={18} color={t.colors.green900} />}
           onPress={() => navigation.navigate('CreatePost', { place: { slug, name } })}
         />
@@ -62,11 +65,11 @@ export function PhotoGalleryScreen({ route, navigation }: AppScreenProps<'PhotoG
       <View style={styles.tabs}>
         {TABS.map((tab) => (
           <Chip
-            key={tab.label}
+            key={tab.labelKey}
             label={
               tab.key && photos.data
-                ? `${tab.label} · ${tab.key === 'official' ? photos.data.counts.official : photos.data.counts.community}`
-                : tab.label
+                ? `${tr(tab.labelKey)} · ${tab.key === 'official' ? photos.data.counts.official : photos.data.counts.community}`
+                : tr(tab.labelKey)
             }
             active={filter === tab.key}
             onPress={() => setFilter(tab.key)}
@@ -83,12 +86,8 @@ export function PhotoGalleryScreen({ route, navigation }: AppScreenProps<'PhotoG
       ) : !items.length ? (
         <EmptyState
           icon="camera"
-          title="Foto yoxdur"
-          message={
-            filter === 'community'
-              ? 'Bu məkanı ilk paylaşan sən ol — check-in edib foto əlavə et.'
-              : 'Bu məkan üçün hələ foto yüklənməyib.'
-          }
+          title={tr('gallery.emptyTitle')}
+          message={filter === 'community' ? tr('gallery.emptyCommunity') : tr('gallery.emptyOfficial')}
         />
       ) : (
         <View style={styles.grid}>
@@ -98,11 +97,15 @@ export function PhotoGalleryScreen({ route, navigation }: AppScreenProps<'PhotoG
               onPress={() => setZoom(i)}
               accessibilityRole="imagebutton"
               accessibilityLabel={
-                photo.uploadedBy ? `Foto — ${photo.uploadedBy.fullName}` : `Foto ${i + 1}`
+                photo.uploadedBy
+                  ? tr('gallery.photoBy', { name: photo.uploadedBy.fullName })
+                  : tr('gallery.photoN', { n: i + 1 })
               }
             >
               <Photo uri={photo.url} style={styles.cell} radius={0} />
-              {!photo.isOfficial ? <Pill label="Gezgin" tone="brown" style={styles.badge} /> : null}
+              {!photo.isOfficial ? (
+                <Pill label={tr('gallery.communityBadge')} tone="brown" style={styles.badge} />
+              ) : null}
             </Pressable>
           ))}
         </View>

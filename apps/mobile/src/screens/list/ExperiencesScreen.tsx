@@ -2,21 +2,23 @@ import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Chip, EmptyState, ExperienceCard, ListSkeleton, Screen, TopBar } from '@/components';
 import { useCategoryList, useExperiences } from '@/api/hooks/content';
+import { useT } from '@/i18n';
 import { t } from '@/theme';
 import type { AppScreenProps } from '@/navigation/types';
 
 /** Ekran 16 — təcrübələr. */
 export function ExperiencesScreen({ navigation }: AppScreenProps<'Experiences'>) {
+  const { t: tr } = useT('explore');
   const [category, setCategory] = useState<string | undefined>();
   const categories = useCategoryList('experience');
   const experiences = useExperiences({ categories: category, limit: 30 });
 
   return (
     <Screen padded={false}>
-      <TopBar title="Təcrübələr" onBack={navigation.goBack} />
+      <TopBar title={tr('experiences.title')} onBack={navigation.goBack} />
 
       <View style={styles.chipRow}>
-        <Chip label="Hamısı" active={!category} onPress={() => setCategory(undefined)} />
+        <Chip label={tr('all')} active={!category} onPress={() => setCategory(undefined)} />
         {(categories.data ?? []).map((c) => (
           <Chip
             key={c.slug}
@@ -31,7 +33,7 @@ export function ExperiencesScreen({ navigation }: AppScreenProps<'Experiences'>)
         {experiences.isLoading ? (
           <ListSkeleton />
         ) : !experiences.data?.data.length ? (
-          <EmptyState title="Təcrübə tapılmadı" message="Başqa kateqoriya seçin." />
+          <EmptyState title={tr('experiences.emptyTitle')} message={tr('experiences.emptyMessage')} />
         ) : (
           <View style={styles.grid}>
             {experiences.data.data.map((e) => (

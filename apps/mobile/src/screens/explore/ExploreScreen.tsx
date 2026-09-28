@@ -5,6 +5,7 @@ import {
   Button, Card, Chip, ExperienceCard, Icon, Loading, PhotoCard, RowCard, SectionHead, Text,
 } from '@/components';
 import { errorText } from '@/lib/errors';
+import { useT } from '@/i18n';
 import { useExperiences, usePlaces, useRegions, useRoutes } from '@/api/hooks/content';
 import { useBusinesses } from '@/api/hooks/business';
 import { BUSINESS_TYPE_LABEL, label } from '@/lib/labels';
@@ -26,6 +27,7 @@ function EmptyLine({ children }: { children: string }) {
 
 /** Ekran 10 — Kəşf et. Region seçici, populyar məkanlar və seçilmiş təcrübələr. */
 export function ExploreScreen({ navigation }: TabScreenProps<'Explore'>) {
+  const { t: tr, tp: tpr } = useT('explore');
   const [region, setRegion] = useState<string | undefined>();
   const user = useUser();
 
@@ -36,9 +38,11 @@ export function ExploreScreen({ navigation }: TabScreenProps<'Explore'>) {
   const businesses = useBusinesses({ region });
   const lodging = (businesses.data?.data ?? []).filter((b) => !NOT_LODGING.has(b.type));
   const regionName = regions.data?.find((r) => r.slug === region)?.name;
-  const where = regionName ? `${regionName} regionunda` : 'Hələ';
+  // "X regionunda məkan yoxdur" / "Hələ məkan yoxdur" — hər dildə tam cümlə
+  const emptyText = (kind: 'Places' | 'Experiences' | 'Routes') =>
+    regionName ? tr(`home.no${kind}InRegion`, { region: regionName }) : tr(`home.no${kind}`);
 
-  if (regions.isLoading) return <Loading label="Yüklənir…" />;
+  if (regions.isLoading) return <Loading label={tr('common:states.loading')} />;
 
   // Oflayn və ya server xətası — bölmələr səssizcə boş qalmasın
   const failed = [regions, places, experiences, routes].find((q) => q.isError);
@@ -60,22 +64,22 @@ export function ExploreScreen({ navigation }: TabScreenProps<'Explore'>) {
       >
         <View style={styles.header}>
           <Text variant="titleLg">
-            Salam, {user?.fullName?.split(' ')[0] ?? 'gezgin'} 👋
+            {tr('home.greeting', { name: user?.fullName?.split(' ')[0] ?? tr('home.greetingFallback') })}
           </Text>
-          <Text variant="meta">Harada kəşf edək bu gün?</Text>
+          <Text variant="meta">{tr('home.subtitle')}</Text>
         </View>
 
         <Pressable style={styles.search} onPress={() => navigation.navigate('Search')}>
           <Icon name="search" size={20} color={t.colors.muted} />
           <Text variant="body" color="muted">
-            Məkan, marşrut və ya təcrübə axtar…
+            {tr('home.searchPlaceholder')}
           </Text>
         </Pressable>
 
         {failed ? (
           <Card padded style={styles.errorCard}>
-            <Text variant="h3">{errorText(failed.error, 'Məlumat yüklənmədi')}</Text>
-            <Button label="Yenidən cəhd et" size="sm" variant="soft" onPress={refetchAll} style={styles.errorBtn} />
+            <Text variant="h3">{errorText(failed.error, tr('home.loadFailed'))}</Text>
+            <Button label={tr('common:actions.retry')} size="sm" variant="soft" onPress={refetchAll} style={styles.errorBtn} />
           </Card>
         ) : null}
 
@@ -84,7 +88,7 @@ export function ExploreScreen({ navigation }: TabScreenProps<'Explore'>) {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.chips}
         >
-          <Chip label="Hamısı" active={!region} onPress={() => setRegion(undefined)} />
+          <Chip label={tr('all')} active={!region} onPress={() => setRegion(undefined)} />
           {(regions.data ?? []).map((r) => (
             <Chip
               key={r.slug}
@@ -97,14 +101,14 @@ export function ExploreScreen({ navigation }: TabScreenProps<'Explore'>) {
 
         <View style={styles.section}>
           <SectionHead
-            title="Populyar məkanlar"
-            actionLabel="Daha çox"
+            title={tr('home.popularPlaces')}
+            actionLabel={tr('common:actions.more')}
             onAction={() => navigation.navigate('Places', region ? { region } : undefined)}
           />
           {places.isLoading ? (
             <Loading />
           ) : !places.data?.data.length ? (
-            <EmptyLine>{`${where} məkan yoxdur`}</EmptyLine>
+            <EmptyLine>{emptyText('Places')}</EmptyLine>
           ) : (
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.hscroll}>
               {places.data.data.map((p) => (
@@ -125,14 +129,14 @@ export function ExploreScreen({ navigation }: TabScreenProps<'Explore'>) {
 
         <View style={styles.section}>
           <SectionHead
-            title="Seçilmiş təcrübələr"
-            actionLabel="Daha çox"
+            title={tr('home.featuredExperiences')}
+            actionLabel={tr('common:actions.more')}
             onAction={() => navigation.navigate('Experiences')}
           />
           {experiences.isLoading ? (
             <Loading />
           ) : !experiences.data?.data.length ? (
-            <EmptyLine>{`${where} təcrübə yoxdur`}</EmptyLine>
+            <EmptyLine>{emptyText('Experiences')}</EmptyLine>
           ) : (
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.hscroll}>
               {experiences.data.data.map((e) => (
@@ -155,7 +159,7 @@ export function ExploreScreen({ navigation }: TabScreenProps<'Explore'>) {
         {/* Otel və qonaq evi paketləri — biznes profili (ekran 22) → otel rezervasiyası (ekran 49) */}
         {lodging.length ? (
           <View style={styles.section}>
-            <SectionHead title="Otellər və qonaq evləri" />
+            <SectionHead title={tr('home.lodging')} />
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.hscroll}>
               {lodging.map((b) => (
                 <PhotoCard
@@ -166,12 +170,12 @@ export function ExploreScreen({ navigation }: TabScreenProps<'Explore'>) {
                   rating={b.ratingCount > 0 ? b.rating : null}
                   badge={
                     b.packageCount > 0
-                      ? `${b.packageCount} paket`
+                      ? tpr('home.packages', b.packageCount)
                       : label(BUSINESS_TYPE_LABEL, b.type)
                   }
                   width={220}
                   height={160}
-                  accessibilityLabel={`Biznes ${b.name}`}
+                  accessibilityLabel={tr('home.businessA11y', { name: b.name })}
                   onPress={() => navigation.navigate('BusinessProfile', { slug: b.slug })}
                 />
               ))}
@@ -181,14 +185,14 @@ export function ExploreScreen({ navigation }: TabScreenProps<'Explore'>) {
 
         <View style={styles.section}>
           <SectionHead
-            title="Tövsiyə olunan marşrutlar"
-            actionLabel="Daha çox"
+            title={tr('home.recommendedRoutes')}
+            actionLabel={tr('common:actions.more')}
             onAction={() => navigation.navigate('Routes')}
           />
           {routes.isLoading ? (
             <Loading />
           ) : !routes.data?.data.length ? (
-            <EmptyLine>{`${where} marşrut yoxdur`}</EmptyLine>
+            <EmptyLine>{emptyText('Routes')}</EmptyLine>
           ) : (
             <View style={styles.list}>
               {routes.data.data.map((r) => (
@@ -196,10 +200,11 @@ export function ExploreScreen({ navigation }: TabScreenProps<'Explore'>) {
                   key={r.slug}
                   uri={r.coverUrl}
                   title={r.title}
-                  subtitle={`${r.days} gün · ${r.region.name}`}
+                  subtitle={`${tpr('common:labels.duration.days', r.days)} · ${r.region.name}`}
                   meta={
                     <Text variant="small" color="muted">
-                      {r.stopCount} dayanacaq{r.distanceKm ? ` · ${r.distanceKm} km` : ''}
+                      {tpr('units.stops', r.stopCount)}
+                      {r.distanceKm ? ` · ${r.distanceKm} km` : ''}
                     </Text>
                   }
                   onPress={() => navigation.navigate('RouteDetail', { slug: r.slug })}

@@ -3,6 +3,7 @@ import { StyleSheet, View } from 'react-native';
 import { Button, Chip, Icon, Rating, Screen, Text, TopBar } from '@/components';
 import { usePlaceFilters } from '@/api/hooks/details';
 import { usePlaces } from '@/api/hooks/content';
+import { useT } from '@/i18n';
 import { t } from '@/theme';
 import type { AppScreenProps } from '@/navigation/types';
 
@@ -27,6 +28,7 @@ export function toQuery(value: PlaceFilterValue): Record<string, unknown> {
 
 /** Ekran 45 — filtr paneli. Nəticə sayı seçimlə birlikdə yenilənir. */
 export function FilterSheetScreen({ route, navigation }: AppScreenProps<'FilterSheet'>) {
+  const { t: tr, tp: tpr } = useT('explore');
   const { region, value } = route.params;
   const filters = usePlaceFilters(region);
   const [draft, setDraft] = useState<PlaceFilterValue>(value ?? { categories: [] });
@@ -52,13 +54,17 @@ export function FilterSheetScreen({ route, navigation }: AppScreenProps<'FilterS
       footer={
         <View style={styles.footer}>
           <Button
-            label="Sıfırla"
+            label={tr('filter.reset')}
             variant="soft"
             onPress={() => setDraft({ categories: [] })}
             style={styles.reset}
           />
           <Button
-            label={preview.isLoading ? 'Göstər' : `${countLabel} məkanı göstər`}
+            label={
+              preview.isLoading
+                ? tr('filter.show')
+                : tpr('filter.showPlaces', count, { replace: { shown: countLabel } })
+            }
             style={styles.apply}
             // popTo: mövcud Yerlər ekranına qayıdır — navigate isə hər dəfə yenisini üst-üstə qoyurdu
             onPress={() => navigation.popTo('Places', { region, filter: draft }, { merge: true })}
@@ -67,19 +73,19 @@ export function FilterSheetScreen({ route, navigation }: AppScreenProps<'FilterS
       }
     >
       <TopBar
-        title="Filtr"
+        title={tr('filter.title')}
         onBack={navigation.goBack}
         right={
           activeCount ? (
             <Text variant="small" color="green700">
-              {activeCount} aktiv
+              {tpr('filter.active', activeCount)}
             </Text>
           ) : undefined
         }
       />
 
       <View style={styles.body}>
-        <Text variant="h2">Kateqoriya</Text>
+        <Text variant="h2">{tr('filter.category')}</Text>
         <View style={styles.chips}>
           {(filters.data?.categories ?? []).map((c) => (
             <Chip
@@ -91,12 +97,12 @@ export function FilterSheetScreen({ route, navigation }: AppScreenProps<'FilterS
           ))}
         </View>
 
-        <Text variant="h2">Minimum reytinq</Text>
+        <Text variant="h2">{tr('filter.minRating')}</Text>
         <View style={styles.chips}>
           {(filters.data?.ratings ?? []).map((r) => (
             <Chip
               key={r}
-              label={r === 0 ? 'Hamısı' : `${r.toFixed(1)}+`}
+              label={r === 0 ? tr('all') : `${r.toFixed(1)}+`}
               active={(draft.minRating ?? 0) === r}
               onPress={() => setDraft((d) => ({ ...d, minRating: r === 0 ? undefined : r }))}
             />
@@ -106,12 +112,12 @@ export function FilterSheetScreen({ route, navigation }: AppScreenProps<'FilterS
           <View style={styles.ratingHint}>
             <Rating value={draft.minRating} size={14} />
             <Text variant="meta" color="muted">
-              və yuxarı
+              {tr('filter.andUp')}
             </Text>
           </View>
         ) : null}
 
-        <Text variant="h2">Giriş haqqı</Text>
+        <Text variant="h2">{tr('filter.entranceFee')}</Text>
         <View style={styles.chips}>
           {(filters.data?.priceLevels ?? []).map((p) => (
             <Chip
@@ -126,7 +132,7 @@ export function FilterSheetScreen({ route, navigation }: AppScreenProps<'FilterS
           ))}
         </View>
 
-        <Text variant="h2">Məsafə</Text>
+        <Text variant="h2">{tr('filter.distance')}</Text>
         <View style={styles.chips}>
           {DISTANCES.map((km) => (
             <Chip
@@ -140,7 +146,7 @@ export function FilterSheetScreen({ route, navigation }: AppScreenProps<'FilterS
         <View style={styles.note}>
           <Icon name="info" size={16} color={t.colors.muted} />
           <Text variant="meta" color="muted">
-            Məsafə cihazın mövqeyinə görə hesablanır — yerləşmə icazəsi lazımdır.
+            {tr('filter.distanceNote')}
           </Text>
         </View>
       </View>

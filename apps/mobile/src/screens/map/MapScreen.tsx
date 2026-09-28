@@ -5,6 +5,7 @@ import { Card, Chip, Icon, Photo, Rating, Screen, Text, TopBar } from '@/compone
 import { usePlacesMap, useRegions } from '@/api/hooks/content';
 import { usePlaceDetail } from '@/api/hooks/details';
 import { getCurrentPosition } from '@/lib/location';
+import { useT } from '@/i18n';
 import { t } from '@/theme';
 import type { AppScreenProps } from '@/navigation/types';
 
@@ -35,6 +36,7 @@ const bboxOf = (r: MapRegion): string =>
 
 /** Ekran 12 xəritə rejimi — pinlər, klasterlər və seçilən məkan kartı. */
 export function MapScreen({ route, navigation }: AppScreenProps<'Map'>) {
+  const { t: tr, tp: tpr } = useT('explore');
   const mapRef = useRef<MapView>(null);
   const [viewport, setViewport] = useState<MapRegion>(INITIAL);
   const [region, setRegion] = useState<string | undefined>(route.params?.region);
@@ -81,13 +83,13 @@ export function MapScreen({ route, navigation }: AppScreenProps<'Map'>) {
   return (
     <Screen padded={false} scroll={false} edges={['top']}>
       <TopBar
-        title="Xəritə"
+        title={tr('map.title')}
         onBack={navigation.goBack}
         actions={[{ icon: 'search', onPress: () => navigation.navigate('Search') }]}
       />
 
       <View style={styles.chipRow}>
-        <Chip label="Hamısı" active={!region} onPress={() => goToRegion(undefined)} />
+        <Chip label={tr('all')} active={!region} onPress={() => goToRegion(undefined)} />
         {(regions.data ?? []).map((r) => (
           <Chip key={r.slug} label={r.name} active={region === r.slug} onPress={() => goToRegion(r.slug)} />
         ))}
@@ -145,15 +147,15 @@ export function MapScreen({ route, navigation }: AppScreenProps<'Map'>) {
         {map.isFetching ? (
           <View style={styles.badge}>
             <Text variant="caption" color="paper">
-              Yüklənir…
+              {tr('common:states.loading')}
             </Text>
           </View>
         ) : (
           <View style={styles.badge}>
             <Text variant="caption" color="paper">
               {map.data?.mode === 'clusters'
-                ? `${allClusters.reduce((n, c) => n + c.count, 0)} məkan · yaxınlaş`
-                : `${points.length} məkan`}
+                ? tpr('map.clustered', allClusters.reduce((n, c) => n + c.count, 0))
+                : tpr('units.places', points.length)}
             </Text>
           </View>
         )}
@@ -172,6 +174,7 @@ export function MapScreen({ route, navigation }: AppScreenProps<'Map'>) {
 
 /** Pin seçiləndə aşağıda açılan kart — ekran 12-dəki məkan sətri ilə eyni. */
 function SelectedCard({ slug, onClose, onOpen }: { slug: string; onClose: () => void; onOpen: () => void }) {
+  const { t: tr } = useT('explore');
   const place = usePlaceDetail(slug);
   const p = place.data;
 
@@ -181,7 +184,7 @@ function SelectedCard({ slug, onClose, onOpen }: { slug: string; onClose: () => 
         <Photo uri={p?.photos[0]?.url ?? null} style={styles.sheetPhoto} radius={10} />
         <View style={styles.flex}>
           <Text variant="h3" numberOfLines={1}>
-            {p?.name ?? 'Yüklənir…'}
+            {p?.name ?? tr('common:states.loading')}
           </Text>
           {p ? (
             <Text variant="caption" numberOfLines={1}>

@@ -4,6 +4,7 @@ import {
 } from '@/components';
 import { useNearbyPlaces, usePlaceDetail, useToggleSaved } from '@/api/hooks/details';
 import { shareItem } from '@/lib/share';
+import { useT } from '@/i18n';
 import { t } from '@/theme';
 import type { AppScreenProps } from '@/navigation/types';
 import { ReviewsBlock } from './ReviewsBlock';
@@ -12,6 +13,7 @@ const HERO_HEIGHT = 320;
 
 /** Ekran 13 — məkan detalı. */
 export function PlaceDetailScreen({ route, navigation }: AppScreenProps<'PlaceDetail'>) {
+  const { t: tr, tp: tpr } = useT('explore');
   const { slug } = route.params;
   const place = usePlaceDetail(slug);
   const nearby = useNearbyPlaces(slug);
@@ -35,24 +37,24 @@ export function PlaceDetailScreen({ route, navigation }: AppScreenProps<'PlaceDe
       actions={[
         {
           icon: 'bookmark',
-          label: p.isSaved ? 'Saxlamanı götür' : 'Saxla',
+          label: p.isSaved ? tr('unsave') : tr('common:actions.saveItem'),
           active: p.isSaved,
           onPress: () => save.mutate(!p.isSaved),
         },
-        { icon: 'share', label: 'Paylaş', onPress: () => void shareItem('place', slug, p.name) },
+        { icon: 'share', label: tr('common:actions.share'), onPress: () => void shareItem('place', slug, p.name) },
       ]}
       footer={
         <View style={styles.footerRow}>
           {/* Check-in əvvəllər yalnız səyahət planındakı elementdən açılırdı */}
           <Button
-            label="Check-in et"
+            label={tr('place.checkin')}
             variant="outline"
             left={<Icon name="pin" size={18} color={t.colors.green900} />}
             onPress={() => navigation.navigate('Checkin', { place: slug })}
             style={styles.checkinButton}
           />
           <Button
-            label="Plana əlavə et"
+            label={tr('addToTrip')}
             onPress={() => navigation.navigate('AddToPlan', { type: 'place', slug, name: p.name })}
             style={styles.planButton}
           />
@@ -89,12 +91,18 @@ export function PlaceDetailScreen({ route, navigation }: AppScreenProps<'PlaceDe
 
         {/* Faktlar — ekran 13-dəki üç xana */}
         <View style={styles.facts}>
-          {p.altitudeM ? <Fact icon="mountain" value={`${p.altitudeM} m`} label="Hündürlük" /> : null}
-          {p.visitDurationH ? <Fact icon="clock" value={`${p.visitDurationH} saat`} label="Ziyarət" /> : null}
+          {p.altitudeM ? <Fact icon="mountain" value={`${p.altitudeM} m`} label={tr('place.altitude')} /> : null}
+          {p.visitDurationH ? (
+            <Fact
+              icon="clock"
+              value={tpr('common:labels.duration.hours', p.visitDurationH)}
+              label={tr('place.visit')}
+            />
+          ) : null}
           <Fact
             icon="coins"
-            value={p.entranceFeeAzn ? `${p.entranceFeeAzn} AZN` : 'Pulsuz'}
-            label="Giriş"
+            value={p.entranceFeeAzn ? `${p.entranceFeeAzn} AZN` : tr('free')}
+            label={tr('place.entry')}
           />
         </View>
 
@@ -108,8 +116,8 @@ export function PlaceDetailScreen({ route, navigation }: AppScreenProps<'PlaceDe
         {p.photos.length > 0 ? (
           <View style={styles.section}>
             <SectionHead
-              title={`Fotolar (${p.photoCount})`}
-              actionLabel="Hamısı"
+              title={tr('place.photos', { total: p.photoCount })}
+              actionLabel={tr('all')}
               onAction={() => navigation.navigate('PhotoGallery', { slug, name: p.name })}
             />
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.hscroll}>
@@ -124,7 +132,7 @@ export function PlaceDetailScreen({ route, navigation }: AppScreenProps<'PlaceDe
 
         {nearby.data?.length ? (
           <View style={styles.section}>
-            <SectionHead title="Yaxınlıqdakılar" />
+            <SectionHead title={tr('place.nearby')} />
             <View style={styles.list}>
               {nearby.data.map((n) => (
                 <RowCard

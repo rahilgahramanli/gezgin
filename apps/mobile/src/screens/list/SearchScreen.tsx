@@ -3,19 +3,22 @@ import { StyleSheet, View } from 'react-native';
 import { Chip, EmptyState, Icon, Input, Loading, RowCard, Screen, Text, TopBar } from '@/components';
 import { useSearch, type SearchHit } from '@/api/hooks/content';
 import { SEARCH_TYPE_LABEL, label } from '@/lib/labels';
+import { useT } from '@/i18n';
 import { t } from '@/theme';
 import type { AppScreenProps } from '@/navigation/types';
 
+/** Çip mətni render zamanı tərcümə olunur — burada yalnız açarlar. */
 const TYPES = [
-  { key: undefined, label: 'Hamısı' },
-  { key: 'place', label: 'Yerlər' },
-  { key: 'route', label: 'Marşrutlar' },
-  { key: 'experience', label: 'Təcrübələr' },
-  { key: 'user', label: 'Gezginlər' },
+  { key: undefined, labelKey: 'all' },
+  { key: 'place', labelKey: 'search.types.place' },
+  { key: 'route', labelKey: 'search.types.route' },
+  { key: 'experience', labelKey: 'search.types.experience' },
+  { key: 'user', labelKey: 'search.types.user' },
 ] as const;
 
 /** Ekran 11 — axtarış. */
 export function SearchScreen({ navigation }: AppScreenProps<'Search'>) {
+  const { t: tr, tp: tpr } = useT('explore');
   const [query, setQuery] = useState('');
   const [type, setType] = useState<string | undefined>();
   const search = useSearch(query, type ? { types: type } : {});
@@ -29,12 +32,12 @@ export function SearchScreen({ navigation }: AppScreenProps<'Search'>) {
 
   return (
     <Screen padded={false}>
-      <TopBar title="Axtarış" onBack={navigation.goBack} />
+      <TopBar title={tr('search.title')} onBack={navigation.goBack} />
 
       <View style={styles.searchWrap}>
         <Input
           icon="search"
-          placeholder="Məkan, marşrut, təcrübə…"
+          placeholder={tr('search.placeholder')}
           value={query}
           onChangeText={setQuery}
           autoFocus
@@ -44,30 +47,27 @@ export function SearchScreen({ navigation }: AppScreenProps<'Search'>) {
       </View>
 
       <View style={styles.chips}>
-        {TYPES.map((tp) => (
+        {TYPES.map((ty) => (
           <Chip
-            key={tp.label}
-            label={tp.label}
-            active={type === tp.key}
-            onPress={() => setType(tp.key)}
+            key={ty.labelKey}
+            label={tr(ty.labelKey)}
+            active={type === ty.key}
+            onPress={() => setType(ty.key)}
           />
         ))}
       </View>
 
       <View style={styles.body}>
         {query.trim().length < 2 ? (
-          <EmptyState
-            title="Nə axtarırsan?"
-            message="Məkan adı, marşrut və ya təcrübə yaz. Ən azı 2 hərf."
-          />
+          <EmptyState title={tr('search.promptTitle')} message={tr('search.promptMessage')} />
         ) : search.isLoading ? (
           <Loading />
         ) : !search.data?.results.length ? (
-          <EmptyState title="Nəticə tapılmadı" message={`"${query}" üçün heç nə tapılmadı.`} />
+          <EmptyState title={tr('search.emptyTitle')} message={tr('search.emptyMessage', { query })} />
         ) : (
           <>
             <Text variant="meta" style={styles.count}>
-              {search.data.total} nəticə
+              {tpr('search.results', search.data.total)}
             </Text>
             <View style={styles.list}>
               {search.data.results.map((hit) => (
