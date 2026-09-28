@@ -1,0 +1,167 @@
+{
+  "tabs": {
+    "feed": "Feed",
+    "explore": "Explore",
+    "create": "Create",
+    "trips": "My trips",
+    "profile": "Profile"
+  },
+  "actions": {
+    "back": "Back",
+    "retry": "Try again",
+    "cancel": "Cancel",
+    "ok": "OK",
+    "close": "Close",
+    "save": "Save",
+    "delete": "Delete",
+    "share": "Share",
+    "more": "More",
+    "seeAll": "See all",
+    "continue": "Continue",
+    "notNow": "Not now",
+    "signUp": "Sign up",
+    "createAccount": "Create account",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "like": "Like",
+    "unlike": "Unlike",
+    "comments": "Comments",
+    "saveItem": "Save",
+    "saved": "Saved"
+  },
+  "states": {
+    "loading": "Loading…",
+    "offlineTitle": "No connection",
+    "offlineMessage": "Check your internet connection and try again.",
+    "notFound": "Not found",
+    "failedTitle": "Couldn't load",
+    "tryLater": "Please try again in a moment."
+  },
+  "errors": {
+    "alertTitle": "Something went wrong",
+    "generic": "The action couldn't be completed",
+    "network": "Connection problem — check your internet and try again",
+    "networkShort": "Network error",
+    "sessionRefresh": "Couldn't refresh the session"
+  },
+  "guest": {
+    "title": "Account required",
+    "message": "You need an account to do this"
+  },
+  "session": {
+    "inactiveTitle": "Account inactive",
+    "inactiveMessage": "Your account has been suspended or deleted. Contact GEZGIN support for details.",
+    "expiredTitle": "Session expired",
+    "expiredMessage": "Please sign in again for security."
+  },
+  "location": {
+    "permTitle": "Location permission",
+    "permMessage": "We need to confirm you are at the place to check in.",
+    "allow": "Allow",
+    "deny": "Deny",
+    "denied": "GEZGIN doesn't have location permission. Allow it in Settings and try again.",
+    "timeout": "GPS didn't respond in time. Move to an open area and try again.",
+    "unavailable": "Couldn't determine the device location. Make sure location services are on."
+  },
+  "share": {
+    "dialogTitle": "Share on GEZGIN"
+  },
+  "time": {
+    "justNow": "just now",
+    "minutesAgo_one": "{{count}} min ago",
+    "minutesAgo_other": "{{count}} min ago",
+    "hoursAgo_one": "{{count}} hour ago",
+    "hoursAgo_other": "{{count}} hours ago",
+    "daysAgo_one": "{{count}} day ago",
+    "daysAgo_other": "{{count}} days ago",
+    "days_one": "{{count}} day",
+    "days_other": "{{count}} days",
+    "weeks_one": "{{count}} week",
+    "weeks_other": "{{count}} weeks",
+    "yesterday": "Yesterday",
+    "today": "Today"
+  },
+  "post": {
+    "allComments_one": "View {{count}} comment",
+    "allComments_other": "View all {{count}} comments"
+  },
+  "labels": {
+    "duration": {
+      "yarim-gun": "Half day",
+      "1-gun": "1 day",
+      "2-gun": "2 days",
+      "bir-nece-gun": "Several days",
+      "hours_one": "{{count}} hour",
+      "hours_other": "{{count}} hours",
+      "days_one": "{{count}} day",
+      "days_other": "{{count}} days"
+    },
+    "difficulty": {
+      "asan": "Easy",
+      "orta": "Moderate",
+      "cetin": "Hard"
+    },
+    "tripStatus": {
+      "planned": "Planned",
+      "active": "Active",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+    "searchType": {
+      "place": "Place",
+      "route": "Route",
+      "experience": "Experience",
+      "event": "Event",
+      "user": "Traveller",
+      "post": "Post",
+      "business": "Hotel"
+    },
+    "businessType": {
+      "otel": "Hotel",
+      "restoran": "Restaurant",
+      "qonaq_evi": "Guest house",
+      "qonaq-evi": "Guest house",
+      "tur_sirketi": "Tour company",
+      "tur": "Tour company",
+      "diger": "Other"
+    },
+    "amenity": {
+      "spa": "Spa",
+      "hovuz": "Pool",
+      "restoran": "Restaurant",
+      "transfer": "Transfer",
+      "konfrans": "Conference hall",
+      "ski": "Skiing",
+      "yerli-metbex": "Local cuisine",
+      "beledci": "Guide",
+      "yerlesme": "Accommodation",
+      "sehar-yemeyi": "Breakfast",
+      "tam-pansion": "Full board",
+      "ski-pass": "Ski pass",
+      "neqliyyat": "Transport",
+      "yerli-nahar": "Local lunch",
+      "sigorta": "Insurance",
+      "materiallar": "Materials"
+    }
+  },
+  "report": {
+    "spam": "Spam or advertising",
+    "inappropriate": "Inappropriate content",
+    "harassment": "Insult or harassment",
+    "false_info": "False information",
+    "copyright": "Copyright",
+    "other": "Other"
+  },
+  "feedback": {
+    "settingsNotSaved": "Setting wasn't saved",
+    "photoNotSet": "Couldn't set the photo",
+    "unblockFailed": "Couldn't unblock",
+    "deleteAccountFailed": "Couldn't delete the account",
+    "likeFailed": "Couldn't like",
+    "saveFailed": "Couldn't save",
+    "followFailed": "Couldn't follow",
+    "saveNotDone": "Not saved",
+    "photoMissing": "Photo not found",
+    "photoUploadFailed": "Photo upload failed — check your network and try again"
+  }
+}

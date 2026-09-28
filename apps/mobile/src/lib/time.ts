@@ -1,35 +1,67 @@
+import i18n, { currentLang, tp, type Lang } from '@/i18n';
+
 /**
- * Sosial ekranlar üçün vaxt və sayğac formatı.
+ * Sosial ekranlar üçün vaxt və sayğac formatı — cari dilə görə.
  * Ekran 05: "2 saat əvvəl", ekran 08: "10:24 · Dünən · 2 gün", ekran 05: "1.2K".
+ * Hermes-də `Intl` tarix lokalları etibarlı deyil — ay adları əl ilə.
  */
+
+const MONTHS_SHORT: Record<Lang, readonly string[]> = {
+  az: ['yan', 'fev', 'mar', 'apr', 'may', 'iyn', 'iyl', 'avq', 'sen', 'okt', 'noy', 'dek'],
+  en: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+  ru: ['янв', 'фев', 'мар', 'апр', 'мая', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'],
+};
+
+/** Həftə günləri `getDay()` sırası ilə (0 = bazar). */
+const WEEKDAYS_SHORT: Record<Lang, readonly string[]> = {
+  az: ['Ba', 'Be', 'Ça', 'Çr', 'Ca', 'Cü', 'Şə'],
+  en: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+  ru: ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'],
+};
+
+/** Qısa ay adı cari dildə: 9 → "okt" / "Oct" / "окт". */
+export const monthShort = (monthIndex: number): string => MONTHS_SHORT[currentLang()][monthIndex] ?? '';
+/** Qısa həftə günü cari dildə: 0 → "Ba" / "Sun" / "Вс". */
+export const weekdayShort = (dayIndex: number): string => WEEKDAYS_SHORT[currentLang()][dayIndex] ?? '';
+
+/** "2 okt" / "Oct 2" / "2 окт" — ingiliscə ay əvvəl gəlir. */
+function dayMonth(day: number, monthIndex: number): string {
+  return currentLang() === 'en' ? `${monthShort(monthIndex)} ${day}` : `${day} ${monthShort(monthIndex)}`;
+}
+
+const NUMBER_LOCALE: Record<Lang, string> = { az: 'az-AZ', en: 'en-US', ru: 'ru-RU' };
+/** Min ayırıcı ilə say: 3980 → "3.980" / "3,980" / "3 980". */
+export const formatNumber = (n: number): string => n.toLocaleString(NUMBER_LOCALE[currentLang()]);
+
+const pad2 = (n: number): string => String(n).padStart(2, '0');
+const localClock = (d: Date): string => `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
 
 export function timeAgo(value: string | Date, now = Date.now()): string {
   const seconds = Math.max(0, (now - new Date(value).getTime()) / 1000);
-  if (seconds < 60) return 'indicə';
-  if (seconds < 3600) return `${Math.floor(seconds / 60)} dəq əvvəl`;
-  if (seconds < 86_400) return `${Math.floor(seconds / 3600)} saat əvvəl`;
-  if (seconds < 172_800) return 'Dünən';
-  if (seconds < 604_800) return `${Math.floor(seconds / 86_400)} gün əvvəl`;
-  return new Date(value).toLocaleDateString('az-AZ', { day: 'numeric', month: 'short' });
+  if (seconds < 60) return i18n.t('common:time.justNow');
+  if (seconds < 3600) return tp('common:time.minutesAgo', Math.floor(seconds / 60));
+  if (seconds < 86_400) return tp('common:time.hoursAgo', Math.floor(seconds / 3600));
+  if (seconds < 172_800) return i18n.t('common:time.yesterday');
+  if (seconds < 604_800) return tp('common:time.daysAgo', Math.floor(seconds / 86_400));
+  const d = new Date(value);
+  return dayMonth(d.getDate(), d.getMonth());
 }
 
 /** Söhbət siyahısı — bu gün saat, sonra "Dünən", "3 gün", "2 həftə". */
 export function chatTime(value: string | Date, now = new Date()): string {
   const date = new Date(value);
   const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-  if (date.getTime() >= startOfToday) {
-    return date.toLocaleTimeString('az-AZ', { hour: '2-digit', minute: '2-digit', hour12: false });
-  }
+  if (date.getTime() >= startOfToday) return localClock(date);
   const days = Math.ceil((startOfToday - date.getTime()) / 86_400_000);
-  if (days <= 1) return 'Dünən';
-  if (days < 7) return `${days} gün`;
-  if (days < 30) return `${Math.floor(days / 7)} həftə`;
-  return date.toLocaleDateString('az-AZ', { day: 'numeric', month: 'short' });
+  if (days <= 1) return i18n.t('common:time.yesterday');
+  if (days < 7) return tp('common:time.days', days);
+  if (days < 30) return tp('common:time.weeks', Math.floor(days / 7));
+  return dayMonth(date.getDate(), date.getMonth());
 }
 
 /** Mesaj balonunun altındakı saat. */
 export function clockTime(value: string | Date): string {
-  return new Date(value).toLocaleTimeString('az-AZ', { hour: '2-digit', minute: '2-digit', hour12: false });
+  return localClock(new Date(value));
 }
 
 export function compactCount(n: number): string {
@@ -47,10 +79,16 @@ export function isSameDay(a: string | Date, b: string | Date): boolean {
 /** Çatdakı gün ayırıcısı — "Bu gün", "Dünən", "12 sen". */
 export function dayLabel(value: string | Date, now = new Date()): string {
   const date = new Date(value);
-  if (isSameDay(date, now)) return 'Bu gün';
+  if (isSameDay(date, now)) return i18n.t('common:time.today');
   const yesterday = new Date(now.getTime() - 86_400_000);
-  if (isSameDay(date, yesterday)) return 'Dünən';
-  return date.toLocaleDateString('az-AZ', { day: 'numeric', month: 'short' });
+  if (isSameDay(date, yesterday)) return i18n.t('common:time.yesterday');
+  return dayMonth(date.getDate(), date.getMonth());
+}
+
+/** Yerli təqvim tarixi (səyahət günləri kimi saatsız tarixlər): "5 okt" / "Oct 5". */
+export function localShortDate(value: string | Date): string {
+  const d = new Date(value);
+  return dayMonth(d.getDate(), d.getMonth());
 }
 
 // ─────────────────── Bakı vaxtı ───────────────────
@@ -64,11 +102,8 @@ export function dayLabel(value: string | Date, now = new Date()): string {
 export const BAKU_OFFSET_MS = 4 * 3_600_000;
 const DAY_MS = 86_400_000;
 
-/** Azərbaycanca qısa ay adları — "12 sen" (çat ayırıcısı) ilə eyni üslub. */
-export const AZ_MONTHS_SHORT = ['yan', 'fev', 'mar', 'apr', 'may', 'iyn', 'iyl', 'avq', 'sen', 'okt', 'noy', 'dek'] as const;
-
-/** Həftə günləri `getUTCDay()` sırası ilə (0 = bazar) — ekran 18 tarix zolağı. */
-export const AZ_WEEKDAYS_SHORT = ['Ba', 'Be', 'Ça', 'Çr', 'Ca', 'Cü', 'Şə'] as const;
+/** @deprecated `monthShort(i)` işlət — cari dilə görə ay adı. */
+export const AZ_MONTHS_SHORT = MONTHS_SHORT.az;
 
 type Instant = string | number | Date;
 
@@ -96,18 +131,16 @@ export function bakuParts(value: Instant): BakuParts {
   };
 }
 
-const pad2 = (n: number): string => String(n).padStart(2, '0');
-
 /** "2 okt 2026" */
 export function bakuDate(value: Instant): string {
   const p = bakuParts(value);
-  return `${p.day} ${AZ_MONTHS_SHORT[p.month]} ${p.year}`;
+  return currentLang() === 'en' ? `${monthShort(p.month)} ${p.day}, ${p.year}` : `${p.day} ${monthShort(p.month)} ${p.year}`;
 }
 
 /** "2 okt" */
 export function bakuShortDate(value: Instant): string {
   const p = bakuParts(value);
-  return `${p.day} ${AZ_MONTHS_SHORT[p.month]}`;
+  return dayMonth(p.day, p.month);
 }
 
 /** "03:00" */
@@ -123,7 +156,7 @@ export function bakuDateTime(value: Instant): string {
 
 /** "Cü" */
 export function bakuWeekday(value: Instant): string {
-  return AZ_WEEKDAYS_SHORT[bakuParts(value).weekday] ?? '';
+  return weekdayShort(bakuParts(value).weekday);
 }
 
 /** Bakı təqvim günü — müqayisə və açar üçün: "2026-10-02". */

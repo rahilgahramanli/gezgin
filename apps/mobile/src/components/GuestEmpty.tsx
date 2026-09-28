@@ -1,4 +1,5 @@
 import type { IconName } from './Icon';
+import { useT } from '@/i18n';
 import { Button } from './Button';
 import { EmptyState } from './Screen';
 import { useAuth } from '@/store/auth';
@@ -9,12 +10,13 @@ import { useAuth } from '@/store/auth';
  */
 export function GuestEmpty({ title, message, icon = 'user' }: { title: string; message: string; icon?: IconName }) {
   const upgrade = useAuth((s) => s.upgradeGuest);
+  const { t } = useT();
   return (
     <EmptyState
       icon={icon}
       title={title}
       message={message}
-      action={<Button label="Hesab yarat" onPress={() => void upgrade()} />}
+      action={<Button label={t('actions.createAccount')} onPress={() => void upgrade()} />}
     />
   );
 }

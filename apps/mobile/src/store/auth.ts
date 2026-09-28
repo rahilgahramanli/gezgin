@@ -1,4 +1,5 @@
 import { Alert } from 'react-native';
+import i18n from '@/i18n';
 import { create } from 'zustand';
 import { ApiError, NETWORK_ERROR, api, rawPost, setAccessToken, setRefreshHandler } from '@/api/client';
 import { STORAGE_KEYS, storage } from '@/lib/storage';
@@ -99,10 +100,8 @@ export const useAuth = create<AuthState>((set, get) => ({
         // Səssiz çıxış istifadəçini çaşdırır — səbəbi deyirik (dayandırılmış hesab, bitmiş sessiya)
         const inactive = e instanceof ApiError && e.code === 'FORBIDDEN';
         Alert.alert(
-          inactive ? 'Hesab aktiv deyil' : 'Sessiya bitdi',
-          inactive
-            ? 'Hesabın dayandırılıb və ya silinib. Ətraflı məlumat üçün GEZGIN dəstəyinə yaz.'
-            : 'Təhlükəsizlik üçün yenidən daxil ol.',
+          i18n.t(inactive ? 'common:session.inactiveTitle' : 'common:session.expiredTitle'),
+          i18n.t(inactive ? 'common:session.inactiveMessage' : 'common:session.expiredMessage'),
         );
         return null;
       }

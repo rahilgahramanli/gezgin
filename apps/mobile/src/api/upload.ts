@@ -1,5 +1,6 @@
 import type { Asset } from 'react-native-image-picker';
 import { ApiError, api } from '@/api/client';
+import i18n from '@/i18n';
 
 export type UploadFolder = 'post' | 'review' | 'avatar' | 'cover';
 
@@ -49,7 +50,7 @@ export interface UploadedMedia {
  * Android emulyatoru üçün `S3_PUBLIC_URL`/endpoint `10.0.2.2` olmalıdır.
  */
 export async function uploadImage(asset: Asset, folder: UploadFolder): Promise<UploadedMedia> {
-  if (!asset.uri) throw new ApiError(400, 'VALIDATION_FAILED', 'Foto tapılmadı');
+  if (!asset.uri) throw new ApiError(400, 'VALIDATION_FAILED', i18n.t('common:feedback.photoMissing'));
 
   const contentType = contentTypeOf(asset);
   const blob = await (await fetch(asset.uri)).blob();
@@ -64,7 +65,7 @@ export async function uploadImage(asset: Asset, folder: UploadFolder): Promise<U
     headers: { 'Content-Type': contentType },
     body: blob,
   });
-  if (!put.ok) throw new ApiError(put.status, 'UPLOAD_FAILED', 'Foto yüklənmədi — şəbəkəni yoxlayın');
+  if (!put.ok) throw new ApiError(put.status, 'UPLOAD_FAILED', i18n.t('common:feedback.photoUploadFailed'));
 
   return api<UploadedMedia>(`/media/${presign.mediaPublicId}/complete`, {
     method: 'POST',

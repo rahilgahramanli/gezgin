@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useT } from '@/i18n';
 import { Pressable, StyleSheet, TextInput, View, type TextInputProps } from 'react-native';
 import { t } from '@/theme';
 import { Icon, type IconName } from './Icon';
@@ -14,6 +15,7 @@ export interface InputProps extends TextInputProps {
 }
 
 export function Input({ label, icon, error, secure, right, style, ...rest }: InputProps) {
+  const { t: tr } = useT();
   const [focused, setFocused] = useState(false);
   const [hidden, setHidden] = useState(secure ?? false);
 
@@ -49,7 +51,7 @@ export function Input({ label, icon, error, secure, right, style, ...rest }: Inp
             onPress={() => setHidden((v) => !v)}
             hitSlop={10}
             accessibilityRole="button"
-            accessibilityLabel={hidden ? 'Şifrəni göstər' : 'Şifrəni gizlət'}
+            accessibilityLabel={hidden ? tr('actions.showPassword') : tr('actions.hidePassword')}
           >
             <Icon name="eye" size={20} color={t.colors.muted} filled={!hidden} />
           </Pressable>

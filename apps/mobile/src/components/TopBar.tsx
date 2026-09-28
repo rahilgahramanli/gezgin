@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { useT } from '@/i18n';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { t } from '@/theme';
 import { Icon, type IconName } from './Icon';
@@ -24,6 +25,7 @@ export interface TopBarProps {
 }
 
 export function TopBar({ title, onBack, actions, right, light, transparent }: TopBarProps) {
+  const { t: t_ } = useT();
   const tint = light ? '#fff' : t.colors.ink;
 
   return (
@@ -34,7 +36,7 @@ export function TopBar({ title, onBack, actions, right, light, transparent }: To
             onPress={onBack}
             hitSlop={10}
             accessibilityRole="button"
-            accessibilityLabel="Geri"
+            accessibilityLabel={t_('actions.back')}
             style={[styles.iconBtn, light && styles.glass]}
           >
             <Icon name="chevronLeft" size={22} color={tint} />

@@ -1,4 +1,5 @@
 import { Platform, Share } from 'react-native';
+import i18n from '@/i18n';
 
 /** Paylaşılan linklərin qısa yolları — veb tərəf eyni sxemi gözləyir. */
 const PATHS = { place: 'm', route: 'r', experience: 't', business: 'b' } as const;
@@ -18,7 +19,7 @@ export async function shareItem(type: ShareType, slug: string, title: string): P
   try {
     await Share.share(
       Platform.OS === 'ios' ? { message: title, url } : { message: `${title}\n${url}` },
-      { subject: title, dialogTitle: 'GEZGIN-də paylaş' },
+      { subject: title, dialogTitle: i18n.t('common:share.dialogTitle') },
     );
   } catch {
     // paylaşma vərəqi açılmadı — səssiz keç

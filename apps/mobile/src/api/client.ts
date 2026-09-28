@@ -1,4 +1,5 @@
 import { ERROR_CODES, type ErrorCode } from '@gezgin/shared';
+import i18n from '@/i18n';
 import { env } from '@/config/env';
 
 const BASE_URL = env.apiUrl;
@@ -26,7 +27,7 @@ function readableMessage(code: string | undefined, message: string | undefined, 
     const az = texts.find((d) => /[əğıöüçşİƏ]/.test(d));
     if (az) return az;
   }
-  return message ?? 'Şəbəkə xətası';
+  return message ?? i18n.t('common:errors.networkShort');
 }
 
 /** Server cavab vermir (internet yoxdur, server dayanıb) — ekranlar bu kodla fərqləndirir. */
@@ -96,7 +97,7 @@ export async function api<T>(path: string, options: RequestOptions = {}): Promis
       ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
     });
   } catch {
-    throw new ApiError(0, NETWORK_ERROR, 'Bağlantı problemi — internetini yoxla və yenidən cəhd et');
+    throw new ApiError(0, NETWORK_ERROR, i18n.t('common:errors.network'));
   }
 
   if (res.status === 204) return undefined as T;
@@ -136,10 +137,10 @@ export async function rawPost<T>(path: string, body: unknown): Promise<T> {
       body: JSON.stringify(body),
     });
   } catch {
-    throw new ApiError(0, NETWORK_ERROR, 'Bağlantı problemi — internetini yoxla və yenidən cəhd et');
+    throw new ApiError(0, NETWORK_ERROR, i18n.t('common:errors.network'));
   }
   const payload = (await res.json().catch(() => null)) as { code?: string; message?: string } | null;
-  if (!res.ok) throw new ApiError(res.status, payload?.code ?? 'REFRESH_FAILED', payload?.message ?? 'Sessiya yenilənmədi');
+  if (!res.ok) throw new ApiError(res.status, payload?.code ?? 'REFRESH_FAILED', payload?.message ?? i18n.t('common:errors.sessionRefresh'));
   return payload as T;
 }
 

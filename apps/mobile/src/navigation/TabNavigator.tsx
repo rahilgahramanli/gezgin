@@ -2,6 +2,7 @@ import { Platform, StyleSheet, View } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Icon, type IconName } from '@/components';
 import { t } from '@/theme';
+import { useT } from '@/i18n';
 import { ExploreScreen } from '@/screens/explore/ExploreScreen';
 import { TripsScreen } from '@/screens/trips/TripsScreen';
 import { ProfileScreen } from '@/screens/profile/ProfileScreen';
@@ -29,6 +30,7 @@ function CreateButton({ focused }: { focused: boolean }) {
 }
 
 export function TabNavigator() {
+  const { t: tr } = useT();
   return (
     <Tab.Navigator
       initialRouteName="Discover"
@@ -46,16 +48,16 @@ export function TabNavigator() {
           ),
       })}
     >
-      <Tab.Screen name="Discover" component={DiscoverScreen} options={{ title: 'Lent' }} />
-      <Tab.Screen name="Explore" component={ExploreScreen} options={{ title: 'Kəşf' }} />
+      <Tab.Screen name="Discover" component={DiscoverScreen} options={{ title: tr('tabs.feed') }} />
+      <Tab.Screen name="Explore" component={ExploreScreen} options={{ title: tr('tabs.explore') }} />
       <Tab.Screen
         name="Create"
         component={CreateHubScreen}
         // Etiketsiz FAB ekran oxuyucusunda sadəcə "düymə" kimi səslənirdi
-        options={{ title: '', tabBarLabel: () => null, tabBarAccessibilityLabel: 'Yarat' }}
+        options={{ title: '', tabBarLabel: () => null, tabBarAccessibilityLabel: tr('tabs.create') }}
       />
-      <Tab.Screen name="Trips" component={TripsScreen} options={{ title: 'Planım' }} />
-      <Tab.Screen name="Profile" component={ProfileScreen} options={{ title: 'Profil' }} />
+      <Tab.Screen name="Trips" component={TripsScreen} options={{ title: tr('tabs.trips') }} />
+      <Tab.Screen name="Profile" component={ProfileScreen} options={{ title: tr('tabs.profile') }} />
     </Tab.Navigator>
   );
 }

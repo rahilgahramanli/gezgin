@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import i18n from '@/i18n';
 import { api } from '@/api/client';
 import { useAuth } from '@/store/auth';
 import { alertError } from '@/lib/errors';
@@ -110,7 +111,7 @@ export function useUpdateSettings() {
     },
     onError: (error, _body, context) => {
       if (context?.previous) qc.setQueryData(key, context.previous);
-      alertError(error, 'Tənzimləmə yadda saxlanılmadı');
+      alertError(error, i18n.t('common:feedback.settingsNotSaved'));
     },
     onSettled: () => void qc.invalidateQueries({ queryKey: key }),
   });
@@ -123,7 +124,7 @@ export function useSetProfileMedia(kind: 'avatar' | 'cover') {
     mutationFn: (mediaPublicId: string) =>
       api<MeProfile>(`/me/${kind}`, { method: 'POST', body: { mediaPublicId } }),
     onSuccess: () => void qc.invalidateQueries({ queryKey: meKeys.profile }),
-    onError: (error) => alertError(error, 'Şəkil təyin olunmadı'),
+    onError: (error) => alertError(error, i18n.t('common:feedback.photoNotSet')),
   });
 }
 
@@ -138,7 +139,7 @@ export function useUnblock() {
   return useMutation({
     mutationFn: (username: string) => api(`/me/blocked/${username}`, { method: 'DELETE' }),
     onSuccess: () => void qc.invalidateQueries({ queryKey: ['me', 'blocked'] }),
-    onError: (error) => alertError(error, 'Blok götürülmədi'),
+    onError: (error) => alertError(error, i18n.t('common:feedback.unblockFailed')),
   });
 }
 
@@ -148,7 +149,7 @@ export function useDeleteAccount() {
   return useMutation({
     mutationFn: () => api('/me', { method: 'DELETE' }),
     onSuccess: () => signOut(),
-    onError: (error) => alertError(error, 'Hesab silinmədi'),
+    onError: (error) => alertError(error, i18n.t('common:feedback.deleteAccountFailed')),
   });
 }
 

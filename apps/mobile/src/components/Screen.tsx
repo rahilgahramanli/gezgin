@@ -3,6 +3,7 @@ import { ActivityIndicator, ScrollView, StyleSheet, View, type ViewStyle } from 
 import { SafeAreaView, type Edge } from 'react-native-safe-area-context';
 import { t } from '@/theme';
 import { ApiError } from '@/api/client';
+import { useT } from '@/i18n';
 import { Button } from './Button';
 import { Icon, type IconName } from './Icon';
 import { Text } from './Text';
@@ -128,13 +129,12 @@ export function ErrorState({
   onBack?: () => void;
   title?: string;
 }) {
+  const { t: tr } = useT();
   const api = error instanceof ApiError ? error : null;
   const network = api?.code === 'NETWORK';
   const notFound = api?.status === 404;
-  const heading = title ?? (network ? 'Bağlantı yoxdur' : notFound ? 'Tapılmadı' : 'Yüklənmədi');
-  const message = network
-    ? 'İnternetini yoxla və yenidən cəhd et.'
-    : api?.message ?? 'Bir az sonra yenidən cəhd et.';
+  const heading = title ?? tr(network ? 'states.offlineTitle' : notFound ? 'states.notFound' : 'states.failedTitle');
+  const message = network ? tr('states.offlineMessage') : api?.message ?? tr('states.tryLater');
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: t.colors.bg }]} edges={['top']}>
@@ -143,7 +143,7 @@ export function ErrorState({
         icon={network ? 'wifiOff' : 'info'}
         title={heading}
         message={message}
-        action={onRetry && !notFound ? <Button label="Yenidən cəhd et" onPress={onRetry} /> : undefined}
+        action={onRetry && !notFound ? <Button label={tr('actions.retry')} onPress={onRetry} /> : undefined}
       />
     </SafeAreaView>
   );

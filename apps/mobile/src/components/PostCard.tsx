@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useT } from '@/i18n';
 import {
   Pressable, ScrollView, StyleSheet, View, useWindowDimensions,
   type NativeScrollEvent, type NativeSyntheticEvent,
@@ -64,6 +65,7 @@ export interface PostCardProps {
 
 /** Ekran 05 lent kartı: müəllif, foto karuseli, düymələr, mətn. */
 export function PostCard({ post, full, onOpen, onAuthor, onPlace, onLike, onComment, onShare, onSave }: PostCardProps) {
+  const { t: tr, tp: tpr } = useT();
   const { width: screen } = useWindowDimensions();
   const width = screen - t.spacing.page * 2;
 
@@ -91,7 +93,7 @@ export function PostCard({ post, full, onOpen, onAuthor, onPlace, onLike, onComm
             </Text>
           </View>
         </Pressable>
-        <Pressable onPress={onShare} hitSlop={12} accessibilityLabel="Daha çox">
+        <Pressable onPress={onShare} hitSlop={12} accessibilityLabel={tr('actions.more')}>
           <Icon name="more" size={22} color={t.colors.muted} strokeWidth={3} />
         </Pressable>
       </View>
@@ -107,12 +109,12 @@ export function PostCard({ post, full, onOpen, onAuthor, onPlace, onLike, onComm
           active={post.viewer.liked}
           activeColor={t.colors.danger}
           onPress={onLike}
-          label={post.viewer.liked ? 'Bəyənməni geri al' : 'Bəyən'}
+          label={post.viewer.liked ? tr('actions.unlike') : tr('actions.like')}
         />
-        <Action icon="chat" count={post.counts.comments} onPress={onComment ?? onOpen} label="Şərhlər" />
-        <Action icon="share" count={post.counts.shares} onPress={onShare} label="Paylaş" />
+        <Action icon="chat" count={post.counts.comments} onPress={onComment ?? onOpen} label={tr('actions.comments')} />
+        <Action icon="share" count={post.counts.shares} onPress={onShare} label={tr('actions.share')} />
         <View style={styles.flex} />
-        <Pressable onPress={onSave} hitSlop={10} accessibilityLabel={post.viewer.saved ? 'Saxlanılıb' : 'Saxla'}>
+        <Pressable onPress={onSave} hitSlop={10} accessibilityLabel={post.viewer.saved ? tr('actions.saved') : tr('actions.saveItem')}>
           <Icon
             name="bookmark"
             size={22}
@@ -130,7 +132,7 @@ export function PostCard({ post, full, onOpen, onAuthor, onPlace, onLike, onComm
 
       {!full && post.counts.comments > 0 ? (
         <Text variant="small" color="muted" onPress={onComment ?? onOpen}>
-          {post.counts.comments} şərhin hamısına bax
+          {tpr('post.allComments', post.counts.comments)}
         </Text>
       ) : null}
     </View>

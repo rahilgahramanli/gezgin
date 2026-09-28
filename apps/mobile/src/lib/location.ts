@@ -1,4 +1,5 @@
 import { PermissionsAndroid, Platform } from 'react-native';
+import i18n from '@/i18n';
 import Geolocation from '@react-native-community/geolocation';
 
 /**
@@ -95,10 +96,10 @@ function requestIosPermission(): Promise<boolean | null> {
 async function requestAndroidPermission(): Promise<boolean> {
   if (permission === 'granted') return true;
   const granted = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION, {
-    title: 'Mövqe icazəsi',
-    message: 'Check-in üçün məkanda olduğunu təsdiqləməliyik.',
-    buttonPositive: 'İcazə ver',
-    buttonNegative: 'İmtina',
+    title: i18n.t('common:location.permTitle'),
+    message: i18n.t('common:location.permMessage'),
+    buttonPositive: i18n.t('common:location.allow'),
+    buttonNegative: i18n.t('common:location.deny'),
   });
   const ok = granted === PermissionsAndroid.RESULTS.GRANTED;
   permission = ok ? 'granted' : 'denied';
@@ -176,10 +177,10 @@ export async function getCurrentPosition(timeoutMs = 8000): Promise<Coords | nul
 export function locateFailureText(reason: LocateFailure): string {
   switch (reason) {
     case 'denied':
-      return 'GEZGIN-ə yerləşmə icazəsi verilməyib. Tənzimləmələrdən icazə ver və yenidən cəhd et.';
+      return i18n.t('common:location.denied');
     case 'timeout':
-      return 'GPS vaxtında cavab vermədi. Açıq yerə çıx və yenidən cəhd et.';
+      return i18n.t('common:location.timeout');
     default:
-      return 'Cihazın yerləşməsi müəyyən edilmədi. Yerləşmə xidmətinin açıq olduğunu yoxla.';
+      return i18n.t('common:location.unavailable');
   }
 }

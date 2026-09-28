@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/client';
+import i18n from '@/i18n';
 import { alertError } from '@/lib/errors';
 
 /** Ekran 13 — məkan detalı. */
@@ -163,7 +164,7 @@ export function useToggleSaved(type: SavedType, slug: string) {
     },
     onError: (error, _next, context) => {
       if (context?.previous) qc.setQueryData(key, context.previous);
-      alertError(error, 'Saxlanılmadı');
+      alertError(error, i18n.t('common:feedback.saveNotDone'));
     },
     onSettled: () => {
       void qc.invalidateQueries({ queryKey: key });
@@ -253,7 +254,7 @@ export function useToggleHelpful(targetType: string, target: string) {
       );
     },
     onError: (e) => {
-      alertError(e, 'Alınmadı');
+      alertError(e);
       void qc.invalidateQueries({ queryKey: key });
     },
     onSuccess: () => void qc.invalidateQueries({ queryKey: [...key, 'all', 'helpful'] }),

@@ -2,6 +2,7 @@ import {
   useInfiniteQuery, useMutation, useQuery, useQueryClient, type InfiniteData, type QueryClient,
 } from '@tanstack/react-query';
 import { api } from '@/api/client';
+import i18n from '@/i18n';
 import { alertError } from '@/lib/errors';
 import { qs } from '@/api/hooks/content';
 import { meKeys } from '@/api/hooks/me';
@@ -356,7 +357,7 @@ export function useLikePost() {
       })),
     onError: (error, { publicId, like }) => {
       toggle(publicId, !like);
-      alertError(error, 'Bəyənmək alınmadı');
+      alertError(error, i18n.t('common:feedback.likeFailed'));
     },
   });
 }
@@ -378,7 +379,7 @@ export function useSavePost() {
     },
     onError: (error, { publicId, save }) => {
       patchPost(qc, publicId, (p) => ({ ...p, viewer: { ...p.viewer, saved: !save } }));
-      alertError(error, 'Saxlamaq alınmadı');
+      alertError(error, i18n.t('common:feedback.saveFailed'));
     },
   });
 }
@@ -394,13 +395,14 @@ export function useSharePost() {
 }
 
 export const REPORT_REASONS = [
-  { code: 'spam', label: 'Spam və ya reklam' },
-  { code: 'inappropriate', label: 'Uyğunsuz kontent' },
-  { code: 'harassment', label: 'Təhqir və ya təzyiq' },
-  { code: 'false_info', label: 'Yanlış məlumat' },
-  { code: 'copyright', label: 'Müəllif hüququ' },
-  { code: 'other', label: 'Digər' },
-] as const;
+  'spam', 'inappropriate', 'harassment', 'false_info', 'copyright', 'other',
+].map((code) => ({
+  code,
+  /** Oxunanda cari dildə — `common:report.<kod>` */
+  get label(): string {
+    return i18n.t(`common:report.${code}`);
+  },
+}));
 
 export const useReportUser = () =>
   useMutation({
@@ -609,7 +611,7 @@ export function useFollow() {
       patchLists(username, !follow);
       // Profil kartı da əvvəlki vəziyyətinə qayıdır — qonaqda "İzləyirsən" və +1 qalırdı
       if (ctx?.previous) qc.setQueryData(socialKeys.user(username), ctx.previous);
-      alertError(error, 'İzləmək alınmadı');
+      alertError(error, i18n.t('common:feedback.followFailed'));
     },
     onSettled: () => {
       void qc.invalidateQueries({ queryKey: ['feed', 'following'] });

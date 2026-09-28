@@ -1,0 +1,175 @@
+{
+  "tabs": {
+    "feed": "Лента",
+    "explore": "Обзор",
+    "create": "Создать",
+    "trips": "Мои поездки",
+    "profile": "Профиль"
+  },
+  "actions": {
+    "back": "Назад",
+    "retry": "Повторить",
+    "cancel": "Отмена",
+    "ok": "OK",
+    "close": "Закрыть",
+    "save": "Сохранить",
+    "delete": "Удалить",
+    "share": "Поделиться",
+    "more": "Ещё",
+    "seeAll": "Смотреть все",
+    "continue": "Продолжить",
+    "notNow": "Не сейчас",
+    "signUp": "Зарегистрироваться",
+    "createAccount": "Создать аккаунт",
+    "showPassword": "Показать пароль",
+    "hidePassword": "Скрыть пароль",
+    "like": "Нравится",
+    "unlike": "Убрать отметку «Нравится»",
+    "comments": "Комментарии",
+    "saveItem": "Сохранить",
+    "saved": "Сохранено"
+  },
+  "states": {
+    "loading": "Загрузка…",
+    "offlineTitle": "Нет соединения",
+    "offlineMessage": "Проверьте подключение к интернету и повторите попытку.",
+    "notFound": "Не найдено",
+    "failedTitle": "Не удалось загрузить",
+    "tryLater": "Повторите попытку чуть позже."
+  },
+  "errors": {
+    "alertTitle": "Не удалось",
+    "generic": "Не удалось выполнить действие",
+    "network": "Проблема с соединением — проверьте интернет и повторите попытку",
+    "networkShort": "Ошибка сети",
+    "sessionRefresh": "Не удалось обновить сессию"
+  },
+  "guest": {
+    "title": "Нужен аккаунт",
+    "message": "Для этого действия нужно создать аккаунт"
+  },
+  "session": {
+    "inactiveTitle": "Аккаунт неактивен",
+    "inactiveMessage": "Ваш аккаунт заблокирован или удалён. Подробности — в поддержке GEZGIN.",
+    "expiredTitle": "Сессия истекла",
+    "expiredMessage": "В целях безопасности войдите снова."
+  },
+  "location": {
+    "permTitle": "Доступ к геопозиции",
+    "permMessage": "Чтобы отметиться, нужно подтвердить, что вы на месте.",
+    "allow": "Разрешить",
+    "deny": "Отклонить",
+    "denied": "У GEZGIN нет доступа к геопозиции. Разрешите его в настройках и повторите попытку.",
+    "timeout": "GPS не ответил вовремя. Выйдите на открытое место и повторите попытку.",
+    "unavailable": "Не удалось определить местоположение. Проверьте, включены ли службы геолокации."
+  },
+  "share": {
+    "dialogTitle": "Поделиться в GEZGIN"
+  },
+  "time": {
+    "justNow": "только что",
+    "minutesAgo_one": "{{count}} мин назад",
+    "minutesAgo_few": "{{count}} мин назад",
+    "minutesAgo_many": "{{count}} мин назад",
+    "hoursAgo_one": "{{count}} час назад",
+    "hoursAgo_few": "{{count}} часа назад",
+    "hoursAgo_many": "{{count}} часов назад",
+    "daysAgo_one": "{{count}} день назад",
+    "daysAgo_few": "{{count}} дня назад",
+    "daysAgo_many": "{{count}} дней назад",
+    "days_one": "{{count}} день",
+    "days_few": "{{count}} дня",
+    "days_many": "{{count}} дней",
+    "weeks_one": "{{count}} неделя",
+    "weeks_few": "{{count}} недели",
+    "weeks_many": "{{count}} недель",
+    "yesterday": "Вчера",
+    "today": "Сегодня"
+  },
+  "post": {
+    "allComments_one": "Смотреть {{count}} комментарий",
+    "allComments_few": "Смотреть все {{count}} комментария",
+    "allComments_many": "Смотреть все {{count}} комментариев"
+  },
+  "labels": {
+    "duration": {
+      "yarim-gun": "Полдня",
+      "1-gun": "1 день",
+      "2-gun": "2 дня",
+      "bir-nece-gun": "Несколько дней",
+      "hours_one": "{{count}} час",
+      "hours_few": "{{count}} часа",
+      "hours_many": "{{count}} часов",
+      "days_one": "{{count}} день",
+      "days_few": "{{count}} дня",
+      "days_many": "{{count}} дней"
+    },
+    "difficulty": {
+      "asan": "Лёгкий",
+      "orta": "Средний",
+      "cetin": "Сложный"
+    },
+    "tripStatus": {
+      "planned": "Запланирована",
+      "active": "Активна",
+      "completed": "Завершена",
+      "cancelled": "Отменена"
+    },
+    "searchType": {
+      "place": "Место",
+      "route": "Маршрут",
+      "experience": "Впечатление",
+      "event": "Событие",
+      "user": "Путешественник",
+      "post": "Публикация",
+      "business": "Отель"
+    },
+    "businessType": {
+      "otel": "Отель",
+      "restoran": "Ресторан",
+      "qonaq_evi": "Гостевой дом",
+      "qonaq-evi": "Гостевой дом",
+      "tur_sirketi": "Туркомпания",
+      "tur": "Туркомпания",
+      "diger": "Другое"
+    },
+    "amenity": {
+      "spa": "Спа",
+      "hovuz": "Бассейн",
+      "restoran": "Ресторан",
+      "transfer": "Трансфер",
+      "konfrans": "Конференц-зал",
+      "ski": "Лыжи",
+      "yerli-metbex": "Местная кухня",
+      "beledci": "Гид",
+      "yerlesme": "Проживание",
+      "sehar-yemeyi": "Завтрак",
+      "tam-pansion": "Полный пансион",
+      "ski-pass": "Ски-пасс",
+      "neqliyyat": "Транспорт",
+      "yerli-nahar": "Местный обед",
+      "sigorta": "Страховка",
+      "materiallar": "Материалы"
+    }
+  },
+  "report": {
+    "spam": "Спам или реклама",
+    "inappropriate": "Неприемлемый контент",
+    "harassment": "Оскорбление или травля",
+    "false_info": "Ложная информация",
+    "copyright": "Авторское право",
+    "other": "Другое"
+  },
+  "feedback": {
+    "settingsNotSaved": "Настройка не сохранена",
+    "photoNotSet": "Не удалось установить фото",
+    "unblockFailed": "Не удалось разблокировать",
+    "deleteAccountFailed": "Не удалось удалить аккаунт",
+    "likeFailed": "Не удалось поставить отметку",
+    "saveFailed": "Не удалось сохранить",
+    "followFailed": "Не удалось подписаться",
+    "saveNotDone": "Не сохранено",
+    "photoMissing": "Фото не найдено",
+    "photoUploadFailed": "Фото не загрузилось — проверьте сеть и повторите попытку"
+  }
+}

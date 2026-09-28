@@ -1,0 +1,159 @@
+{
+  "tabs": {
+    "feed": "Lent",
+    "explore": "Kəşf",
+    "create": "Yarat",
+    "trips": "Planım",
+    "profile": "Profil"
+  },
+  "actions": {
+    "back": "Geri",
+    "retry": "Yenidən cəhd et",
+    "cancel": "İmtina",
+    "ok": "OK",
+    "close": "Bağla",
+    "save": "Yadda saxla",
+    "delete": "Sil",
+    "share": "Paylaş",
+    "more": "Daha çox",
+    "seeAll": "Hamısına bax",
+    "continue": "Davam et",
+    "notNow": "İndi yox",
+    "signUp": "Qeydiyyatdan keç",
+    "createAccount": "Hesab yarat",
+    "showPassword": "Şifrəni göstər",
+    "hidePassword": "Şifrəni gizlət",
+    "like": "Bəyən",
+    "unlike": "Bəyənməni geri al",
+    "comments": "Şərhlər",
+    "saveItem": "Saxla",
+    "saved": "Saxlanılıb"
+  },
+  "states": {
+    "loading": "Yüklənir…",
+    "offlineTitle": "Bağlantı yoxdur",
+    "offlineMessage": "İnternetini yoxla və yenidən cəhd et.",
+    "notFound": "Tapılmadı",
+    "failedTitle": "Yüklənmədi",
+    "tryLater": "Bir az sonra yenidən cəhd et."
+  },
+  "errors": {
+    "alertTitle": "Alınmadı",
+    "generic": "Əməliyyat alınmadı",
+    "network": "Bağlantı problemi — internetini yoxla və yenidən cəhd et",
+    "networkShort": "Şəbəkə xətası",
+    "sessionRefresh": "Sessiya yenilənmədi"
+  },
+  "guest": {
+    "title": "Hesab lazımdır",
+    "message": "Bu əməliyyat üçün hesab yaratmalısınız"
+  },
+  "session": {
+    "inactiveTitle": "Hesab aktiv deyil",
+    "inactiveMessage": "Hesabın dayandırılıb və ya silinib. Ətraflı məlumat üçün GEZGIN dəstəyinə yaz.",
+    "expiredTitle": "Sessiya bitdi",
+    "expiredMessage": "Təhlükəsizlik üçün yenidən daxil ol."
+  },
+  "location": {
+    "permTitle": "Mövqe icazəsi",
+    "permMessage": "Check-in üçün məkanda olduğunu təsdiqləməliyik.",
+    "allow": "İcazə ver",
+    "deny": "İmtina",
+    "denied": "GEZGIN-ə yerləşmə icazəsi verilməyib. Tənzimləmələrdən icazə ver və yenidən cəhd et.",
+    "timeout": "GPS vaxtında cavab vermədi. Açıq yerə çıx və yenidən cəhd et.",
+    "unavailable": "Cihazın yerləşməsi müəyyən edilmədi. Yerləşmə xidmətinin açıq olduğunu yoxla."
+  },
+  "share": {
+    "dialogTitle": "GEZGIN-də paylaş"
+  },
+  "time": {
+    "justNow": "indicə",
+    "minutesAgo_other": "{{count}} dəq əvvəl",
+    "hoursAgo_other": "{{count}} saat əvvəl",
+    "daysAgo_other": "{{count}} gün əvvəl",
+    "days_other": "{{count}} gün",
+    "weeks_other": "{{count}} həftə",
+    "yesterday": "Dünən",
+    "today": "Bu gün"
+  },
+  "post": {
+    "allComments_other": "{{count}} şərhin hamısına bax"
+  },
+  "labels": {
+    "duration": {
+      "yarim-gun": "Yarım gün",
+      "1-gun": "1 gün",
+      "2-gun": "2 gün",
+      "bir-nece-gun": "Bir neçə gün",
+      "hours_other": "{{count}} saat",
+      "days_other": "{{count}} gün"
+    },
+    "difficulty": {
+      "asan": "Asan",
+      "orta": "Orta",
+      "cetin": "Çətin"
+    },
+    "tripStatus": {
+      "planned": "Planlanıb",
+      "active": "Aktiv",
+      "completed": "Tamamlandı",
+      "cancelled": "Ləğv edildi"
+    },
+    "searchType": {
+      "place": "Yer",
+      "route": "Marşrut",
+      "experience": "Təcrübə",
+      "event": "Tədbir",
+      "user": "Gezgin",
+      "post": "Paylaşım",
+      "business": "Otel"
+    },
+    "businessType": {
+      "otel": "Otel",
+      "restoran": "Restoran",
+      "qonaq_evi": "Qonaq evi",
+      "qonaq-evi": "Qonaq evi",
+      "tur_sirketi": "Tur şirkəti",
+      "tur": "Tur şirkəti",
+      "diger": "Digər"
+    },
+    "amenity": {
+      "spa": "Spa",
+      "hovuz": "Hovuz",
+      "restoran": "Restoran",
+      "transfer": "Transfer",
+      "konfrans": "Konfrans zalı",
+      "ski": "Xizək",
+      "yerli-metbex": "Yerli mətbəx",
+      "beledci": "Bələdçi",
+      "yerlesme": "Yerləşmə",
+      "sehar-yemeyi": "Səhər yeməyi",
+      "tam-pansion": "Tam pansion",
+      "ski-pass": "Ski-pass",
+      "neqliyyat": "Nəqliyyat",
+      "yerli-nahar": "Yerli nahar",
+      "sigorta": "Sığorta",
+      "materiallar": "Materiallar"
+    }
+  },
+  "report": {
+    "spam": "Spam və ya reklam",
+    "inappropriate": "Uyğunsuz kontent",
+    "harassment": "Təhqir və ya təzyiq",
+    "false_info": "Yanlış məlumat",
+    "copyright": "Müəllif hüququ",
+    "other": "Digər"
+  },
+  "feedback": {
+    "settingsNotSaved": "Tənzimləmə yadda saxlanılmadı",
+    "photoNotSet": "Şəkil təyin olunmadı",
+    "unblockFailed": "Blok götürülmədi",
+    "deleteAccountFailed": "Hesab silinmədi",
+    "likeFailed": "Bəyənmək alınmadı",
+    "saveFailed": "Saxlamaq alınmadı",
+    "followFailed": "İzləmək alınmadı",
+    "saveNotDone": "Saxlanılmadı",
+    "photoMissing": "Foto tapılmadı",
+    "photoUploadFailed": "Foto yüklənmədi — şəbəkəni yoxlayıb yenidən cəhd edin"
+  }
+}
