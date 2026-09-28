@@ -4,10 +4,15 @@ import { Button, Icon, Input, Screen, Text, TopBar } from '@/components';
 import { useForgotPassword, useResetPassword } from '@/api/hooks/auth';
 import { ApiError } from '@/api/client';
 import { t } from '@/theme';
+import { useT } from '@/i18n';
 import type { AuthScreenProps } from '@/navigation/types';
+
+/** E-mail-i qalın yazmaq üçün tərcümədə yerini tutan nişan — söz sırası dildən asılıdır. */
+const EMAIL_MARK = '\u0001';
 
 /** Ekran 37 → 38 — şifrəni bərpa et və kodla yeni şifrə təyin et. */
 export function ForgotPasswordScreen({ navigation }: AuthScreenProps<'ForgotPassword'>) {
+  const { t: tr } = useT('auth');
   const [step, setStep] = useState<'email' | 'code'>('email');
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
@@ -17,7 +22,10 @@ export function ForgotPasswordScreen({ navigation }: AuthScreenProps<'ForgotPass
   const reset = useResetPassword();
 
   const error =
-    reset.error instanceof ApiError ? reset.error.message : forgot.error ? 'Kod göndərilmədi' : null;
+    reset.error instanceof ApiError ? reset.error.message : forgot.error ? tr('forgot.codeNotSent') : null;
+
+  // "{{email}} ünvanına…" / "…sent to {{email}}." — e-mail cümlənin istənilən yerində ola bilər
+  const [sentBefore = '', sentAfter = ''] = tr('forgot.codeSent', { email: EMAIL_MARK }).split(EMAIL_MARK);
 
   const sendCode = () =>
     forgot.mutate(
@@ -30,7 +38,7 @@ export function ForgotPasswordScreen({ navigation }: AuthScreenProps<'ForgotPass
       { email: email.trim().toLowerCase(), code, newPassword: password },
       {
         onSuccess: () => {
-          Alert.alert('Şifrə yeniləndi', 'Yeni şifrənlə daxil ola bilərsən.');
+          Alert.alert(tr('forgot.doneTitle'), tr('forgot.doneMessage'));
           navigation.navigate('Login');
         },
       },
@@ -39,7 +47,7 @@ export function ForgotPasswordScreen({ navigation }: AuthScreenProps<'ForgotPass
   return (
     <Screen padded={false}>
       <TopBar
-        title={step === 'email' ? 'Şifrəni bərpa et' : 'Təsdiq kodu'}
+        title={step === 'email' ? tr('forgot.title') : tr('forgot.codeTitle')}
         onBack={step === 'code' ? () => setStep('email') : navigation.goBack}
       />
 
@@ -51,14 +59,14 @@ export function ForgotPasswordScreen({ navigation }: AuthScreenProps<'ForgotPass
         {step === 'email' ? (
           <>
             <Text variant="titleLg" center>
-              Şifrəni unutmusan?
+              {tr('forgot.heading')}
             </Text>
             <Text variant="meta" center style={styles.sub}>
-              E-mail ünvanını yaz, sənə 6 rəqəmli təsdiq kodu göndərək.
+              {tr('forgot.sub')}
             </Text>
 
             <Input
-              label="E-mail"
+              label={tr('fields.email')}
               icon="mail"
               placeholder="aysel@gezgin.app"
               autoCapitalize="none"
@@ -70,7 +78,7 @@ export function ForgotPasswordScreen({ navigation }: AuthScreenProps<'ForgotPass
             />
 
             <Button
-              label="Kod göndər"
+              label={tr('forgot.sendCode')}
               onPress={sendCode}
               loading={forgot.isPending}
               disabled={!email.includes('@')}
@@ -80,26 +88,27 @@ export function ForgotPasswordScreen({ navigation }: AuthScreenProps<'ForgotPass
         ) : (
           <>
             <Text variant="titleLg" center>
-              Kodu daxil et
+              {tr('forgot.enterCode')}
             </Text>
             <Text variant="meta" center style={styles.sub}>
+              {sentBefore}
               <Text variant="meta" style={styles.bold}>
                 {email}
-              </Text>{' '}
-              ünvanına göndərdiyimiz kodu yaz.
+              </Text>
+              {sentAfter}
             </Text>
 
             {/* Dev rejimdə API kodu cavabda qaytarır — Mailhog-a baxmadan test etmək üçün */}
             {forgot.data?.devCode ? (
               <View style={styles.devHint}>
                 <Text variant="small" color="green900">
-                  Dev kodu: {forgot.data.devCode}
+                  {tr('forgot.devCode', { code: forgot.data.devCode })}
                 </Text>
               </View>
             ) : null}
 
             <Input
-              label="Təsdiq kodu"
+              label={tr('forgot.codeLabel')}
               icon="check"
               placeholder="482715"
               keyboardType="number-pad"
@@ -109,9 +118,9 @@ export function ForgotPasswordScreen({ navigation }: AuthScreenProps<'ForgotPass
               style={styles.field}
             />
             <Input
-              label="Yeni şifrə"
+              label={tr('forgot.newPassword')}
               icon="lock"
-              placeholder="Ən azı 8 simvol"
+              placeholder={tr('fields.passwordHint')}
               secure
               value={password}
               onChangeText={setPassword}
@@ -120,14 +129,14 @@ export function ForgotPasswordScreen({ navigation }: AuthScreenProps<'ForgotPass
             />
 
             <Button
-              label="Şifrəni yenilə"
+              label={tr('forgot.submit')}
               onPress={submitReset}
               loading={reset.isPending}
               disabled={code.length !== 6 || password.length < 8}
               style={styles.cta}
             />
             <Button
-              label="Kodu yenidən göndər"
+              label={tr('forgot.resend')}
               variant="ghost"
               onPress={sendCode}
               loading={forgot.isPending}

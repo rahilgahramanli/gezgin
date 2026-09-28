@@ -4,10 +4,12 @@ import { Button, Input, Screen, Text, TopBar } from '@/components';
 import { useLogin } from '@/api/hooks/auth';
 import { ApiError } from '@/api/client';
 import { t } from '@/theme';
+import { useT } from '@/i18n';
 import type { AuthScreenProps } from '@/navigation/types';
 
 /** Ekran 02 — daxil ol. */
 export function LoginScreen({ navigation }: AuthScreenProps<'Login'>) {
+  const { t: tr } = useT('auth');
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const login = useLogin();
@@ -16,7 +18,7 @@ export function LoginScreen({ navigation }: AuthScreenProps<'Login'>) {
     login.error instanceof ApiError
       ? login.error.message
       : login.error
-        ? 'Bağlantı problemi — yenidən cəhd edin'
+        ? tr('login.networkError')
         : null;
 
   const submit = () => {
@@ -32,14 +34,14 @@ export function LoginScreen({ navigation }: AuthScreenProps<'Login'>) {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <View style={styles.body}>
-          <Text variant="titleXl">Xoş gəldin!</Text>
+          <Text variant="titleXl">{tr('login.title')}</Text>
           <Text variant="meta" style={styles.sub}>
-            Hesabına daxil ol və səyahətinə davam et
+            {tr('login.sub')}
           </Text>
 
           <View style={styles.form}>
             <Input
-              label="E-mail və ya istifadəçi adı"
+              label={tr('login.identifier')}
               icon="mail"
               placeholder="aysel@gezgin.app"
               autoCapitalize="none"
@@ -49,7 +51,7 @@ export function LoginScreen({ navigation }: AuthScreenProps<'Login'>) {
               onChangeText={setIdentifier}
             />
             <Input
-              label="Şifrə"
+              label={tr('fields.password')}
               icon="lock"
               placeholder="••••••••"
               secure
@@ -65,21 +67,21 @@ export function LoginScreen({ navigation }: AuthScreenProps<'Login'>) {
               style={styles.forgot}
               onPress={() => navigation.navigate('ForgotPassword')}
             >
-              Şifrəni unutmusan?
+              {tr('login.forgot')}
             </Text>
           </View>
 
           <Button
-            label="Daxil ol"
+            label={tr('login.submit')}
             onPress={submit}
             loading={login.isPending}
             disabled={!identifier.trim() || !password}
           />
 
           <Text variant="meta" center style={styles.footer}>
-            Hesabın yoxdur?{' '}
+            {tr('login.noAccount')}{' '}
             <Text variant="meta" color="green900" onPress={() => navigation.navigate('Register')}>
-              Qeydiyyatdan keç
+              {tr('common:actions.signUp')}
             </Text>
           </Text>
         </View>

@@ -7,6 +7,7 @@ import { useCategoryList, useRegions } from '@/api/hooks/content';
 import { PICKER_OPTIONS, uploadImage } from '@/api/upload';
 import { alertError } from '@/lib/errors';
 import { t } from '@/theme';
+import { useT } from '@/i18n';
 import { sanitizeUsername } from '@/lib/username';
 import type { AppScreenProps } from '@/navigation/types';
 
@@ -14,6 +15,7 @@ const BIO_MAX = 300;
 
 /** Ekran 54 — profilin redaktəsi: cover, avatar, ad, bio, region, maraqlar. */
 export function EditProfileScreen({ navigation }: AppScreenProps<'EditProfile'>) {
+  const { t: tr } = useT('profile');
   const me = useMe();
   const regions = useRegions();
   const categories = useCategoryList();
@@ -48,7 +50,7 @@ export function EditProfileScreen({ navigation }: AppScreenProps<'EditProfile'>)
       const media = await uploadImage(asset, kind);
       await (kind === 'avatar' ? setAvatar : setCover).mutateAsync(media.publicId);
     } catch (error) {
-      alertError(error, 'Şəkil yüklənmədi');
+      alertError(error, tr('edit.photoFailed'));
     } finally {
       setUploading(null);
     }
@@ -57,17 +59,17 @@ export function EditProfileScreen({ navigation }: AppScreenProps<'EditProfile'>)
   const save = async () => {
     const name = f.fullName.trim();
     if (name.length < 2) {
-      Alert.alert('Ad qısadır', 'Adın ən azı 2 hərf olmalıdır');
+      Alert.alert(tr('edit.nameShortTitle'), tr('edit.nameShortMessage'));
       return;
     }
     if (f.username.trim().length < 3) {
-      Alert.alert('İstifadəçi adı qısadır', 'İstifadəçi adı ən azı 3 simvol olmalıdır');
+      Alert.alert(tr('edit.usernameShortTitle'), tr('edit.usernameShortMessage'));
       return;
     }
     // Maraqlar ayrıca endpointdədir (PUT /me/interests) və ən azı 1 seçim tələb edir —
     // hamısını götürüb səssizcə yadda saxlamamaq əvəzinə səbəbi deyirik
     if (interests && interests.length === 0) {
-      Alert.alert('Maraq seç', 'Tövsiyələr üçün ən azı 1 maraq seçilməlidir');
+      Alert.alert(tr('edit.interestsEmptyTitle'), tr('edit.interestsEmptyMessage'));
       return;
     }
     try {
@@ -81,22 +83,22 @@ export function EditProfileScreen({ navigation }: AppScreenProps<'EditProfile'>)
       if (interests?.length) await saveInterests.mutateAsync(interests);
       navigation.goBack();
     } catch (error) {
-      alertError(error, 'Profil yadda saxlanılmadı');
+      alertError(error, tr('edit.saveFailed'));
     }
   };
 
   return (
     <Screen
       padded={false}
-      footer={<Button block label="Yadda saxla" onPress={() => void save()} loading={update.isPending || saveInterests.isPending} />}
+      footer={<Button block label={tr('common:actions.save')} onPress={() => void save()} loading={update.isPending || saveInterests.isPending} />}
     >
-      <TopBar title="Profili redaktə et" onBack={navigation.goBack} />
+      <TopBar title={tr('edit.title')} onBack={navigation.goBack} />
 
       <View style={styles.cover}>
         <Photo uri={profile?.coverUrl} style={styles.coverImage} radius={0} />
         <View style={styles.coverShade} />
         <Button
-          label={uploading === 'cover' ? 'Yüklənir…' : 'Cover dəyiş'}
+          label={uploading === 'cover' ? tr('common:states.loading') : tr('edit.changeCover')}
           variant="light"
           size="sm"
           left={<Icon name="camera" size={16} color={t.colors.ink} />}
@@ -108,7 +110,7 @@ export function EditProfileScreen({ navigation }: AppScreenProps<'EditProfile'>)
       <View style={styles.avatarWrap}>
         <Avatar uri={profile?.avatarUrl} size={96} name={profile?.fullName} />
         <Button
-          label={uploading === 'avatar' ? 'Yüklənir…' : 'Şəkli dəyiş'}
+          label={uploading === 'avatar' ? tr('common:states.loading') : tr('edit.changePhoto')}
           variant="soft"
           size="sm"
           onPress={() => void pick('avatar')}
@@ -117,9 +119,9 @@ export function EditProfileScreen({ navigation }: AppScreenProps<'EditProfile'>)
       </View>
 
       <View style={styles.form}>
-        <Input label="Ad və soyad" value={f.fullName} onChangeText={(v) => set({ fullName: v })} icon="user" />
+        <Input label={tr('edit.fullName')} value={f.fullName} onChangeText={(v) => set({ fullName: v })} icon="user" />
         <Input
-          label="İstifadəçi adı"
+          label={tr('edit.username')}
           value={f.username}
           onChangeText={(v) => set({ username: sanitizeUsername(v) })}
           autoCapitalize="none"
@@ -128,16 +130,16 @@ export function EditProfileScreen({ navigation }: AppScreenProps<'EditProfile'>)
           icon="at"
         />
         <Input
-          label={`Haqqında (${f.bio.length}/${BIO_MAX})`}
+          label={tr('edit.bio', { length: f.bio.length, max: BIO_MAX })}
           value={f.bio}
           onChangeText={(v) => set({ bio: v.slice(0, BIO_MAX) })}
           multiline
           numberOfLines={3}
-          placeholder="Bir-iki cümlə ilə özün haqqında"
+          placeholder={tr('edit.bioPlaceholder')}
         />
 
         <Text variant="small" color="ink2" style={styles.label}>
-          Ev regionu
+          {tr('edit.homeRegion')}
         </Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
           {regions.data?.map((r) => (
@@ -151,7 +153,7 @@ export function EditProfileScreen({ navigation }: AppScreenProps<'EditProfile'>)
         </ScrollView>
 
         <Text variant="small" color="ink2" style={styles.label}>
-          Maraqlar
+          {tr('edit.interests')}
         </Text>
         <View style={styles.interestGrid}>
           {categories.data?.map((i) => (

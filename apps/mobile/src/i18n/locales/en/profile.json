@@ -1,1 +1,129 @@
-{}
+{
+  "profile": {
+    "loading": "Loading profile…",
+    "edit": "Edit profile",
+    "settings": "Settings",
+    "level": "Level {{level}}",
+    "nextLevel": "{{xp}} XP to next level",
+    "stats": {
+      "regions": "Regions",
+      "places": "Places",
+      "experiences": "Experiences",
+      "routes": "Routes",
+      "wishlist": "Wishlist"
+    },
+    "followers_one": "{{count}} follower",
+    "followers_other": "{{count}} followers",
+    "following_one": "{{count}} following",
+    "following_other": "{{count}} following",
+    "myPosts": "My posts",
+    "badges": "Badges",
+    "leaderboard": "Leaderboard",
+    "wishlist": "Wishlist",
+    "bookings": "My bookings"
+  },
+  "tiers": {
+    "baslangic": "Beginner",
+    "kesf_eden": "Explorer",
+    "seyyah": "Traveler",
+    "kesfci": "Discoverer",
+    "gezgin": "Gezgin"
+  },
+  "edit": {
+    "title": "Edit profile",
+    "changeCover": "Change cover",
+    "changePhoto": "Change photo",
+    "fullName": "Full name",
+    "username": "Username",
+    "bio": "About ({{length}}/{{max}})",
+    "bioPlaceholder": "A sentence or two about yourself",
+    "homeRegion": "Home region",
+    "interests": "Interests",
+    "photoFailed": "Couldn't upload the photo",
+    "saveFailed": "Couldn't save your profile",
+    "nameShortTitle": "Name too short",
+    "nameShortMessage": "Your name must be at least 2 letters long",
+    "usernameShortTitle": "Username too short",
+    "usernameShortMessage": "Username must be at least 3 characters long",
+    "interestsEmptyTitle": "Pick an interest",
+    "interestsEmptyMessage": "Pick at least 1 interest to get recommendations"
+  },
+  "settings": {
+    "title": "Settings",
+    "sections": {
+      "account": "Account",
+      "language": "Language",
+      "notifications": "Notifications",
+      "privacy": "Privacy",
+      "downloads": "Downloads",
+      "legal": "Legal"
+    },
+    "editProfile": "Edit profile",
+    "interests": "My interests",
+    "interestsCount_one": "{{count}} selected",
+    "interestsCount_other": "{{count}} selected",
+    "paymentMethods": "Payment methods",
+    "email": "Email",
+    "languages": {
+      "az": "Azərbaycan",
+      "en": "English",
+      "ru": "Русский"
+    },
+    "push": "Push notifications",
+    "pushHint": "Likes, comments, followers and bookings",
+    "emailNotifications": "Email notifications",
+    "visibilityHint": "Who can see your profile",
+    "visibility": {
+      "public": "Everyone",
+      "followers": "Followers",
+      "private": "Only me"
+    },
+    "location": "Location",
+    "locationHint": "For check-ins and the “Nearby” feed",
+    "blocked": "Blocked accounts",
+    "unblock": "Unblock",
+    "noBlocked": "You haven't blocked anyone.",
+    "wifiOnly": "Download over Wi-Fi only",
+    "wifiOnlyHint": "Offline map packs",
+    "terms": "Terms of use",
+    "privacyPolicy": "Privacy policy",
+    "logout": "Log out",
+    "logoutTitle": "Log out",
+    "logoutMessage": "Do you want to log out of your account?",
+    "deleteAccount": "Delete account",
+    "deleteTitle": "Delete account?",
+    "deleteMessage": "Your posts, reviews and routes will be anonymised. This can't be undone."
+  },
+  "regions": {
+    "title": "Regions",
+    "progress_one": "{{discovered}} / {{count}} region",
+    "progress_other": "{{discovered}} / {{count}} regions",
+    "left_one": "{{count}} region of Azerbaijan left to explore",
+    "left_other": "{{count}} regions of Azerbaijan left to explore",
+    "allDone": "You've explored every region!",
+    "placesProgress_one": "{{visited}} / {{count}} place",
+    "placesProgress_other": "{{visited}} / {{count}} places",
+    "placesWaiting_one": "{{count}} place awaits you",
+    "placesWaiting_other": "{{count}} places await you"
+  },
+  "saved": {
+    "title": "Wishlist",
+    "filters": {
+      "all": "All",
+      "place": "Places",
+      "route": "Routes",
+      "experience": "Experiences",
+      "post": "Posts",
+      "business": "Hotels",
+      "event": "Events"
+    },
+    "guestTitle": "Save what you love",
+    "guestMessage": "Create an account to save places, routes and experiences for later.",
+    "emptyTitle": "Your list is empty",
+    "emptyMessage": "Save a place, route or experience you like — you'll find it here later."
+  },
+  "legal": {
+    "fallbackTitle": "Document",
+    "version": "Version {{version}} · {{date}}"
+  }
+}

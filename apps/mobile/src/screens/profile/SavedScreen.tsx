@@ -7,16 +7,18 @@ import { useUser } from '@/store/auth';
 import { useSaved } from '@/api/hooks/details';
 import { SEARCH_TYPE_LABEL, label } from '@/lib/labels';
 import { t } from '@/theme';
+import { useT } from '@/i18n';
 import type { AppScreenProps } from '@/navigation/types';
 
+/** Etiket render zamanı tərcümə olunur — `saved.filters.<countKey>`. */
 const FILTERS = [
-  { key: undefined, label: 'Hamısı', countKey: 'all' },
-  { key: 'place', label: 'Yerlər', countKey: 'place' },
-  { key: 'route', label: 'Marşrutlar', countKey: 'route' },
-  { key: 'experience', label: 'Təcrübələr', countKey: 'experience' },
-  { key: 'post', label: 'Paylaşımlar', countKey: 'post' },
-  { key: 'business', label: 'Otellər', countKey: 'business' },
-  { key: 'event', label: 'Tədbirlər', countKey: 'event' },
+  { key: undefined, countKey: 'all' },
+  { key: 'place', countKey: 'place' },
+  { key: 'route', countKey: 'route' },
+  { key: 'experience', countKey: 'experience' },
+  { key: 'post', countKey: 'post' },
+  { key: 'business', countKey: 'business' },
+  { key: 'event', countKey: 'event' },
 ] as const;
 
 /** Həmişə görünən çiplər — qalanları yalnız saxlanmış element varsa göstərilir. */
@@ -24,6 +26,7 @@ const ALWAYS = new Set(['all', 'place', 'route', 'experience']);
 
 /** Ekran 33 — İstəklərim (saxlanılanlar). */
 export function SavedScreen({ navigation }: AppScreenProps<'Saved'>) {
+  const { t: tr } = useT('profile');
   const isGuest = useUser()?.isGuest ?? false;
   const [type, setType] = useState<string | undefined>();
   const saved = useSaved(type);
@@ -38,15 +41,16 @@ export function SavedScreen({ navigation }: AppScreenProps<'Saved'>) {
 
   return (
     <Screen padded={false}>
-      <TopBar title="İstəklərim" onBack={navigation.goBack} />
+      <TopBar title={tr('saved.title')} onBack={navigation.goBack} />
 
       <View style={styles.chips}>
         {FILTERS.filter((f) => ALWAYS.has(f.countKey) || (saved.data?.counts[f.countKey] ?? 0) > 0 || type === f.key).map((f) => {
           const count = saved.data?.counts[f.countKey] ?? 0;
+          const name = tr(`saved.filters.${f.countKey}`);
           return (
             <Chip
-              key={f.label}
-              label={count ? `${f.label} · ${count}` : f.label}
+              key={f.countKey}
+              label={count ? `${name} · ${count}` : name}
               active={type === f.key}
               onPress={() => setType(f.key)}
             />
@@ -58,15 +62,15 @@ export function SavedScreen({ navigation }: AppScreenProps<'Saved'>) {
         {isGuest ? (
           <GuestEmpty
             icon="bookmark"
-            title="Sevdiklərini saxla"
-            message="Məkan, marşrut və təcrübələri sonraya saxlamaq üçün hesab yarat."
+            title={tr('saved.guestTitle')}
+            message={tr('saved.guestMessage')}
           />
         ) : saved.isLoading ? (
           <Loading />
         ) : !saved.data?.data.length ? (
           <EmptyState
-            title="Siyahın boşdur"
-            message="Bəyəndiyin məkanı, marşrutu və ya təcrübəni saxla — sonra buradan tapacaqsan."
+            title={tr('saved.emptyTitle')}
+            message={tr('saved.emptyMessage')}
           />
         ) : (
           <View style={styles.list}>

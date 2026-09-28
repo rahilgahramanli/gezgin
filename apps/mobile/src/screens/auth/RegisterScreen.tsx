@@ -4,11 +4,13 @@ import { Button, Input, Screen, Text, TopBar } from '@/components';
 import { useRegister } from '@/api/hooks/auth';
 import { ApiError } from '@/api/client';
 import { t } from '@/theme';
+import { useT } from '@/i18n';
 import { sanitizeUsername } from '@/lib/username';
 import type { AuthScreenProps } from '@/navigation/types';
 
 /** Ekran 03 — qeydiyyat. */
 export function RegisterScreen({ navigation }: AuthScreenProps<'Register'>) {
+  const { t: tr } = useT('auth');
   const [fullName, setFullName] = useState('');
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
@@ -30,24 +32,24 @@ export function RegisterScreen({ navigation }: AuthScreenProps<'Register'>) {
 
   return (
     <Screen scroll padded={false}>
-      <TopBar title="Qeydiyyat" onBack={navigation.goBack} />
+      <TopBar title={tr('register.topTitle')} onBack={navigation.goBack} />
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <View style={styles.body}>
-          <Text variant="titleXl">Hesab yarat</Text>
+          <Text variant="titleXl">{tr('register.title')}</Text>
           <Text variant="meta" style={styles.sub}>
-            Gezgin icmasına qoşul, kəşf et və paylaş
+            {tr('register.sub')}
           </Text>
 
           <View style={styles.form}>
             <Input
-              label="Ad Soyad"
+              label={tr('register.fullName')}
               icon="user"
-              placeholder="Aysel Məmmədova"
+              placeholder={tr('register.fullNamePlaceholder')}
               value={fullName}
               onChangeText={setFullName}
             />
             <Input
-              label="İstifadəçi adı"
+              label={tr('fields.username')}
               icon="at"
               placeholder="aysel.go"
               autoCapitalize="none"
@@ -58,7 +60,7 @@ export function RegisterScreen({ navigation }: AuthScreenProps<'Register'>) {
               error={usernameError}
             />
             <Input
-              label="E-mail"
+              label={tr('fields.email')}
               icon="mail"
               placeholder="aysel@gezgin.app"
               autoCapitalize="none"
@@ -69,9 +71,9 @@ export function RegisterScreen({ navigation }: AuthScreenProps<'Register'>) {
               error={emailError}
             />
             <Input
-              label="Şifrə"
+              label={tr('fields.password')}
               icon="lock"
-              placeholder="Ən azı 8 simvol"
+              placeholder={tr('fields.passwordHint')}
               secure
               value={password}
               onChangeText={setPassword}
@@ -80,16 +82,16 @@ export function RegisterScreen({ navigation }: AuthScreenProps<'Register'>) {
           </View>
 
           <Button
-            label="Davam et"
+            label={tr('common:actions.continue')}
             onPress={() => register.mutate({ fullName: fullName.trim(), username: username.trim(), email: email.trim(), password })}
             loading={register.isPending}
             disabled={!canSubmit}
           />
 
           <Text variant="meta" center style={styles.footer}>
-            Artıq hesabın var?{' '}
+            {tr('register.haveAccount')}{' '}
             <Text variant="meta" color="green900" onPress={() => navigation.navigate('Login')}>
-              Daxil ol
+              {tr('register.login')}
             </Text>
           </Text>
         </View>

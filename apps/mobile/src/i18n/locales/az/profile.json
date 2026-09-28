@@ -1,1 +1,122 @@
-{}
+{
+  "profile": {
+    "loading": "Profil yüklənir…",
+    "edit": "Profili redaktə et",
+    "settings": "Tənzimləmələr",
+    "level": "Level {{level}}",
+    "nextLevel": "Növbəti levelə {{xp}} XP",
+    "stats": {
+      "regions": "Regionlar",
+      "places": "Məkanlar",
+      "experiences": "Təcrübələr",
+      "routes": "Marşrutlar",
+      "wishlist": "İstəklərim"
+    },
+    "followers_other": "{{count}} izləyici",
+    "following_other": "{{count}} izlənən",
+    "myPosts": "Paylaşımlarım",
+    "badges": "Nailiyyətlər",
+    "leaderboard": "Liderlər",
+    "wishlist": "İstəklərim",
+    "bookings": "Rezervasiyalarım"
+  },
+  "tiers": {
+    "baslangic": "Başlanğıc",
+    "kesf_eden": "Kəşf edən",
+    "seyyah": "Səyyah",
+    "kesfci": "Kəşfçi",
+    "gezgin": "Gezgin"
+  },
+  "edit": {
+    "title": "Profili redaktə et",
+    "changeCover": "Cover dəyiş",
+    "changePhoto": "Şəkli dəyiş",
+    "fullName": "Ad və soyad",
+    "username": "İstifadəçi adı",
+    "bio": "Haqqında ({{length}}/{{max}})",
+    "bioPlaceholder": "Bir-iki cümlə ilə özün haqqında",
+    "homeRegion": "Ev regionu",
+    "interests": "Maraqlar",
+    "photoFailed": "Şəkil yüklənmədi",
+    "saveFailed": "Profil yadda saxlanılmadı",
+    "nameShortTitle": "Ad qısadır",
+    "nameShortMessage": "Adın ən azı 2 hərf olmalıdır",
+    "usernameShortTitle": "İstifadəçi adı qısadır",
+    "usernameShortMessage": "İstifadəçi adı ən azı 3 simvol olmalıdır",
+    "interestsEmptyTitle": "Maraq seç",
+    "interestsEmptyMessage": "Tövsiyələr üçün ən azı 1 maraq seçilməlidir"
+  },
+  "settings": {
+    "title": "Tənzimləmələr",
+    "sections": {
+      "account": "Hesab",
+      "language": "Dil",
+      "notifications": "Bildirişlər",
+      "privacy": "Məxfilik",
+      "downloads": "Yükləmə",
+      "legal": "Hüquqi"
+    },
+    "editProfile": "Profili redaktə et",
+    "interests": "Maraqlarım",
+    "interestsCount_other": "{{count}} seçim",
+    "paymentMethods": "Ödəniş üsullarım",
+    "email": "E-mail",
+    "languages": {
+      "az": "Azərbaycan",
+      "en": "English",
+      "ru": "Русский"
+    },
+    "push": "Push bildirişləri",
+    "pushHint": "Bəyənmə, şərh, izləyici və rezervasiya",
+    "emailNotifications": "E-mail bildirişləri",
+    "visibilityHint": "Profilini kim görə bilər",
+    "visibility": {
+      "public": "Hamı",
+      "followers": "İzləyicilər",
+      "private": "Yalnız mən"
+    },
+    "location": "Yerləşmə",
+    "locationHint": "Check-in və “Yaxınlıqda” lenti üçün",
+    "blocked": "Bloklanmış hesablar",
+    "unblock": "Bloku götür",
+    "noBlocked": "Heç kimi bloklamamısan.",
+    "wifiOnly": "Yalnız Wi-Fi ilə yüklə",
+    "wifiOnlyHint": "Offline xəritə paketləri",
+    "terms": "İstifadə şərtləri",
+    "privacyPolicy": "Məxfilik siyasəti",
+    "logout": "Çıxış",
+    "logoutTitle": "Çıxış",
+    "logoutMessage": "Hesabdan çıxmaq istəyirsən?",
+    "deleteAccount": "Hesabı sil",
+    "deleteTitle": "Hesabı silmək?",
+    "deleteMessage": "Paylaşımların, rəylərin və marşrutların anonimləşdiriləcək. Bu əməliyyat geri qaytarılmır."
+  },
+  "regions": {
+    "title": "Regionlar",
+    "progress_other": "{{discovered}} / {{count}} region",
+    "left_other": "Azərbaycanın {{count}} regionu qalıb",
+    "allDone": "Bütün regionları kəşf etmisən!",
+    "placesProgress_other": "{{visited}} / {{count}} məkan",
+    "placesWaiting_other": "{{count}} məkan səni gözləyir"
+  },
+  "saved": {
+    "title": "İstəklərim",
+    "filters": {
+      "all": "Hamısı",
+      "place": "Yerlər",
+      "route": "Marşrutlar",
+      "experience": "Təcrübələr",
+      "post": "Paylaşımlar",
+      "business": "Otellər",
+      "event": "Tədbirlər"
+    },
+    "guestTitle": "Sevdiklərini saxla",
+    "guestMessage": "Məkan, marşrut və təcrübələri sonraya saxlamaq üçün hesab yarat.",
+    "emptyTitle": "Siyahın boşdur",
+    "emptyMessage": "Bəyəndiyin məkanı, marşrutu və ya təcrübəni saxla — sonra buradan tapacaqsan."
+  },
+  "legal": {
+    "fallbackTitle": "Sənəd",
+    "version": "Versiya {{version}} · {{date}}"
+  }
+}

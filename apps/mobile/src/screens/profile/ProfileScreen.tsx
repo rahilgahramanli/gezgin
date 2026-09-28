@@ -3,11 +3,15 @@ import {
   Avatar, Button, Card, ErrorState, Icon, Loading, Photo, Pill, Progress, Screen, StatCell, Text, TopBar,
 } from '@/components';
 import { useMe, useMyStats } from '@/api/hooks/me';
+import { tierForLevel } from '@gezgin/shared';
 import { t } from '@/theme';
+import { useT } from '@/i18n';
+import { formatNumber } from '@/lib/time';
 import type { TabScreenProps } from '@/navigation/types';
 
 /** Ekran 28 — profil, Gezgin Score və statistika. */
 export function ProfileScreen({ navigation }: TabScreenProps<'Profile'>) {
+  const { t: tr, tp: tpr } = useT('profile');
   const me = useMe();
   const stats = useMyStats();
 
@@ -16,7 +20,7 @@ export function ProfileScreen({ navigation }: TabScreenProps<'Profile'>) {
     return me.error && !me.isFetching ? (
       <ErrorState error={me.error} onRetry={() => void me.refetch()} />
     ) : (
-      <Loading label="Profil yüklənir…" />
+      <Loading label={tr('profile.loading')} />
     );
   }
 
@@ -33,8 +37,8 @@ export function ProfileScreen({ navigation }: TabScreenProps<'Profile'>) {
             light
             transparent
             actions={[
-              { icon: 'edit', label: 'Profili redaktə et', onPress: () => navigation.navigate('EditProfile') },
-              { icon: 'settings', label: 'Tənzimləmələr', onPress: () => navigation.navigate('Settings') },
+              { icon: 'edit', label: tr('profile.edit'), onPress: () => navigation.navigate('EditProfile') },
+              { icon: 'settings', label: tr('profile.settings'), onPress: () => navigation.navigate('Settings') },
             ]}
           />
         </View>
@@ -60,13 +64,14 @@ export function ProfileScreen({ navigation }: TabScreenProps<'Profile'>) {
         <Card padded style={styles.scoreCard} onPress={() => navigation.navigate('Score')}>
           <View style={styles.scoreTop}>
             <View>
-              <Text variant="h3">Level {g.level}</Text>
-              <Text variant="meta">{g.tier}</Text>
+              <Text variant="h3">{tr('profile.level', { level: g.level })}</Text>
+              {/* API səviyyə adını azərbaycanca qaytarır — dil üçün koddan (level → tier) tərcümə edirik */}
+              <Text variant="meta">{tr(`tiers.${tierForLevel(g.level).code}`, { defaultValue: g.tier })}</Text>
             </View>
             <View style={styles.scoreRight}>
               <Text variant="meta">Gezgin Score</Text>
               <Text variant="titleLg" color="green900">
-                {g.gezginScore.toLocaleString('az-AZ')}
+                {formatNumber(g.gezginScore)}
               </Text>
             </View>
           </View>
@@ -77,18 +82,18 @@ export function ProfileScreen({ navigation }: TabScreenProps<'Profile'>) {
               {g.xpInLevel} / {g.xpForLevel} XP
             </Text>
             <Text variant="small" color="muted">
-              Növbəti levelə {g.xpToNext} XP
+              {tr('profile.nextLevel', { xp: g.xpToNext })}
             </Text>
           </View>
         </Card>
 
         {stats.data ? (
           <View style={styles.stats}>
-            <StatCell value={`${stats.data.regions}`} label="Regionlar" onPress={() => navigation.navigate('Regions')} />
-            <StatCell value={`${stats.data.places}`} label="Məkanlar" onPress={() => navigation.navigate('Regions')} />
-            <StatCell value={`${stats.data.experiences}`} label="Təcrübələr" onPress={() => navigation.navigate('MyBookings')} />
-            <StatCell value={`${stats.data.routes}`} label="Marşrutlar" onPress={openMyProfile} />
-            <StatCell value={`${stats.data.wantToGo}`} label="İstəklərim" onPress={() => navigation.navigate('Saved')} />
+            <StatCell value={`${stats.data.regions}`} label={tr('profile.stats.regions')} onPress={() => navigation.navigate('Regions')} />
+            <StatCell value={`${stats.data.places}`} label={tr('profile.stats.places')} onPress={() => navigation.navigate('Regions')} />
+            <StatCell value={`${stats.data.experiences}`} label={tr('profile.stats.experiences')} onPress={() => navigation.navigate('MyBookings')} />
+            <StatCell value={`${stats.data.routes}`} label={tr('profile.stats.routes')} onPress={openMyProfile} />
+            <StatCell value={`${stats.data.wantToGo}`} label={tr('profile.stats.wishlist')} onPress={() => navigation.navigate('Saved')} />
           </View>
         ) : null}
 
@@ -103,14 +108,14 @@ export function ProfileScreen({ navigation }: TabScreenProps<'Profile'>) {
         {stats.data ? (
           <View style={styles.links}>
             <Button
-              label={`${stats.data.followers} izləyici`}
+              label={tpr('profile.followers', stats.data.followers)}
               variant="outline"
               size="sm"
               onPress={() => navigation.navigate('Followers', { username: me.data!.username, tab: 'followers' })}
               style={styles.link}
             />
             <Button
-              label={`${stats.data.following} izlənən`}
+              label={tpr('profile.following', stats.data.following)}
               variant="outline"
               size="sm"
               onPress={() => navigation.navigate('Followers', { username: me.data!.username, tab: 'following' })}
@@ -119,20 +124,20 @@ export function ProfileScreen({ navigation }: TabScreenProps<'Profile'>) {
           </View>
         ) : null}
         <Button
-          label="Paylaşımlarım"
+          label={tr('profile.myPosts')}
           variant="soft"
           onPress={() => navigation.navigate('UserProfile', { username: me.data!.username })}
         />
 
         <View style={styles.links}>
-          <Button label="Nailiyyətlər" variant="soft" onPress={() => navigation.navigate('Badges')} style={styles.link} />
-          <Button label="Liderlər" variant="soft" onPress={() => navigation.navigate('Leaderboard')} style={styles.link} />
+          <Button label={tr('profile.badges')} variant="soft" onPress={() => navigation.navigate('Badges')} style={styles.link} />
+          <Button label={tr('profile.leaderboard')} variant="soft" onPress={() => navigation.navigate('Leaderboard')} style={styles.link} />
         </View>
-        <Button label="İstəklərim" variant="outline" onPress={() => navigation.navigate('Saved')} />
-        <Button label="Rezervasiyalarım" variant="outline" onPress={() => navigation.navigate('MyBookings')} />
+        <Button label={tr('profile.wishlist')} variant="outline" onPress={() => navigation.navigate('Saved')} />
+        <Button label={tr('profile.bookings')} variant="outline" onPress={() => navigation.navigate('MyBookings')} />
 
         <Button
-          label="Profili redaktə et"
+          label={tr('profile.edit')}
           variant="outline"
           left={<Icon name="edit" size={18} color={t.colors.green900} />}
           onPress={() => navigation.navigate('EditProfile')}
