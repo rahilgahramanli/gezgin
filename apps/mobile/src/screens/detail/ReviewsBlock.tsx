@@ -6,6 +6,7 @@ import { Avatar, Button, Card, Icon, Pill, Rating, SectionHead, Text } from '@/c
 import { useReviewSummary, useReviews } from '@/api/hooks/details';
 import type { ReviewTargetType } from '@/api/hooks/social';
 import { errorText } from '@/lib/errors';
+import { useT } from '@/i18n';
 import { t } from '@/theme';
 import type { AppStackParamList } from '@/navigation/types';
 
@@ -27,6 +28,7 @@ export function ReviewsBlock({
   name: string;
   subtitle?: string;
 }) {
+  const { t: tr, tp: tpr } = useT('explore');
   const navigation = useNavigation<NativeStackNavigationProp<AppStackParamList>>();
   const summary = useReviewSummary(targetType, target);
   const reviews = useReviews(targetType, target);
@@ -45,11 +47,11 @@ export function ReviewsBlock({
     // "Hələ rəy yoxdur" yazmaq yanlış olardı — rəylər sadəcə yüklənmədi
     return (
       <Card padded style={styles.empty}>
-        <Text variant="h3">Rəylər yüklənmədi</Text>
+        <Text variant="h3">{tr('reviews.loadFailed')}</Text>
         <Text variant="small" color="ink2">
-          {errorText(reviews.error, 'Bir az sonra yenidən cəhd et.')}
+          {errorText(reviews.error, tr('common:states.tryLater'))}
         </Text>
-        <Button label="Yenidən cəhd et" variant="soft" size="sm" onPress={() => void reviews.refetch()} />
+        <Button label={tr('common:actions.retry')} variant="soft" size="sm" onPress={() => void reviews.refetch()} />
       </Card>
     );
   }
@@ -58,18 +60,22 @@ export function ReviewsBlock({
     // Rəy yoxdursa da yazmaq mümkün olmalıdır — ekran 27-yə giriş budur
     return (
       <Card padded style={styles.empty}>
-        <Text variant="h3">Hələ rəy yoxdur</Text>
+        <Text variant="h3">{tr('reviews.empty')}</Text>
         <Text variant="small" color="ink2">
-          Burada olmusan? Təcrübəni bölüş — rəy +{XP_RULES.review_written.xp} XP qazandırır.
+          {tr('reviews.emptyBlockMessage', { xp: XP_RULES.review_written.xp })}
         </Text>
-        <Button label="İlk rəyi sən yaz" variant="soft" size="sm" onPress={write} />
+        <Button label={tr('reviews.writeFirst')} variant="soft" size="sm" onPress={write} />
       </Card>
     );
   }
 
   return (
     <View>
-      <SectionHead title={`Rəylər (${total})`} actionLabel="Hamısına bax" onAction={all} />
+      <SectionHead
+        title={tr('reviews.titleCount', { total })}
+        actionLabel={tr('common:actions.seeAll')}
+        onAction={all}
+      />
       <View style={styles.list}>
         <Card padded style={styles.summary} onPress={all}>
           <Text variant="titleLg">{average.toFixed(1)}</Text>
@@ -85,7 +91,7 @@ export function ReviewsBlock({
                 />
               ))}
             </View>
-            <Text variant="caption">{total} rəy əsasında</Text>
+            <Text variant="caption">{tpr('reviews.basedOn', total)}</Text>
           </View>
           <Icon name="chevronRight" size={18} color={t.colors.muted} />
         </Card>
@@ -101,7 +107,7 @@ export function ReviewsBlock({
                   </Text>
                   {r.author.isLocalExpert ? <Pill label="Local Expert" tone="brown" /> : null}
                 </View>
-                <Text variant="caption">Level {r.author.level}</Text>
+                <Text variant="caption">{tr('reviews.level', { level: r.author.level })}</Text>
               </View>
               <Rating value={r.rating} />
             </View>
@@ -114,7 +120,7 @@ export function ReviewsBlock({
         ))}
 
         <Button
-          label="Rəy yaz"
+          label={tr('reviews.write')}
           variant="outline"
           left={<Icon name="edit" size={18} color={t.colors.green900} />}
           onPress={write}

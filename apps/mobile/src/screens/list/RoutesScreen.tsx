@@ -2,32 +2,34 @@ import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Button, Chip, EmptyState, ListSkeleton, Pill, Rating, RowCard, Screen, Text, TopBar } from '@/components';
 import { useRoutes } from '@/api/hooks/content';
+import { useT } from '@/i18n';
 import { t } from '@/theme';
 import type { AppScreenProps } from '@/navigation/types';
 
-/** Ekran 14 — marşrutlar, müddət filtri ilə. */
+/** Ekran 14 — marşrutlar, müddət filtri ilə. Çip mətni render zamanı tərcümə olunur. */
 const DURATIONS = [
-  { key: undefined, label: 'Hamısı' },
-  { key: '1', label: '1 gün' },
-  { key: '2-3', label: '2–3 gün' },
-  { key: '4', label: '4+ gün' },
+  { key: undefined, labelKey: 'all' },
+  { key: '1', labelKey: 'routes.durations.day1' },
+  { key: '2-3', labelKey: 'routes.durations.days2to3' },
+  { key: '4', labelKey: 'routes.durations.days4plus' },
 ] as const;
 
 export function RoutesScreen({ navigation }: AppScreenProps<'Routes'>) {
+  const { t: tr, tp: tpr } = useT('explore');
   const [duration, setDuration] = useState<string | undefined>();
   const routes = useRoutes({ duration, limit: 30 });
 
   return (
     <Screen padded={false}>
       <TopBar
-        title="Marşrutlar"
+        title={tr('routes.title')}
         onBack={navigation.goBack}
         actions={[{ icon: 'plus', onPress: () => navigation.navigate('RouteBuilder') }]}
       />
 
       <View style={styles.chipRow}>
         {DURATIONS.map((d) => (
-          <Chip key={d.label} label={d.label} active={duration === d.key} onPress={() => setDuration(d.key)} />
+          <Chip key={d.labelKey} label={tr(d.labelKey)} active={duration === d.key} onPress={() => setDuration(d.key)} />
         ))}
       </View>
 
@@ -36,11 +38,11 @@ export function RoutesScreen({ navigation }: AppScreenProps<'Routes'>) {
           <ListSkeleton />
         ) : !routes.data?.data.length ? (
           <EmptyState
-            title="Marşrut tapılmadı"
-            message="Başqa müddət seçin və ya özün marşrut qur."
+            title={tr('routes.emptyTitle')}
+            message={tr('routes.emptyMessage')}
             action={
               <Button
-                label="Marşrut qur"
+                label={tr('routes.build')}
                 variant="soft"
                 size="sm"
                 onPress={() => navigation.navigate('RouteBuilder')}
@@ -54,13 +56,13 @@ export function RoutesScreen({ navigation }: AppScreenProps<'Routes'>) {
                 key={r.slug}
                 uri={r.coverUrl}
                 title={r.title}
-                subtitle={`${r.days} gün · ${r.region.name}`}
+                subtitle={`${tpr('common:labels.duration.days', r.days)} · ${r.region.name}`}
                 meta={
                   <View style={styles.meta}>
                     {r.ratingCount > 0 ? <Rating value={r.rating} count={r.ratingCount} /> : null}
-                    <Text variant="caption">{r.stopCount} dayanacaq</Text>
+                    <Text variant="caption">{tpr('units.stops', r.stopCount)}</Text>
                     {r.distanceKm ? <Text variant="caption">{r.distanceKm} km</Text> : null}
-                    {r.isOfficial ? <Pill label="Rəsmi" tone="teal" /> : null}
+                    {r.isOfficial ? <Pill label={tr('routes.official')} tone="teal" /> : null}
                   </View>
                 }
                 onPress={() => navigation.navigate('RouteDetail', { slug: r.slug })}

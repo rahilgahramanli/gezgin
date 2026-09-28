@@ -1,1 +1,167 @@
-{}
+{
+  "all": "Hamısı",
+  "free": "Pulsuz",
+  "unsave": "Saxlamanı götür",
+  "addToTrip": "Plana əlavə et",
+  "units": {
+    "places_other": "{{count}} məkan",
+    "stops_other": "{{count}} dayanacaq",
+    "minutes_other": "{{count}} dəq",
+    "reviews_other": "{{count}} rəy"
+  },
+  "home": {
+    "greeting": "Salam, {{name}} 👋",
+    "greetingFallback": "gezgin",
+    "subtitle": "Harada kəşf edək bu gün?",
+    "searchPlaceholder": "Məkan, marşrut və ya təcrübə axtar…",
+    "loadFailed": "Məlumat yüklənmədi",
+    "popularPlaces": "Populyar məkanlar",
+    "featuredExperiences": "Seçilmiş təcrübələr",
+    "lodging": "Otellər və qonaq evləri",
+    "recommendedRoutes": "Tövsiyə olunan marşrutlar",
+    "noPlaces": "Hələ məkan yoxdur",
+    "noPlacesInRegion": "{{region}} regionunda məkan yoxdur",
+    "noExperiences": "Hələ təcrübə yoxdur",
+    "noExperiencesInRegion": "{{region}} regionunda təcrübə yoxdur",
+    "noRoutes": "Hələ marşrut yoxdur",
+    "noRoutesInRegion": "{{region}} regionunda marşrut yoxdur",
+    "packages_other": "{{count}} paket",
+    "businessA11y": "Biznes {{name}}"
+  },
+  "search": {
+    "title": "Axtarış",
+    "placeholder": "Məkan, marşrut, təcrübə…",
+    "types": {
+      "place": "Yerlər",
+      "route": "Marşrutlar",
+      "experience": "Təcrübələr",
+      "user": "Gezginlər"
+    },
+    "promptTitle": "Nə axtarırsan?",
+    "promptMessage": "Məkan adı, marşrut və ya təcrübə yaz. Ən azı 2 hərf.",
+    "emptyTitle": "Nəticə tapılmadı",
+    "emptyMessage": "\"{{query}}\" üçün heç nə tapılmadı.",
+    "results_other": "{{count}} nəticə"
+  },
+  "places": {
+    "title": "Yerlər",
+    "showOnMap": "Xəritədə göstər",
+    "filter": "Filtr",
+    "filterActive_other": "Filtr ({{count}} aktiv)",
+    "sortPopular": "Populyar",
+    "sortRating": "Ən yüksək reytinq",
+    "emptyTitle": "Məkan tapılmadı",
+    "emptyMessage": "Filtri dəyişib yenidən cəhd edin."
+  },
+  "filter": {
+    "title": "Filtr",
+    "active_other": "{{count}} aktiv",
+    "category": "Kateqoriya",
+    "minRating": "Minimum reytinq",
+    "andUp": "və yuxarı",
+    "entranceFee": "Giriş haqqı",
+    "distance": "Məsafə",
+    "distanceNote": "Məsafə cihazın mövqeyinə görə hesablanır — yerləşmə icazəsi lazımdır.",
+    "reset": "Sıfırla",
+    "show": "Göstər",
+    "showPlaces_other": "{{shown}} məkanı göstər"
+  },
+  "routes": {
+    "title": "Marşrutlar",
+    "durations": {
+      "day1": "1 gün",
+      "days2to3": "2–3 gün",
+      "days4plus": "4+ gün"
+    },
+    "emptyTitle": "Marşrut tapılmadı",
+    "emptyMessage": "Başqa müddət seçin və ya özün marşrut qur.",
+    "build": "Marşrut qur",
+    "official": "Rəsmi"
+  },
+  "experiences": {
+    "title": "Təcrübələr",
+    "emptyTitle": "Təcrübə tapılmadı",
+    "emptyMessage": "Başqa kateqoriya seçin."
+  },
+  "map": {
+    "title": "Xəritə",
+    "clustered_other": "{{count}} məkan · yaxınlaş"
+  },
+  "place": {
+    "checkin": "Check-in et",
+    "altitude": "Hündürlük",
+    "visit": "Ziyarət",
+    "entry": "Giriş",
+    "photos": "Fotolar ({{total}})",
+    "nearby": "Yaxınlıqdakılar"
+  },
+  "route": {
+    "deleteTitle": "Marşrut silinsin?",
+    "deleteMessage": "“{{title}}” və onun dayanacaqları silinəcək. Bu geri qaytarılmır.",
+    "deleteFailed": "Marşrut silinmədi",
+    "start": "Marşrutu başlat",
+    "official": "Rəsmi marşrut",
+    "distance": "Məsafə",
+    "duration": "Müddət",
+    "places": "Məkan",
+    "yours": "Sənin marşrutun",
+    "private": "Şəxsi",
+    "public": "İctimai",
+    "edit": "Redaktə et",
+    "delete": "Marşrutu sil",
+    "dayPlan": "Günlər üzrə plan",
+    "day": "{{day}}-ci gün",
+    "noStops": "Bu günə dayanacaq əlavə edilməyib"
+  },
+  "experience": {
+    "save": "Seçilmişlərə at",
+    "unsave": "Seçilmişlərdən çıxar",
+    "nextDate": "Növbəti tarix: {{date}}, {{time}}",
+    "seatsLeft_other": "{{count}} yer qalıb",
+    "book": "Təcrübəni bron et",
+    "local": "Lokal təcrübə",
+    "perPerson": "nəfər başına",
+    "expertExperiences_other": "{{count}} təcrübə",
+    "includes": "Qiymətə daxildir",
+    "expertEarns": "Local Expert qazanır",
+    "split": "{{expert}}% expertə · platforma komissiyası {{platform}}% ({{fee}} AZN)",
+    "rewards": "Gezgin qazancı",
+    "rewardExperience": "Təcrübə XP",
+    "rewardBooking": "Bron XP",
+    "rewardReview": "Rəy XP",
+    "about": "Haqqında",
+    "meetingPoint": "Görüş yeri"
+  },
+  "gallery": {
+    "official": "Rəsmi",
+    "community": "Gezginlərdən",
+    "addPhoto": "Foto əlavə et",
+    "emptyTitle": "Foto yoxdur",
+    "emptyCommunity": "Bu məkanı ilk paylaşan sən ol — check-in edib foto əlavə et.",
+    "emptyOfficial": "Bu məkan üçün hələ foto yüklənməyib.",
+    "photoBy": "Foto — {{name}}",
+    "photoN": "Foto {{n}}",
+    "communityBadge": "Gezgin"
+  },
+  "reviews": {
+    "title": "Rəylər",
+    "titleCount": "Rəylər ({{total}})",
+    "write": "Rəy yaz",
+    "writeFirst": "İlk rəyi sən yaz",
+    "loadFailed": "Rəylər yüklənmədi",
+    "empty": "Hələ rəy yoxdur",
+    "emptyAllMessage": "İlk rəyi sən yaz — digər gezginlərə kömək edərsən.",
+    "emptyBlockMessage": "Burada olmusan? Təcrübəni bölüş — rəy +{{xp}} XP qazandırır.",
+    "basedOn_other": "{{count}} rəy əsasında",
+    "level": "Level {{level}}",
+    "sort": {
+      "newest": "Ən yeni",
+      "highest": "Ən yüksək",
+      "lowest": "Ən aşağı",
+      "helpful": "Faydalı"
+    },
+    "helpful": "Faydalı",
+    "helpfulA11y": "Faydalı: {{n}}",
+    "helpfulMarkedA11y": "Faydalı — işarələnib: {{n}}"
+  }
+}

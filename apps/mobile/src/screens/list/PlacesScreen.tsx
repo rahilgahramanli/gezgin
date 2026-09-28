@@ -3,11 +3,13 @@ import { StyleSheet, View } from 'react-native';
 import { Chip, EmptyState, ListSkeleton, Rating, RowCard, Screen, Text, TopBar } from '@/components';
 import { usePlaces, useRegions } from '@/api/hooks/content';
 import { toQuery, type PlaceFilterValue } from '@/screens/list/FilterSheetScreen';
+import { useT } from '@/i18n';
 import { t } from '@/theme';
 import type { AppScreenProps } from '@/navigation/types';
 
 /** Ekran 12 — yerlər siyahısı və filtrlər. */
 export function PlacesScreen({ route, navigation }: AppScreenProps<'Places'>) {
+  const { t: tr, tp: tpr } = useT('explore');
   const [region, setRegion] = useState<string | undefined>(route.params?.region);
   const [sort, setSort] = useState<'popular' | 'rating'>('popular');
   // Filtr paneli (ekran 45) nəticəni `route.params` ilə geri qaytarır
@@ -24,13 +26,13 @@ export function PlacesScreen({ route, navigation }: AppScreenProps<'Places'>) {
   return (
     <Screen padded={false}>
       <TopBar
-        title="Yerlər"
+        title={tr('places.title')}
         onBack={navigation.goBack}
         actions={[
-          { icon: 'map', label: 'Xəritədə göstər', onPress: () => navigation.navigate('Map', region ? { region } : undefined) },
+          { icon: 'map', label: tr('places.showOnMap'), onPress: () => navigation.navigate('Map', region ? { region } : undefined) },
           {
             icon: 'filter',
-            label: activeFilters ? `Filtr (${activeFilters} aktiv)` : 'Filtr',
+            label: activeFilters ? tpr('places.filterActive', activeFilters) : tr('places.filter'),
             active: activeFilters > 0,
             onPress: () => navigation.navigate('FilterSheet', { region, value: filter }),
           },
@@ -39,14 +41,14 @@ export function PlacesScreen({ route, navigation }: AppScreenProps<'Places'>) {
 
       <View style={styles.filters}>
         <View style={styles.chipRow}>
-          <Chip label="Hamısı" active={!region} onPress={() => setRegion(undefined)} />
+          <Chip label={tr('all')} active={!region} onPress={() => setRegion(undefined)} />
           {(regions.data ?? []).map((r) => (
             <Chip key={r.slug} label={r.name} active={region === r.slug} onPress={() => setRegion(r.slug)} />
           ))}
         </View>
         <View style={styles.chipRow}>
-          <Chip label="Populyar" active={sort === 'popular'} onPress={() => setSort('popular')} />
-          <Chip label="Ən yüksək reytinq" active={sort === 'rating'} onPress={() => setSort('rating')} />
+          <Chip label={tr('places.sortPopular')} active={sort === 'popular'} onPress={() => setSort('popular')} />
+          <Chip label={tr('places.sortRating')} active={sort === 'rating'} onPress={() => setSort('rating')} />
         </View>
       </View>
 
@@ -54,11 +56,11 @@ export function PlacesScreen({ route, navigation }: AppScreenProps<'Places'>) {
         {places.isLoading ? (
           <ListSkeleton />
         ) : !places.data?.data.length ? (
-          <EmptyState title="Məkan tapılmadı" message="Filtri dəyişib yenidən cəhd edin." />
+          <EmptyState title={tr('places.emptyTitle')} message={tr('places.emptyMessage')} />
         ) : (
           <>
             <Text variant="meta" style={styles.count}>
-              {places.data.data.length} məkan
+              {tpr('units.places', places.data.data.length)}
             </Text>
             <View style={styles.list}>
               {places.data.data.map((p) => (
@@ -73,7 +75,7 @@ export function PlacesScreen({ route, navigation }: AppScreenProps<'Places'>) {
                       {p.distanceKm != null ? (
                         <Text variant="caption">{p.distanceKm} km</Text>
                       ) : null}
-                      {p.entranceFeeAzn === 0 ? <Text variant="caption">Pulsuz</Text> : null}
+                      {p.entranceFeeAzn === 0 ? <Text variant="caption">{tr('free')}</Text> : null}
                     </View>
                   }
                   onPress={() => navigation.navigate('PlaceDetail', { slug: p.slug })}

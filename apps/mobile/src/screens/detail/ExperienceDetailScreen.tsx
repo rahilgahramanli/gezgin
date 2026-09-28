@@ -6,6 +6,7 @@ import { useExperienceDetail, useToggleSaved } from '@/api/hooks/details';
 import { durationLabel } from '@/lib/labels';
 import { shareItem } from '@/lib/share';
 import { bakuDate, bakuTime } from '@/lib/time';
+import { useT } from '@/i18n';
 import { t } from '@/theme';
 import type { AppScreenProps } from '@/navigation/types';
 import { ReviewsBlock } from './ReviewsBlock';
@@ -15,6 +16,7 @@ const HERO_HEIGHT = 300;
 
 /** Ekran 17 — təcrübə detalı, 80/20 gəlir bölgüsü ilə. */
 export function ExperienceDetailScreen({ route, navigation }: AppScreenProps<'ExperienceDetail'>) {
+  const { t: tr, tp: tpr } = useT('explore');
   const { slug } = route.params;
   const detail = useExperienceDetail(slug);
   const save = useToggleSaved('experience', slug);
@@ -36,22 +38,26 @@ export function ExperienceDetailScreen({ route, navigation }: AppScreenProps<'Ex
       actions={[
         {
           icon: 'heart',
-          label: e.isSaved ? 'Seçilmişlərdən çıxar' : 'Seçilmişlərə at',
+          label: e.isSaved ? tr('experience.unsave') : tr('experience.save'),
           active: e.isSaved,
           onPress: () => save.mutate(!e.isSaved),
         },
-        { icon: 'share', label: 'Paylaş', onPress: () => void shareItem('experience', slug, e.title) },
+        { icon: 'share', label: tr('common:actions.share'), onPress: () => void shareItem('experience', slug, e.title) },
       ]}
       footer={
         <>
           {e.nextAvailable ? (
             <Text variant="caption" center style={styles.availability}>
-              Növbəti tarix: {bakuDate(e.nextAvailable.startAt)}, {bakuTime(e.nextAvailable.startAt)} ·{' '}
-              {e.nextAvailable.seatsLeft} yer qalıb
+              {tr('experience.nextDate', {
+                date: bakuDate(e.nextAvailable.startAt),
+                time: bakuTime(e.nextAvailable.startAt),
+              })}
+              {' · '}
+              {tpr('experience.seatsLeft', e.nextAvailable.seatsLeft)}
             </Text>
           ) : null}
           <Button
-            label="Təcrübəni bron et"
+            label={tr('experience.book')}
             onPress={() => navigation.navigate('Booking', { experience: slug })}
             style={styles.ctaButton}
           />
@@ -62,7 +68,7 @@ export function ExperienceDetailScreen({ route, navigation }: AppScreenProps<'Ex
           <Photo uri={e.photos[0]?.url} style={styles.heroImage} radius={0} />
           <View style={styles.heroShade} />
           <View style={styles.heroText}>
-            <Pill label="Lokal təcrübə" tone="brown" />
+            <Pill label={tr('experience.local')} tone="brown" />
             <Text variant="titleXl" style={styles.onPhoto}>
               {e.title}
             </Text>
@@ -80,14 +86,14 @@ export function ExperienceDetailScreen({ route, navigation }: AppScreenProps<'Ex
             <Text variant="titleLg" color="green900">
               {e.pricing.priceAzn} AZN
             </Text>
-            <Text variant="caption">nəfər başına</Text>
+            <Text variant="caption">{tr('experience.perPerson')}</Text>
           </View>
           {e.ratingCount > 0 ? <Rating value={e.rating} count={e.ratingCount} size={18} /> : null}
         </View>
 
         {/* Bron əsas hərəkətdir (alt panel); səyahət planına əlavə etmək ikinci dərəcəli */}
         <Button
-          label="Plana əlavə et"
+          label={tr('addToTrip')}
           variant="soft"
           size="sm"
           left={<Icon name="plus" size={16} color={t.colors.green900} />}
@@ -105,7 +111,7 @@ export function ExperienceDetailScreen({ route, navigation }: AppScreenProps<'Ex
               <Pill label="Local Expert" tone="brown" />
             </View>
             <Text variant="caption">
-              ★ {e.expert.rating.toFixed(1)} · {e.expert.experienceCount} təcrübə
+              ★ {e.expert.rating.toFixed(1)} · {tpr('experience.expertExperiences', e.expert.experienceCount)}
               {e.expert.languages.length ? ` · ${e.expert.languages.join(', ').toUpperCase()}` : ''}
             </Text>
           </View>
@@ -113,7 +119,7 @@ export function ExperienceDetailScreen({ route, navigation }: AppScreenProps<'Ex
 
         {e.includes.length ? (
           <View>
-            <SectionHead title="Qiymətə daxildir" />
+            <SectionHead title={tr('experience.includes')} />
             <View style={styles.includes}>
               {e.includes.map((i) => (
                 <View key={i.code} style={styles.include}>
@@ -130,31 +136,34 @@ export function ExperienceDetailScreen({ route, navigation }: AppScreenProps<'Ex
         {/* Ekran 17-dəki şəffaf gəlir bölgüsü */}
         <Card padded style={styles.split}>
           <View style={styles.splitHead}>
-            <Text variant="h3">Local Expert qazanır</Text>
+            <Text variant="h3">{tr('experience.expertEarns')}</Text>
             <Text variant="h3" color="brown700">
               {e.pricing.expertEarnsAzn} AZN
             </Text>
           </View>
           <Progress percent={Math.round(e.pricing.expertRate * 100)} tone="brown" />
           <Text variant="caption">
-            {Math.round(e.pricing.expertRate * 100)}% expertə · platforma komissiyası{' '}
-            {Math.round(e.pricing.platformRate * 100)}% ({e.pricing.platformFeeAzn} AZN)
+            {tr('experience.split', {
+              expert: Math.round(e.pricing.expertRate * 100),
+              platform: Math.round(e.pricing.platformRate * 100),
+              fee: e.pricing.platformFeeAzn,
+            })}
           </Text>
         </Card>
 
         {/* Gezgin qazancı — XP mükafatları */}
         <Card padded style={styles.rewards}>
-          <Text variant="h3">Gezgin qazancı</Text>
+          <Text variant="h3">{tr('experience.rewards')}</Text>
           <View style={styles.rewardRow}>
-            <Reward value={`+${e.gezginRewards.experienceXp}`} label="Təcrübə XP" />
-            <Reward value={`+${e.gezginRewards.bookingXp}`} label="Bron XP" />
-            <Reward value={`+${e.gezginRewards.reviewXp}`} label="Rəy XP" />
+            <Reward value={`+${e.gezginRewards.experienceXp}`} label={tr('experience.rewardExperience')} />
+            <Reward value={`+${e.gezginRewards.bookingXp}`} label={tr('experience.rewardBooking')} />
+            <Reward value={`+${e.gezginRewards.reviewXp}`} label={tr('experience.rewardReview')} />
           </View>
         </Card>
 
         {e.description ? (
           <View>
-            <SectionHead title="Haqqında" />
+            <SectionHead title={tr('experience.about')} />
             <Text variant="body" color="ink2" style={styles.description}>
               {e.description}
             </Text>
@@ -166,7 +175,7 @@ export function ExperienceDetailScreen({ route, navigation }: AppScreenProps<'Ex
             <Icon name="pin" size={18} color={t.colors.green900} />
             <View style={styles.flex}>
               <Text variant="small" style={styles.bold}>
-                Görüş yeri
+                {tr('experience.meetingPoint')}
               </Text>
               <Text variant="meta">{e.meetingPoint}</Text>
             </View>

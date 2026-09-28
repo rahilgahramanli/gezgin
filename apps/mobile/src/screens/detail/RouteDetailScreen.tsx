@@ -7,6 +7,7 @@ import { useDeleteRoute } from '@/api/hooks/routeBuilder';
 import { DIFFICULTY_LABEL, label } from '@/lib/labels';
 import { alertError } from '@/lib/errors';
 import { shareItem } from '@/lib/share';
+import { useT } from '@/i18n';
 import { t } from '@/theme';
 import type { AppScreenProps } from '@/navigation/types';
 import { ReviewsBlock } from './ReviewsBlock';
@@ -15,6 +16,7 @@ const HERO_HEIGHT = 280;
 
 /** Ekran 15 — marşrut detalı, gün-gün plan. */
 export function RouteDetailScreen({ route, navigation }: AppScreenProps<'RouteDetail'>) {
+  const { t: tr, tp: tpr } = useT('explore');
   const { slug } = route.params;
   const detail = useRouteDetail(slug);
   const save = useToggleSaved('route', slug);
@@ -30,15 +32,15 @@ export function RouteDetailScreen({ route, navigation }: AppScreenProps<'RouteDe
   const r = detail.data;
 
   const confirmDelete = () =>
-    Alert.alert('Marşrut silinsin?', `“${r.title}” və onun dayanacaqları silinəcək. Bu geri qaytarılmır.`, [
-      { text: 'İmtina', style: 'cancel' },
+    Alert.alert(tr('route.deleteTitle'), tr('route.deleteMessage', { title: r.title }), [
+      { text: tr('common:actions.cancel'), style: 'cancel' },
       {
-        text: 'Sil',
+        text: tr('common:actions.delete'),
         style: 'destructive',
         onPress: () =>
           remove.mutate(slug, {
             onSuccess: () => navigation.goBack(),
-            onError: (error) => alertError(error, 'Marşrut silinmədi'),
+            onError: (error) => alertError(error, tr('route.deleteFailed')),
           }),
       },
     ]);
@@ -51,15 +53,15 @@ export function RouteDetailScreen({ route, navigation }: AppScreenProps<'RouteDe
       actions={[
         {
           icon: 'bookmark',
-          label: r.isSaved ? 'Saxlamanı götür' : 'Saxla',
+          label: r.isSaved ? tr('unsave') : tr('common:actions.saveItem'),
           active: r.isSaved,
           onPress: () => save.mutate(!r.isSaved),
         },
-        { icon: 'share', label: 'Paylaş', onPress: () => void shareItem('route', slug, r.title) },
+        { icon: 'share', label: tr('common:actions.share'), onPress: () => void shareItem('route', slug, r.title) },
       ]}
       footer={
         <Button
-          label="Marşrutu başlat"
+          label={tr('route.start')}
           left={<Icon name="navigation" size={18} color="#fff" />}
           // Naviqasiya ekranı (51) hələ yoxdur — marşrut səyahət planına çevrilir
           onPress={() => navigation.navigate('CreateTrip', { fromRoute: slug, title: r.title })}
@@ -71,7 +73,7 @@ export function RouteDetailScreen({ route, navigation }: AppScreenProps<'RouteDe
           <Photo uri={r.coverUrl} style={styles.heroImage} radius={0} />
           <View style={styles.heroShade} />
           <View style={styles.heroText}>
-            {r.isOfficial ? <Pill label="Rəsmi marşrut" tone="teal" /> : null}
+            {r.isOfficial ? <Pill label={tr('route.official')} tone="teal" /> : null}
             <Text variant="titleXl" style={styles.onPhoto}>
               {r.title}
             </Text>
@@ -84,9 +86,9 @@ export function RouteDetailScreen({ route, navigation }: AppScreenProps<'RouteDe
     >
       <View style={styles.body}>
         <View style={styles.stats}>
-          <StatCell value={r.distanceKm ? `${r.distanceKm} km` : '—'} label="Məsafə" />
-          <StatCell value={`${r.days} gün`} label="Müddət" />
-          <StatCell value={r.stopCount} label="Məkan" />
+          <StatCell value={r.distanceKm ? `${r.distanceKm} km` : '—'} label={tr('route.distance')} />
+          <StatCell value={tpr('common:labels.duration.days', r.days)} label={tr('route.duration')} />
+          <StatCell value={r.stopCount} label={tr('route.places')} />
         </View>
 
         {/* Sahibi marşrutu yaratdıqdan sonra da redaktə edə və silə bilməlidir */}
@@ -95,16 +97,16 @@ export function RouteDetailScreen({ route, navigation }: AppScreenProps<'RouteDe
             <View style={styles.ownerHead}>
               <Icon name="route" size={20} color={t.colors.green900} />
               <Text variant="h3" style={styles.flex}>
-                Sənin marşrutun
+                {tr('route.yours')}
               </Text>
               <Pill
-                label={r.visibility === 'private' ? 'Şəxsi' : 'İctimai'}
+                label={r.visibility === 'private' ? tr('route.private') : tr('route.public')}
                 tone={r.visibility === 'private' ? 'gray' : 'teal'}
               />
             </View>
             <View style={styles.ownerActions}>
               <Button
-                label="Redaktə et"
+                label={tr('route.edit')}
                 variant="soft"
                 size="sm"
                 left={<Icon name="edit" size={16} color={t.colors.green900} />}
@@ -112,7 +114,7 @@ export function RouteDetailScreen({ route, navigation }: AppScreenProps<'RouteDe
                 style={styles.flex}
               />
               <Button
-                label="Marşrutu sil"
+                label={tr('route.delete')}
                 variant="danger"
                 size="sm"
                 loading={remove.isPending}
@@ -146,20 +148,20 @@ export function RouteDetailScreen({ route, navigation }: AppScreenProps<'RouteDe
         ) : null}
 
         <View>
-          <SectionHead title="Günlər üzrə plan" />
+          <SectionHead title={tr('route.dayPlan')} />
           <View style={styles.days}>
             {r.itinerary.map((day) => (
               <View key={day.day} style={styles.day}>
                 <View style={styles.dayHead}>
-                  <Pill label={`${day.day}-ci gün`} tone="green" />
+                  <Pill label={tr('route.day', { day: day.day })} tone="green" />
                   <Text variant="caption">
-                    {day.stops.length} məkan
+                    {tpr('units.places', day.stops.length)}
                   </Text>
                 </View>
 
                 {day.stops.length === 0 ? (
                   <Text variant="meta" style={styles.emptyDay}>
-                    Bu günə dayanacaq əlavə edilməyib
+                    {tr('route.noStops')}
                   </Text>
                 ) : (
                   <View style={styles.timeline}>
@@ -188,7 +190,7 @@ export function RouteDetailScreen({ route, navigation }: AppScreenProps<'RouteDe
                               </>
                             ) : null}
                             {stop.durationMin ? (
-                              <Text variant="caption">· {stop.durationMin} dəq</Text>
+                              <Text variant="caption">· {tpr('units.minutes', stop.durationMin)}</Text>
                             ) : null}
                           </View>
                         </View>

@@ -4,18 +4,16 @@ import { Avatar, Button, Card, Chip, EmptyState, Icon, ListSkeleton, Photo, Pill
 import { useAllReviews, useReviewSummary, useToggleHelpful, type ReviewSort } from '@/api/hooks/details';
 import { timeAgo } from '@/lib/time';
 import { errorText } from '@/lib/errors';
+import { useT } from '@/i18n';
 import { t } from '@/theme';
 import type { AppScreenProps } from '@/navigation/types';
 
-const SORTS: Array<{ key: ReviewSort; label: string }> = [
-  { key: 'newest', label: 'Ən yeni' },
-  { key: 'highest', label: 'Ən yüksək' },
-  { key: 'lowest', label: 'Ən aşağı' },
-  { key: 'helpful', label: 'Faydalı' },
-];
+/** Sıralama çipləri — mətn `reviews.sort.<açar>`, render zamanı tərcümə olunur. */
+const SORTS: ReviewSort[] = ['newest', 'highest', 'lowest', 'helpful'];
 
 /** Ekran 47 — bütün rəylər: bölgü, sıralama, rəy kartları. */
 export function ReviewsAllScreen({ route, navigation }: AppScreenProps<'ReviewsAll'>) {
+  const { t: tr, tp: tpr } = useT('explore');
   const { targetType, target, name } = route.params;
   const [sort, setSort] = useState<ReviewSort>('newest');
   const summary = useReviewSummary(targetType, target);
@@ -28,13 +26,13 @@ export function ReviewsAllScreen({ route, navigation }: AppScreenProps<'ReviewsA
       footer={
         <Button
           block
-          label="Rəy yaz"
+          label={tr('reviews.write')}
           left={<Icon name="edit" size={18} color="#fff" />}
           onPress={() => navigation.navigate('WriteReview', { targetType, target, name })}
         />
       }
     >
-      <TopBar title="Rəylər" onBack={navigation.goBack} />
+      <TopBar title={tr('reviews.title')} onBack={navigation.goBack} />
 
       <Card padded style={styles.summary}>
         <View style={styles.score}>
@@ -51,7 +49,7 @@ export function ReviewsAllScreen({ route, navigation }: AppScreenProps<'ReviewsA
             ))}
           </View>
           <Text variant="meta" color="muted">
-            {summary.data?.total ?? 0} rəy
+            {tpr('units.reviews', summary.data?.total ?? 0)}
           </Text>
         </View>
 
@@ -74,7 +72,7 @@ export function ReviewsAllScreen({ route, navigation }: AppScreenProps<'ReviewsA
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.sorts}>
         {SORTS.map((s) => (
-          <Chip key={s.key} label={s.label} active={sort === s.key} onPress={() => setSort(s.key)} />
+          <Chip key={s} label={tr(`reviews.sort.${s}`)} active={sort === s} onPress={() => setSort(s)} />
         ))}
       </ScrollView>
 
@@ -84,15 +82,15 @@ export function ReviewsAllScreen({ route, navigation }: AppScreenProps<'ReviewsA
         ) : reviews.error && !reviews.data ? (
           <EmptyState
             icon="wifiOff"
-            title="Rəylər yüklənmədi"
-            message={errorText(reviews.error, 'Bir az sonra yenidən cəhd et.')}
-            action={<Button label="Yenidən cəhd et" onPress={() => void reviews.refetch()} />}
+            title={tr('reviews.loadFailed')}
+            message={errorText(reviews.error, tr('common:states.tryLater'))}
+            action={<Button label={tr('common:actions.retry')} onPress={() => void reviews.refetch()} />}
           />
         ) : !reviews.data?.data.length ? (
           <EmptyState
             icon="star"
-            title="Hələ rəy yoxdur"
-            message="İlk rəyi sən yaz — digər gezginlərə kömək edərsən."
+            title={tr('reviews.empty')}
+            message={tr('reviews.emptyAllMessage')}
           />
         ) : (
           reviews.data.data.map((r) => (
@@ -108,7 +106,7 @@ export function ReviewsAllScreen({ route, navigation }: AppScreenProps<'ReviewsA
                 <View style={styles.reviewMeta}>
                   <Rating value={r.rating} size={13} />
                   <Text variant="meta" color="muted">
-                    Level {r.author.level} · {timeAgo(r.createdAt)}
+                    {tr('reviews.level', { level: r.author.level })} · {timeAgo(r.createdAt)}
                   </Text>
                 </View>
                 {r.body ? <Text variant="body">{r.body}</Text> : null}
@@ -125,12 +123,15 @@ export function ReviewsAllScreen({ route, navigation }: AppScreenProps<'ReviewsA
                     hitSlop={8}
                     accessibilityRole="button"
                     accessibilityState={{ selected: !!r.markedHelpful }}
-                    accessibilityLabel={`Faydalı${r.markedHelpful ? ' — işarələnib' : ''}: ${r.helpfulCount ?? 0}`}
+                    accessibilityLabel={tr(r.markedHelpful ? 'reviews.helpfulMarkedA11y' : 'reviews.helpfulA11y', {
+                      n: r.helpfulCount ?? 0,
+                    })}
                     onPress={() => helpful.mutate({ publicId: r.publicId, helpful: !r.markedHelpful })}
                   >
                     <Icon name="check" size={14} color={r.markedHelpful ? t.colors.green900 : t.colors.muted} />
                     <Text variant="meta" color={r.markedHelpful ? 'green900' : 'muted'}>
-                      Faydalı{r.helpfulCount ? ` · ${r.helpfulCount}` : ''}
+                      {tr('reviews.helpful')}
+                      {r.helpfulCount ? ` · ${r.helpfulCount}` : ''}
                     </Text>
                   </Pressable>
                 ) : null}

@@ -1,1 +1,180 @@
-{}
+{
+  "all": "All",
+  "free": "Free",
+  "unsave": "Remove from saved",
+  "addToTrip": "Add to trip",
+  "units": {
+    "places_one": "{{count}} place",
+    "places_other": "{{count}} places",
+    "stops_one": "{{count}} stop",
+    "stops_other": "{{count}} stops",
+    "minutes_one": "{{count}} min",
+    "minutes_other": "{{count}} min",
+    "reviews_one": "{{count}} review",
+    "reviews_other": "{{count}} reviews"
+  },
+  "home": {
+    "greeting": "Hi, {{name}} 👋",
+    "greetingFallback": "traveller",
+    "subtitle": "Where shall we explore today?",
+    "searchPlaceholder": "Search places, routes or experiences…",
+    "loadFailed": "Couldn't load data",
+    "popularPlaces": "Popular places",
+    "featuredExperiences": "Featured experiences",
+    "lodging": "Hotels & guesthouses",
+    "recommendedRoutes": "Recommended routes",
+    "noPlaces": "No places yet",
+    "noPlacesInRegion": "No places in {{region}} yet",
+    "noExperiences": "No experiences yet",
+    "noExperiencesInRegion": "No experiences in {{region}} yet",
+    "noRoutes": "No routes yet",
+    "noRoutesInRegion": "No routes in {{region}} yet",
+    "packages_one": "{{count}} package",
+    "packages_other": "{{count}} packages",
+    "businessA11y": "Business {{name}}"
+  },
+  "search": {
+    "title": "Search",
+    "placeholder": "Places, routes, experiences…",
+    "types": {
+      "place": "Places",
+      "route": "Routes",
+      "experience": "Experiences",
+      "user": "Travellers"
+    },
+    "promptTitle": "What are you looking for?",
+    "promptMessage": "Type a place, route or experience — at least 2 letters.",
+    "emptyTitle": "No results",
+    "emptyMessage": "Nothing found for \"{{query}}\".",
+    "results_one": "{{count}} result",
+    "results_other": "{{count}} results"
+  },
+  "places": {
+    "title": "Places",
+    "showOnMap": "Show on map",
+    "filter": "Filters",
+    "filterActive_one": "Filters ({{count}} active)",
+    "filterActive_other": "Filters ({{count}} active)",
+    "sortPopular": "Popular",
+    "sortRating": "Top rated",
+    "emptyTitle": "No places found",
+    "emptyMessage": "Try changing the filters."
+  },
+  "filter": {
+    "title": "Filters",
+    "active_one": "{{count}} active",
+    "active_other": "{{count}} active",
+    "category": "Category",
+    "minRating": "Minimum rating",
+    "andUp": "and up",
+    "entranceFee": "Entrance fee",
+    "distance": "Distance",
+    "distanceNote": "Distance is measured from your location — location access is required.",
+    "reset": "Reset",
+    "show": "Show",
+    "showPlaces_one": "Show {{shown}} place",
+    "showPlaces_other": "Show {{shown}} places"
+  },
+  "routes": {
+    "title": "Routes",
+    "durations": {
+      "day1": "1 day",
+      "days2to3": "2–3 days",
+      "days4plus": "4+ days"
+    },
+    "emptyTitle": "No routes found",
+    "emptyMessage": "Try another duration or build your own route.",
+    "build": "Build a route",
+    "official": "Official"
+  },
+  "experiences": {
+    "title": "Experiences",
+    "emptyTitle": "No experiences found",
+    "emptyMessage": "Try another category."
+  },
+  "map": {
+    "title": "Map",
+    "clustered_one": "{{count}} place · zoom in",
+    "clustered_other": "{{count}} places · zoom in"
+  },
+  "place": {
+    "checkin": "Check in",
+    "altitude": "Altitude",
+    "visit": "Visit",
+    "entry": "Entry",
+    "photos": "Photos ({{total}})",
+    "nearby": "Nearby"
+  },
+  "route": {
+    "deleteTitle": "Delete route?",
+    "deleteMessage": "“{{title}}” and all its stops will be deleted. This can't be undone.",
+    "deleteFailed": "Couldn't delete the route",
+    "start": "Start route",
+    "official": "Official route",
+    "distance": "Distance",
+    "duration": "Duration",
+    "places": "Places",
+    "yours": "Your route",
+    "private": "Private",
+    "public": "Public",
+    "edit": "Edit",
+    "delete": "Delete route",
+    "dayPlan": "Day-by-day plan",
+    "day": "Day {{day}}",
+    "noStops": "No stops added for this day"
+  },
+  "experience": {
+    "save": "Add to wishlist",
+    "unsave": "Remove from wishlist",
+    "nextDate": "Next date: {{date}}, {{time}}",
+    "seatsLeft_one": "{{count}} spot left",
+    "seatsLeft_other": "{{count}} spots left",
+    "book": "Book this experience",
+    "local": "Local experience",
+    "perPerson": "per person",
+    "expertExperiences_one": "{{count}} experience",
+    "expertExperiences_other": "{{count}} experiences",
+    "includes": "What's included",
+    "expertEarns": "Local Expert earns",
+    "split": "{{expert}}% to the expert · platform fee {{platform}}% ({{fee}} AZN)",
+    "rewards": "Traveller rewards",
+    "rewardExperience": "Experience XP",
+    "rewardBooking": "Booking XP",
+    "rewardReview": "Review XP",
+    "about": "About",
+    "meetingPoint": "Meeting point"
+  },
+  "gallery": {
+    "official": "Official",
+    "community": "From travellers",
+    "addPhoto": "Add photo",
+    "emptyTitle": "No photos",
+    "emptyCommunity": "Be the first to share this place — check in and add a photo.",
+    "emptyOfficial": "No photos have been uploaded for this place yet.",
+    "photoBy": "Photo by {{name}}",
+    "photoN": "Photo {{n}}",
+    "communityBadge": "Traveller"
+  },
+  "reviews": {
+    "title": "Reviews",
+    "titleCount": "Reviews ({{total}})",
+    "write": "Write a review",
+    "writeFirst": "Write the first review",
+    "loadFailed": "Couldn't load reviews",
+    "empty": "No reviews yet",
+    "emptyAllMessage": "Be the first to write one — you'll help other travellers.",
+    "emptyBlockMessage": "Been here? Share your experience — a review earns +{{xp}} XP.",
+    "basedOn_one": "Based on {{count}} review",
+    "basedOn_other": "Based on {{count}} reviews",
+    "level": "Level {{level}}",
+    "sort": {
+      "newest": "Newest",
+      "highest": "Highest",
+      "lowest": "Lowest",
+      "helpful": "Helpful"
+    },
+    "helpful": "Helpful",
+    "helpfulA11y": "Helpful: {{n}}",
+    "helpfulMarkedA11y": "Helpful — marked: {{n}}"
+  }
+}
