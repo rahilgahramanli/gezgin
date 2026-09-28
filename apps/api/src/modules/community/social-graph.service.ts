@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import type { Prisma } from '@prisma/client';
 import { ERROR_CODES, tierForLevel } from '@gezgin/shared';
 import { PrismaService } from '@/common/prisma/prisma.service';
+import { currentLang, tierName, type Lang } from '@/common/i18n';
 import { StorageService } from '@/modules/storage/storage.service';
 
 /** İstifadəçi kartı üçün minimal sahələr — lent, şərh, izləyici siyahısı, çat. */
@@ -46,13 +47,14 @@ export class SocialGraphService {
     return key ? this.storage.publicUrl(key) : null;
   }
 
-  card(u: UserCardRow): UserCard {
+  /** `lang` yalnız sorğudan kənar göndərişdə (canlı bildiriş) verilir — defolt sorğunun dilidir. */
+  card(u: UserCardRow, lang: Lang = currentLang()): UserCard {
     return {
       username: u.username,
       fullName: u.fullName,
       avatarUrl: this.url(u.avatar?.storageKey),
       level: u.level,
-      tier: tierForLevel(u.level).nameAz,
+      tier: tierName(tierForLevel(u.level), lang),
       role: u.role,
       isLocalExpert: u.role === 'local_expert',
       isVerified: u.isVerified,

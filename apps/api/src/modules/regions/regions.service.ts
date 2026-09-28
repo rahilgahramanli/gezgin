@@ -52,7 +52,7 @@ export class RegionsService {
       include: {
         translations: { select: { lang: true, name: true, description: true } },
         cover: { select: { storageKey: true, blurhash: true } },
-        parent: { select: { slug: true, translations: { where: { lang: 'az' }, select: { name: true } } } },
+        parent: { select: { slug: true, translations: { select: { lang: true, name: true } } } },
       },
     });
     if (!region) throw new NotFoundException({ code: ERROR_CODES.NOT_FOUND, message: `Region tapılmadı: ${slug}` });
@@ -74,7 +74,7 @@ export class RegionsService {
       coverUrl: this.url(region.cover?.storageKey),
       blurhash: region.cover?.blurhash ?? null,
       parent: region.parent
-        ? { slug: region.parent.slug, name: region.parent.translations[0]?.name ?? region.parent.slug }
+        ? { slug: region.parent.slug, name: this.pick(region.parent.translations, lang)?.name ?? region.parent.slug }
         : null,
       counts: { places: placeCount, routes: routeCount, experiences: experienceCount, upcomingEvents: eventCount },
     };

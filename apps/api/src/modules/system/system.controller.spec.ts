@@ -43,6 +43,28 @@ describe('SystemController (e2e)', () => {
     expect(res.body.code).toBe('NOT_FOUND');
   });
 
+  it('GET /legal/:slug — Accept-Language və ?lang= ilə tərcümə', async () => {
+    const az = await request(app.getHttpServer()).get('/api/v1/legal/terms').expect(200);
+    expect(az.body.title).toBe('İstifadə şərtləri');
+    expect(az.body.url).toMatch(/\/legal\/terms\/page$/);
+
+    const en = await request(app.getHttpServer()).get('/api/v1/legal/terms').set('Accept-Language', 'en').expect(200);
+    expect(en.body.title).toBe('Terms of Use');
+    expect(en.body.sections).toHaveLength(az.body.sections.length);
+    expect(en.body.url).toMatch(/\/legal\/terms\/page\?lang=en$/);
+
+    const page = await request(app.getHttpServer()).get('/api/v1/legal/privacy/page?lang=ru').expect(200);
+    expect(page.text).toContain('<html lang="ru">');
+    expect(page.text).toContain('Политика конфиденциальности');
+  });
+
+  it('xəta mesajı sorğunun dilindədir', async () => {
+    const ru = await request(app.getHttpServer()).get('/api/v1/legal/yoxdur').set('Accept-Language', 'ru').expect(404);
+    expect(ru.body.message).toBe('Документ не найден: yoxdur');
+    const az = await request(app.getHttpServer()).get('/api/v1/legal/yoxdur').expect(404);
+    expect(az.body.message).toBe('Sənəd tapılmadı: yoxdur');
+  });
+
   it('POST /feedback — yanlış məlumat VALIDATION_FAILED verir', async () => {
     const res = await request(app.getHttpServer())
       .post('/api/v1/feedback')

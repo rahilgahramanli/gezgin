@@ -3,6 +3,7 @@ import { Prisma, type TripItemType } from '@prisma/client';
 import { ulid } from 'ulid';
 import { ERROR_CODES } from '@gezgin/shared';
 import { PrismaService } from '@/common/prisma/prisma.service';
+import { pickTr, text, titleFor, trWhere } from '@/common/i18n';
 import { StorageService } from '@/modules/storage/storage.service';
 import { XpService } from '@/modules/gamification/xp.service';
 import type {
@@ -105,7 +106,7 @@ export class TripsService {
       take: limit + 1,
       include: {
         cover: { select: { storageKey: true, blurhash: true } },
-        route: { select: { slug: true, translations: { where: { lang: 'az' }, select: { title: true } } } },
+        route: { select: { slug: true, translations: { where: trWhere(), select: { lang: true, title: true } } } },
         _count: { select: { items: true, days: true } },
       },
     });
@@ -133,7 +134,7 @@ export class TripsService {
           progressPercent: t._count.items ? Math.round((done / t._count.items) * 100) : 0,
           offlineEnabled: t.offlineEnabled,
           coverUrl: this.url(t.cover?.storageKey),
-          fromRoute: t.route ? { slug: t.route.slug, title: t.route.translations[0]?.title ?? t.route.slug } : null,
+          fromRoute: t.route ? { slug: t.route.slug, title: pickTr(t.route.translations)?.title ?? t.route.slug } : null,
         };
       }),
       nextOffset: hasMore ? offset + limit : null,
@@ -146,7 +147,7 @@ export class TripsService {
       where: { publicId, deletedAt: null },
       include: {
         cover: { select: { storageKey: true, blurhash: true } },
-        route: { select: { slug: true, translations: { where: { lang: 'az' }, select: { title: true } } } },
+        route: { select: { slug: true, translations: { where: trWhere(), select: { lang: true, title: true } } } },
         days: { orderBy: { dayNumber: 'asc' } },
         notes: { orderBy: { createdAt: 'desc' } },
         items: {
@@ -209,7 +210,7 @@ export class TripsService {
           : item.type === 'experience' && item.experience
             ? {
                 slug: item.experience.slug,
-                name: item.experience.titleAz,
+                name: titleFor(item.experience, lang),
                 lat: item.experience.lat === null ? null : Number(item.experience.lat),
                 lng: item.experience.lng === null ? null : Number(item.experience.lng),
                 priceAzn: Number(item.experience.priceAzn),
@@ -218,13 +219,13 @@ export class TripsService {
             : item.type === 'event' && item.event
               ? {
                   slug: item.event.slug,
-                  name: item.event.titleAz,
+                  name: titleFor(item.event, lang),
                   lat: item.event.lat === null ? null : Number(item.event.lat),
                   lng: item.event.lng === null ? null : Number(item.event.lng),
                   startDate: item.event.startDate,
                   imageUrl: this.url(item.event.cover?.storageKey),
                 }
-              : { slug: null, name: item.customTitle ?? 'Qeyd', lat: null, lng: null, imageUrl: null };
+              : { slug: null, name: item.customTitle ?? text('note', lang), lat: null, lng: null, imageUrl: null };
 
       return {
         itemId: Number(item.id),
@@ -260,7 +261,7 @@ export class TripsService {
       startedAt: trip.startedAt,
       completedAt: trip.completedAt,
       coverUrl: this.url(trip.cover?.storageKey),
-      fromRoute: trip.route ? { slug: trip.route.slug, title: trip.route.translations[0]?.title ?? trip.route.slug } : null,
+      fromRoute: trip.route ? { slug: trip.route.slug, title: pickTr(trip.route.translations)?.title ?? trip.route.slug } : null,
       progress: {
         done,
         total: trip.items.length,

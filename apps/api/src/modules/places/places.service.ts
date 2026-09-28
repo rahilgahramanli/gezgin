@@ -7,6 +7,7 @@ import { ReportsService } from '@/modules/community/reports.service';
 import { clusterPrecision, distanceMeters, formatDistanceKm, withinBox, withinRadius } from '@/common/search/geo';
 import { toBooleanQuery } from '@/common/search/normalize';
 import { translationJoin } from '@/common/search/translation';
+import { CATEGORY_NAME_SELECT, categoryName, text } from '@/common/i18n';
 import type { AddPlacePhotoDto, ListPlacesDto, MapPlacesDto, NearbyDto, ReportPlaceDto } from './dto/places.dto';
 
 type Lang = 'az' | 'en' | 'ru';
@@ -267,7 +268,7 @@ export class PlacesService {
       include: {
         translations: { select: { lang: true, name: true, description: true } },
         region: { include: { translations: { select: { lang: true, name: true } } } },
-        categories: { include: { category: { select: { slug: true, nameAz: true, icon: true } } } },
+        categories: { include: { category: { select: { slug: true, ...CATEGORY_NAME_SELECT, icon: true } } } },
         photos: {
           where: { media: { deletedAt: null } },
           include: { media: { select: { storageKey: true, blurhash: true, width: true, height: true } } },
@@ -317,7 +318,7 @@ export class PlacesService {
       region: { slug: place.region.slug, name: rt?.name ?? place.region.slug },
       categories: place.categories.map((c) => ({
         slug: c.category.slug,
-        name: c.category.nameAz,
+        name: categoryName(c.category),
         icon: c.category.icon,
         isPrimary: c.isPrimary,
       })),
@@ -463,7 +464,7 @@ export class PlacesService {
     const [categories, agg] = await Promise.all([
       this.prisma.category.findMany({
         where: { isActive: true, types: { contains: 'place' } },
-        select: { slug: true, nameAz: true, icon: true },
+        select: { slug: true, ...CATEGORY_NAME_SELECT, icon: true },
         orderBy: { sortOrder: 'asc' },
       }),
       this.prisma.place.aggregate({
@@ -474,10 +475,10 @@ export class PlacesService {
     ]);
 
     return {
-      categories: categories.map((c) => ({ slug: c.slug, name: c.nameAz, icon: c.icon })),
+      categories: categories.map((c) => ({ slug: c.slug, name: categoryName(c), icon: c.icon })),
       ratings: [0, 4.0, 4.5, 4.8],
       priceLevels: [
-        { level: 0, label: 'Pulsuz' },
+        { level: 0, label: text('free') },
         { level: 1, label: '₼' },
         { level: 2, label: '₼₼' },
         { level: 3, label: '₼₼₼' },

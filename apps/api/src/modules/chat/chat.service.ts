@@ -6,6 +6,7 @@ import { PrismaService } from '@/common/prisma/prisma.service';
 import { MediaService } from '@/modules/media/media.service';
 import { RealtimeService } from '@/modules/community/realtime.service';
 import { SocialGraphService, USER_CARD_SELECT } from '@/modules/community/social-graph.service';
+import { text } from '@/common/i18n';
 import type { ListConversationsDto, MessagesQueryDto, SendMessageDto } from './dto/chat.dto';
 
 const FILTER_ROLE: Record<string, UserRole | undefined> = {
@@ -94,7 +95,7 @@ export class ChatService {
           publicId: c.publicId,
           type: c.type,
           other: other ? this.graph.card(other.user) : null,
-          title: other?.user.fullName ?? 'GEZGIN Dəstək',
+          title: other?.user.fullName ?? text('support'),
           lastMessage: c.lastMessageAt ? { preview: c.lastMessagePreview, at: c.lastMessageAt } : null,
           unreadCount: row.unreadCount,
           isMuted: row.mutedUntil !== null && row.mutedUntil > now,

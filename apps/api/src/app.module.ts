@@ -1,4 +1,4 @@
-import { Module, ValidationPipe } from '@nestjs/common';
+import { Module, RequestMethod, ValidationPipe, type MiddlewareConsumer, type NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
@@ -7,6 +7,7 @@ import { PrismaModule } from './common/prisma/prisma.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { BigIntInterceptor } from './common/interceptors/bigint.interceptor';
+import { LangMiddleware } from './common/i18n/lang.middleware';
 import { RolesGuard } from './common/guards/roles.guard';
 import { MailModule } from './modules/mail/mail.module';
 import { StorageModule } from './modules/storage/storage.module';
@@ -92,4 +93,9 @@ import { AdminModule } from './modules/admin/admin.module';
     { provide: APP_INTERCEPTOR, useClass: BigIntInterceptor },
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  /** Hər sorğu `Accept-Language` dilinin kontekstində işləyir — bax `common/i18n/lang.ts`. */
+  configure(consumer: MiddlewareConsumer): void {
+    consumer.apply(LangMiddleware).forRoutes({ path: '{*path}', method: RequestMethod.ALL });
+  }
+}

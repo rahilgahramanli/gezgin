@@ -5,6 +5,7 @@ import {
 } from '@gezgin/shared';
 import { bakuDayStart } from '@/common/time';
 import { PrismaService } from '@/common/prisma/prisma.service';
+import { badgeText, tierName, tierNameFromRow, xpNoteText, xpRuleName } from '@/common/i18n';
 import { NotificationsService } from '@/modules/community/notifications.service';
 
 export interface EarnedBadge {
@@ -222,6 +223,7 @@ export class XpService {
       });
     }
 
+    // Bildirişlər yuxarıda az yazılır (oxunanda tərcümə olunur); cavab isə sorğunun dilindədir
     return {
       action,
       xpGained,
@@ -231,11 +233,11 @@ export class XpService {
       levelBefore: before.level,
       levelAfter,
       leveledUp: levelAfter > before.level,
-      tier: progress.tier.nameAz,
+      tier: tierName(progress.tier),
       xpToNext: progress.xpToNext,
       percent: progress.percent,
       cappedByDailyLimit: capped,
-      newBadges,
+      newBadges: newBadges.map((b) => ({ ...b, ...badgeText({ ...b, nameAz: b.name, descriptionAz: b.description }) })),
     };
   }
 
@@ -325,7 +327,7 @@ export class XpService {
       // göstəricini gizlədir.
       trendPercent: previousScore >= 20 ? Math.round((gainedScore / previousScore) * 100) : null,
       level: progress.level,
-      tier: progress.tier.nameAz,
+      tier: tierName(progress.tier),
       tierCode: progress.tier.code,
       xp: user.xp,
       xpInLevel: progress.xpInLevel,
@@ -348,7 +350,7 @@ export class XpService {
     return {
       rules: Object.entries(XP_RULES).map(([action, r]) => ({
         action,
-        name: r.nameAz,
+        name: xpRuleName(action),
         xp: r.xp,
         dailyCap: r.dailyCap,
       })),
@@ -368,12 +370,12 @@ export class XpService {
     return {
       data: rows.slice(0, limit).map((t) => ({
         action: t.action,
-        name: XP_RULES[t.action as keyof typeof XP_RULES]?.nameAz ?? t.action,
+        name: xpRuleName(t.action),
         xp: t.xp,
         scoreDelta: t.scoreDelta,
         levelAfter: t.levelAfter,
         targetType: t.targetType,
-        note: t.note,
+        note: xpNoteText(t.note),
         createdAt: t.createdAt,
       })),
       nextOffset: hasMore ? offset + limit : null,
@@ -392,7 +394,7 @@ export class XpService {
       currentXp: user?.xp ?? null,
       levels: rows.map((l) => ({
         level: l.level,
-        tier: l.tierNameAz,
+        tier: tierNameFromRow(l),
         tierCode: l.tierCode,
         xpRequired: l.xpRequired,
         reached: user ? user.level >= l.level : false,
@@ -409,8 +411,7 @@ export class XpService {
         totalCount: all.length,
         badges: all.map((b) => ({
           slug: b.slug,
-          name: b.nameAz,
-          description: b.descriptionAz,
+          ...badgeText(b),
           icon: b.icon,
           tier: b.tier,
           conditionValue: b.conditionValue,
@@ -433,8 +434,7 @@ export class XpService {
       const progress = o?.progress ?? 0;
       return {
         slug: b.slug,
-        name: b.nameAz,
-        description: b.descriptionAz,
+        ...badgeText(b),
         icon: b.icon,
         tier: b.tier,
         conditionValue: b.conditionValue,

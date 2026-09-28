@@ -9,12 +9,7 @@ import {
   AddDayDto, AddNoteDto, AddTripItemDto, CreateTripDto, ListTripsDto,
   ReorderTripItemsDto, UpdateTripDto, UpdateTripItemDto,
 } from './dto/trips.dto';
-
-type Lang = 'az' | 'en' | 'ru';
-const parseLang = (h?: string): Lang => {
-  const v = h?.slice(0, 2).toLowerCase();
-  return v === 'en' || v === 'ru' ? v : 'az';
-};
+import { parseLang } from '@/common/i18n';
 
 @ApiTags('trips')
 @ApiBearerAuth()

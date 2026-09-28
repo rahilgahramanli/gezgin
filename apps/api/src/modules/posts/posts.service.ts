@@ -3,6 +3,7 @@ import { Prisma } from '@prisma/client';
 import { ulid } from 'ulid';
 import { ERROR_CODES } from '@gezgin/shared';
 import { PrismaService } from '@/common/prisma/prisma.service';
+import { pickTr, text, trWhere } from '@/common/i18n';
 import { distanceMeters, formatDistanceKm, withinRadius } from '@/common/search/geo';
 import { XpService } from '@/modules/gamification/xp.service';
 import { MediaService } from '@/modules/media/media.service';
@@ -28,11 +29,11 @@ const postInclude = (viewerId: bigint) =>
       select: {
         slug: true,
         ratingAvg: true,
-        translations: { where: { lang: 'az' }, select: { name: true } },
-        region: { select: { slug: true, translations: { where: { lang: 'az' }, select: { name: true } } } },
+        translations: { where: trWhere(), select: { lang: true, name: true } },
+        region: { select: { slug: true, translations: { where: trWhere(), select: { lang: true, name: true } } } },
       },
     },
-    route: { select: { slug: true, days: true, translations: { where: { lang: 'az' }, select: { title: true } } } },
+    route: { select: { slug: true, days: true, translations: { where: trWhere(), select: { lang: true, title: true } } } },
     // Anonim baxışda `0n` heç bir sətrə uyğun gəlmir — şərtli include tipi mürəkkəbləşdirərdi
     likes: { where: { userId: viewerId }, select: { userId: true } },
   }) satisfies Prisma.PostInclude;
@@ -207,8 +208,8 @@ export class PostsService {
   }
 
   private card(r: PostRow, viewerId: bigint | undefined, saved: boolean, followsAuthor: boolean, distanceM?: number) {
-    const placeName = r.place?.translations[0]?.name ?? null;
-    const regionName = r.place?.region.translations[0]?.name ?? null;
+    const placeName = pickTr(r.place?.translations)?.name ?? null;
+    const regionName = pickTr(r.place?.region.translations)?.name ?? null;
 
     return {
       publicId: r.publicId,
@@ -228,10 +229,10 @@ export class PostsService {
         ? { slug: r.place.slug, name: placeName ?? r.place.slug, region: regionName, rating: Number(r.place.ratingAvg) }
         : null,
       route: r.route
-        ? { slug: r.route.slug, title: r.route.translations[0]?.title ?? r.route.slug, days: r.route.days }
+        ? { slug: r.route.slug, title: pickTr(r.route.translations)?.title ?? r.route.slug, days: r.route.days }
         : null,
       /** Ekran 05 başlığındakı "Quba, Azərbaycan". */
-      location: regionName ? `${regionName}, Azərbaycan` : null,
+      location: regionName ? `${regionName}, ${text('azerbaijan')}` : null,
       counts: { likes: r.likeCount, comments: r.commentCount, shares: r.shareCount, saves: r.saveCount },
       viewer: {
         liked: r.likes.length > 0,

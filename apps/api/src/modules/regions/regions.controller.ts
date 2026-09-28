@@ -2,12 +2,7 @@ import { Controller, Get, Headers, Param, Query } from '@nestjs/common';
 import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Public } from '@/common/decorators/public.decorator';
 import { RegionsService } from './regions.service';
-
-type Lang = 'az' | 'en' | 'ru';
-const parseLang = (header?: string): Lang => {
-  const v = header?.slice(0, 2).toLowerCase();
-  return v === 'en' || v === 'ru' ? v : 'az';
-};
+import { parseLang } from '@/common/i18n';
 
 @ApiTags('regions')
 @Controller('regions')

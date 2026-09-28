@@ -2,8 +2,16 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '@/common/prisma/prisma.service';
 import { LEVEL_XP, TIERS, XP_RULES, PLATFORM_COMMISSION_RATE, CURRENCY, MEDIA } from '@gezgin/shared';
+import { categoryName, currentLang, tierName, xpRuleName, type Lang } from '@/common/i18n';
 
-import { LEGAL_DOCS } from './legal-content';
+import { LEGAL_DOCS, LEGAL_TRANSLATIONS } from './legal-content';
+
+/** Hüquqi HTML səhifəsinin sabit mətni. */
+const LEGAL_PAGE_TEXT: Record<Lang, { version: string }> = {
+  az: { version: 'Versiya' },
+  en: { version: 'Version' },
+  ru: { version: 'Версия' },
+};
 
 const escapeHtml = (s: string): string =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -45,8 +53,9 @@ export class SystemService {
       gamification: {
         maxLevel: LEVEL_XP.length,
         levelXp: LEVEL_XP,
-        tiers: TIERS,
-        xpRules: XP_RULES,
+        // `name` — sorğunun dilində; nameAz/nameEn/nameRu da qalır
+        tiers: TIERS.map((t) => ({ ...t, name: tierName(t) })),
+        xpRules: Object.fromEntries(Object.entries(XP_RULES).map(([action, r]) => [action, { ...r, name: xpRuleName(action) }])),
       },
       media: { imageMaxBytes: MEDIA.imageMaxBytes, videoMaxBytes: MEDIA.videoMaxBytes, sizes: MEDIA.sizes },
       payments: {
@@ -65,7 +74,9 @@ export class SystemService {
     });
     return rows.map((c) => ({
       slug: c.slug,
+      // Mobil dil obyektini gözləyir (kontrakt testi); `label` — sorğunun dilində hazır ad
       name: { az: c.nameAz, en: c.nameEn, ru: c.nameRu },
+      label: categoryName(c),
       icon: c.icon,
       types: c.types.split('|'),
     }));
@@ -83,18 +94,25 @@ export class SystemService {
     };
   }
 
-  legal(slug: string, url: string) {
+  /** Sənəd seçilmiş dildə; versiya və tarix ortaqdır. */
+  private legalDoc(slug: string, lang: Lang) {
     const doc = LEGAL_DOCS[slug];
     if (!doc) throw new NotFoundException({ message: `Sənəd tapılmadı: ${slug}` });
-    return { slug, ...doc, url };
+    const tr = lang === 'az' ? undefined : LEGAL_TRANSLATIONS[lang][slug];
+    return { doc, title: tr?.title ?? doc.titleAz, sections: tr?.sections ?? doc.sections };
   }
 
-  legalHtml(slug: string): string {
-    const doc = LEGAL_DOCS[slug];
-    if (!doc) throw new NotFoundException({ message: `Sənəd tapılmadı: ${slug}` });
-    const sections = doc.sections
+  /** `titleAz` köhnə klientlər üçün qalır; göstəriləcək başlıq `title`-dır. */
+  legal(slug: string, url: string, lang: Lang = currentLang()) {
+    const { doc, title, sections } = this.legalDoc(slug, lang);
+    return { slug, titleAz: doc.titleAz, title, version: doc.version, updatedAt: doc.updatedAt, sections, url };
+  }
+
+  legalHtml(slug: string, lang: Lang = currentLang()): string {
+    const { doc, title, sections: list } = this.legalDoc(slug, lang);
+    const sections = list
       .map((s) => `<h2>${escapeHtml(s.heading)}</h2>${s.body.split('\n').map((p) => `<p>${escapeHtml(p)}</p>`).join('')}`)
       .join('');
-    return `<!doctype html><html lang="az"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(doc.titleAz)} — GEZGIN</title><style>body{font:16px/1.6 -apple-system,system-ui,sans-serif;max-width:720px;margin:0 auto;padding:24px 16px;color:#1b2a28;background:#faf8f4}h1{font-size:26px}h2{font-size:18px;margin-top:28px}.meta{color:#6b7a77;font-size:14px}</style></head><body><h1>${escapeHtml(doc.titleAz)}</h1><p class="meta">Versiya ${doc.version} · ${doc.updatedAt}</p>${sections}</body></html>`;
+    return `<!doctype html><html lang="${lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(title)} — GEZGIN</title><style>body{font:16px/1.6 -apple-system,system-ui,sans-serif;max-width:720px;margin:0 auto;padding:24px 16px;color:#1b2a28;background:#faf8f4}h1{font-size:26px}h2{font-size:18px;margin-top:28px}.meta{color:#6b7a77;font-size:14px}</style></head><body><h1>${escapeHtml(title)}</h1><p class="meta">${LEGAL_PAGE_TEXT[lang].version} ${doc.version} · ${doc.updatedAt}</p>${sections}</body></html>`;
   }
 }

@@ -6,6 +6,7 @@ import { PrismaService } from '@/common/prisma/prisma.service';
 import { StorageService } from '@/modules/storage/storage.service';
 import { distanceMeters } from '@/common/search/geo';
 import { bakuDayStart } from '@/common/time';
+import { currentLang, pickTr, tierName, trWhere } from '@/common/i18n';
 import { XpService, type XpResult } from './xp.service';
 import type { CheckinDto, LeaderboardDto } from './dto/gamification.dto';
 
@@ -40,8 +41,8 @@ export class GamificationService {
     const place = await this.prisma.place.findFirst({
       where: { slug: dto.place, deletedAt: null },
       include: {
-        translations: { where: { lang: 'az' }, select: { name: true } },
-        region: { include: { translations: { where: { lang: 'az' }, select: { name: true } } } },
+        translations: { where: trWhere(), select: { lang: true, name: true } },
+        region: { include: { translations: { where: trWhere(), select: { lang: true, name: true } } } },
       },
     });
     if (!place) throw new NotFoundException({ code: ERROR_CODES.NOT_FOUND, message: `Məkan tapılmadı: ${dto.place}` });
@@ -124,7 +125,7 @@ export class GamificationService {
     });
 
     const result: XpResult = isFirst
-      ? await this.xp.award(userId, 'place_checkin', { type: 'place', id: place.id, note: place.translations[0]?.name })
+      ? await this.xp.award(userId, 'place_checkin', { type: 'place', id: place.id, note: pickTr(place.translations, 'az')?.name })
       : {
           action: 'place_checkin',
           xpGained: 0,
@@ -134,7 +135,7 @@ export class GamificationService {
           levelBefore: current.level,
           levelAfter: current.level,
           leveledUp: false,
-          tier: tierForLevel(current.level).nameAz,
+          tier: tierName(tierForLevel(current.level)),
           xpToNext: levelProgress(current.xp).xpToNext,
           percent: levelProgress(current.xp).percent,
           cappedByDailyLimit: false,
@@ -164,8 +165,8 @@ export class GamificationService {
     return {
       place: {
         slug: place.slug,
-        name: place.translations[0]?.name ?? place.slug,
-        region: { slug: place.region.slug, name: place.region.translations[0]?.name ?? place.region.slug },
+        name: pickTr(place.translations)?.name ?? place.slug,
+        region: { slug: place.region.slug, name: pickTr(place.region.translations)?.name ?? place.region.slug },
       },
       isFirstVisit: isFirst,
       isFirstInRegion: firstInRegion,
@@ -201,7 +202,7 @@ export class GamificationService {
       include: {
         place: {
           include: {
-            translations: { where: { lang: 'az' }, select: { name: true } },
+            translations: { where: trWhere(), select: { lang: true, name: true } },
             photos: {
               where: { media: { deletedAt: null } },
               include: { media: { select: { storageKey: true } } },
@@ -210,7 +211,7 @@ export class GamificationService {
             },
           },
         },
-        region: { include: { translations: { where: { lang: 'az' }, select: { name: true } } } },
+        region: { include: { translations: { where: trWhere(), select: { lang: true, name: true } } } },
       },
     });
 
@@ -219,16 +220,28 @@ export class GamificationService {
       data: rows.slice(0, limit).map((c) => ({
         place: {
           slug: c.place.slug,
-          name: c.place.translations[0]?.name ?? c.place.slug,
+          name: pickTr(c.place.translations)?.name ?? c.place.slug,
           imageUrl: this.url(c.place.photos[0]?.media.storageKey),
         },
-        region: { slug: c.region.slug, name: c.region.translations[0]?.name ?? c.region.slug },
+        region: { slug: c.region.slug, name: pickTr(c.region.translations)?.name ?? c.region.slug },
         isFirst: c.isFirst,
         xpAwarded: c.xpAwarded,
         createdAt: c.createdAt,
       })),
       nextOffset: hasMore ? offset + limit : null,
     };
+  }
+
+  /** Region slug → cari dildəki ad (az üçün sorğu getmir). */
+  private async regionNames(slugs: Array<string | null>): Promise<Map<string, string>> {
+    const lang = currentLang();
+    const unique = [...new Set(slugs.filter((s): s is string => Boolean(s)))];
+    if (lang === 'az' || !unique.length) return new Map();
+    const rows = await this.prisma.regionTranslation.findMany({
+      where: { lang, region: { slug: { in: unique } } },
+      select: { name: true, region: { select: { slug: true } } },
+    });
+    return new Map(rows.map((r) => [r.region.slug, r.name]));
   }
 
   /**
@@ -259,9 +272,9 @@ export class GamificationService {
     const where = Prisma.join(filters, ' AND ');
 
     const rows = since
-      ? await this.prisma.$queryRaw<Array<{ id: bigint; username: string; full_name: string; level: number; role: string; avatar_key: string | null; region_name: string | null; points: bigint }>>`
+      ? await this.prisma.$queryRaw<Array<{ id: bigint; username: string; full_name: string; level: number; role: string; avatar_key: string | null; region_name: string | null; region_slug: string | null; points: bigint }>>`
           SELECT u.id, u.username, u.full_name, u.level, u.role,
-                 m.storage_key AS avatar_key, rt.name AS region_name,
+                 m.storage_key AS avatar_key, rt.name AS region_name, r.slug AS region_slug,
                  COALESCE(SUM(x.xp), 0) AS points
           FROM users u
           LEFT JOIN media_assets m ON m.id = u.avatar_id
@@ -274,9 +287,9 @@ export class GamificationService {
           ORDER BY points DESC, u.gezgin_score DESC
           LIMIT ${limit}
         `
-      : await this.prisma.$queryRaw<Array<{ id: bigint; username: string; full_name: string; level: number; role: string; avatar_key: string | null; region_name: string | null; points: bigint }>>`
+      : await this.prisma.$queryRaw<Array<{ id: bigint; username: string; full_name: string; level: number; role: string; avatar_key: string | null; region_name: string | null; region_slug: string | null; points: bigint }>>`
           SELECT u.id, u.username, u.full_name, u.level, u.role,
-                 m.storage_key AS avatar_key, rt.name AS region_name,
+                 m.storage_key AS avatar_key, rt.name AS region_name, r.slug AS region_slug,
                  u.gezgin_score AS points
           FROM users u
           LEFT JOIN media_assets m ON m.id = u.avatar_id
@@ -287,13 +300,15 @@ export class GamificationService {
           LIMIT ${limit}
         `;
 
+    // SQL az adı qaytarır (GROUP BY-a görə tərcümə JOIN-u burada qoşulmur) — digər dil sonradan
+    const regionNames = await this.regionNames(rows.map((r) => r.region_slug));
     const entries = rows.map((r, i) => ({
       rank: i + 1,
       username: r.username,
       fullName: r.full_name,
       level: r.level,
       isLocalExpert: r.role === 'local_expert',
-      region: r.region_name,
+      region: (r.region_slug && regionNames.get(r.region_slug)) ?? r.region_name,
       avatarUrl: this.url(r.avatar_key),
       points: Number(r.points),
       isMe: viewerId !== undefined && r.id === viewerId,

@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { ERROR_CODES } from '@gezgin/shared';
 import { PrismaService } from '@/common/prisma/prisma.service';
+import { pickTr, trWhere } from '@/common/i18n';
 import { StorageService } from '@/modules/storage/storage.service';
 
 /** Təxmini paket ölçüsü: xəritə plitələri + məkan məlumatı + kiçik şəkillər. */
@@ -28,7 +29,7 @@ export class OfflineService {
       where: { parentId: { not: null } },
       include: {
         cover: { select: { storageKey: true } },
-        translations: { where: { lang: 'az' }, select: { name: true } },
+        translations: { where: trWhere(), select: { lang: true, name: true } },
         offlinePkg: true,
       },
       orderBy: { sortOrder: 'asc' },
@@ -45,7 +46,7 @@ export class OfflineService {
       const download = pkg ? byPackage.get(pkg.id.toString()) : undefined;
       const version = pkg?.version ?? 1;
       return {
-        region: { slug: r.slug, name: r.translations[0]?.name ?? r.slug, coverUrl: this.url(r.cover?.storageKey) },
+        region: { slug: r.slug, name: pickTr(r.translations)?.name ?? r.slug, coverUrl: this.url(r.cover?.storageKey) },
         placeCount: r.placeCount,
         sizeMb: pkg?.sizeMb || this.estimateSizeMb(r.placeCount),
         status: pkg?.status ?? 'available',

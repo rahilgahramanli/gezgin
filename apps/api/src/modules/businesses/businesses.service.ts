@@ -5,6 +5,7 @@ import { ERROR_CODES } from '@gezgin/shared';
 import { PrismaService } from '@/common/prisma/prisma.service';
 import { StorageService } from '@/modules/storage/storage.service';
 import { toBooleanQuery } from '@/common/search/normalize';
+import { text } from '@/common/i18n';
 
 type Lang = 'az' | 'en' | 'ru';
 
@@ -203,7 +204,7 @@ export class BusinessesService {
     return {
       sent: true,
       business: { slug, name: b.name, phone: b.phone },
-      note: 'Söhbət funksiyası Sprint 7-də açılacaq — hazırda sorğunuz qeydə alındı',
+      note: text('chatSoon'),
     };
   }
 }

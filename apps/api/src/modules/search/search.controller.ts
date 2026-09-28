@@ -3,12 +3,7 @@ import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger'
 import { Public } from '@/common/decorators/public.decorator';
 import { CurrentUser, type AuthUser } from '@/common/decorators/current-user.decorator';
 import { SearchService, type SearchType } from './search.service';
-
-type Lang = 'az' | 'en' | 'ru';
-const parseLang = (h?: string): Lang => {
-  const v = h?.slice(0, 2).toLowerCase();
-  return v === 'en' || v === 'ru' ? v : 'az';
-};
+import { parseLang } from '@/common/i18n';
 
 @ApiTags('search')
 @Controller('search')

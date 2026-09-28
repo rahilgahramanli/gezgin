@@ -14,16 +14,17 @@ export interface Tier {
   code: TierCode;
   nameAz: string;
   nameEn: string;
+  nameRu: string;
   fromLevel: number;
   toLevel: number;
 }
 
 export const TIERS: readonly Tier[] = [
-  { code: 'baslangic', nameAz: 'Başlanğıc', nameEn: 'Beginner', fromLevel: 1, toLevel: 5 },
-  { code: 'kesf_eden', nameAz: 'Kəşf edən', nameEn: 'Explorer', fromLevel: 6, toLevel: 12 },
-  { code: 'seyyah', nameAz: 'Səyyah', nameEn: 'Traveler', fromLevel: 13, toLevel: 17 },
-  { code: 'kesfci', nameAz: 'Kəşfçi', nameEn: 'Discoverer', fromLevel: 18, toLevel: 19 },
-  { code: 'gezgin', nameAz: 'Gezgin', nameEn: 'Gezgin', fromLevel: 20, toLevel: 20 },
+  { code: 'baslangic', nameAz: 'Başlanğıc', nameEn: 'Beginner', nameRu: 'Новичок', fromLevel: 1, toLevel: 5 },
+  { code: 'kesf_eden', nameAz: 'Kəşf edən', nameEn: 'Explorer', nameRu: 'Исследователь', fromLevel: 6, toLevel: 12 },
+  { code: 'seyyah', nameAz: 'Səyyah', nameEn: 'Traveler', nameRu: 'Путешественник', fromLevel: 13, toLevel: 17 },
+  { code: 'kesfci', nameAz: 'Kəşfçi', nameEn: 'Discoverer', nameRu: 'Первооткрыватель', fromLevel: 18, toLevel: 19 },
+  { code: 'gezgin', nameAz: 'Gezgin', nameEn: 'Gezgin', nameRu: 'Gezgin', fromLevel: 20, toLevel: 20 },
 ] as const;
 
 /** İndeks = level - 1. Dəyər = həmin levelə çatmaq üçün lazım olan ümumi XP. */
@@ -78,14 +79,14 @@ export function levelProgress(totalXp: number): LevelProgress {
 
 /** XP mənbələri — slayd 8. `dailyCap` sui-istifadəyə qarşıdır (null = limitsiz). */
 export const XP_RULES = {
-  place_checkin: { xp: 600, dailyCap: 3, nameAz: 'Məkanı kəşf et' },
-  experience_completed: { xp: 800, dailyCap: null, nameAz: 'Təcrübə yaşa' },
-  review_written: { xp: 400, dailyCap: 3, nameAz: 'Rəy yaz' },
-  media_shared: { xp: 300, dailyCap: 5, nameAz: 'Foto / Video paylaş' },
-  route_created: { xp: 350, dailyCap: 2, nameAz: 'Marşrut yarat' },
-  profile_completed: { xp: 100, dailyCap: null, nameAz: 'Profili tamamla' },
-  booking_completed: { xp: 50, dailyCap: null, nameAz: 'Rezervasiya tamamla' },
-  trip_completed: { xp: 500, dailyCap: null, nameAz: 'Səyahəti tamamla' },
+  place_checkin: { xp: 600, dailyCap: 3, nameAz: 'Məkanı kəşf et', nameEn: 'Discover a place', nameRu: 'Открыть место' },
+  experience_completed: { xp: 800, dailyCap: null, nameAz: 'Təcrübə yaşa', nameEn: 'Enjoy an experience', nameRu: 'Посетить впечатление' },
+  review_written: { xp: 400, dailyCap: 3, nameAz: 'Rəy yaz', nameEn: 'Write a review', nameRu: 'Написать отзыв' },
+  media_shared: { xp: 300, dailyCap: 5, nameAz: 'Foto / Video paylaş', nameEn: 'Share a photo / video', nameRu: 'Поделиться фото / видео' },
+  route_created: { xp: 350, dailyCap: 2, nameAz: 'Marşrut yarat', nameEn: 'Create a route', nameRu: 'Создать маршрут' },
+  profile_completed: { xp: 100, dailyCap: null, nameAz: 'Profili tamamla', nameEn: 'Complete your profile', nameRu: 'Заполнить профиль' },
+  booking_completed: { xp: 50, dailyCap: null, nameAz: 'Rezervasiya tamamla', nameEn: 'Complete a booking', nameRu: 'Завершить бронирование' },
+  trip_completed: { xp: 500, dailyCap: null, nameAz: 'Səyahəti tamamla', nameEn: 'Complete a trip', nameRu: 'Завершить поездку' },
 } as const;
 
 export type XpAction = keyof typeof XP_RULES;

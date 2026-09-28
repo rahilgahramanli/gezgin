@@ -6,22 +6,12 @@ import { PrismaService } from '@/common/prisma/prisma.service';
 import { StorageService } from '@/modules/storage/storage.service';
 import { toBooleanQuery } from '@/common/search/normalize';
 import { BookingLifecycleService } from '@/modules/bookings/booking-lifecycle.service';
+import { CATEGORY_NAME_SELECT, INCLUSIONS, categoryName, inclusionName, titleFor } from '@/common/i18n';
 import type {
   AvailabilityDto, CreateExperienceDto, CreateSlotsDto, ListExperiencesDto, UpdateExperienceDto,
 } from './dto/experiences.dto';
 
 type Lang = 'az' | 'en' | 'ru';
-
-/** Ekran 17, 56 — "Qiymətə daxildir" seçimləri. */
-const INCLUSION_NAMES: Record<string, string> = {
-  beledci: 'Bələdçi',
-  neqliyyat: 'Nəqliyyat',
-  'yerli-nahar': 'Yerli nahar',
-  sigorta: 'Sığorta',
-  materiallar: 'Materiallar',
-  giris: 'Giriş biletləri',
-  foto: 'Foto çəkiliş',
-};
 
 @Injectable()
 export class ExperiencesService {
@@ -96,7 +86,8 @@ export class ExperiencesService {
     await this.prisma.experienceInclusion.deleteMany({ where: { experienceId } });
     if (!codes.length) return;
     await this.prisma.experienceInclusion.createMany({
-      data: codes.map((code) => ({ experienceId, code, nameAz: INCLUSION_NAMES[code] ?? code })),
+      // Ekran 17, 56 — "Qiymətə daxildir"; ad bazada az saxlanılır, oxunanda koda görə çevrilir
+      data: codes.map((code) => ({ experienceId, code, nameAz: INCLUSIONS[code]?.az ?? code })),
     });
   }
 
@@ -145,7 +136,7 @@ export class ExperiencesService {
       take: limit + 1,
       include: {
         region: { include: { translations: { select: { lang: true, name: true } } } },
-        category: { select: { slug: true, nameAz: true } },
+        category: { select: { slug: true, ...CATEGORY_NAME_SELECT } },
         expert: { select: { username: true, fullName: true, avatar: { select: { storageKey: true } } } },
         photos: {
           where: { media: { deletedAt: null } },
@@ -162,7 +153,7 @@ export class ExperiencesService {
         const rt = e.region.translations.find((x) => x.lang === lang) ?? e.region.translations.find((x) => x.lang === 'az');
         return {
           slug: e.slug,
-          title: e.titleAz,
+          title: titleFor(e, lang),
           duration: e.duration,
           durationText: e.durationText,
           priceAzn: Number(e.priceAzn),
@@ -171,7 +162,7 @@ export class ExperiencesService {
           ratingCount: e.ratingCount,
           bookingCount: e.bookingCount,
           isFeatured: e.isFeatured,
-          category: e.category ? { slug: e.category.slug, name: e.category.nameAz } : null,
+          category: e.category ? { slug: e.category.slug, name: categoryName(e.category, lang) } : null,
           region: { slug: e.region.slug, name: rt?.name ?? e.region.slug },
           expert: {
             username: e.expert.username,
@@ -202,7 +193,7 @@ export class ExperiencesService {
       include: {
         region: { include: { translations: { select: { lang: true, name: true } } } },
         place: { include: { translations: { select: { lang: true, name: true } } } },
-        category: { select: { slug: true, nameAz: true, icon: true } },
+        category: { select: { slug: true, ...CATEGORY_NAME_SELECT, icon: true } },
         expert: {
           select: {
             username: true, fullName: true, bio: true, level: true,
@@ -242,7 +233,7 @@ export class ExperiencesService {
 
     return {
       slug: exp.slug,
-      title: exp.titleAz,
+      title: titleFor(exp, lang),
       titleEn: exp.titleEn,
       description: exp.descriptionAz,
       status: exp.status,
@@ -270,8 +261,8 @@ export class ExperiencesService {
       },
       region: { slug: exp.region.slug, name: rt?.name ?? exp.region.slug },
       place: exp.place ? { slug: exp.place.slug, name: pt?.name ?? exp.place.slug } : null,
-      category: exp.category ? { slug: exp.category.slug, name: exp.category.nameAz, icon: exp.category.icon } : null,
-      includes: exp.inclusions.map((i) => ({ code: i.code, name: i.nameAz, icon: i.icon })),
+      category: exp.category ? { slug: exp.category.slug, name: categoryName(exp.category, lang), icon: exp.category.icon } : null,
+      includes: exp.inclusions.map((i) => ({ code: i.code, name: inclusionName(i.code, i.nameAz, lang), icon: i.icon })),
       photos: exp.photos.map((p) => ({
         url: this.url(p.media.storageKey),
         blurhash: p.media.blurhash,
@@ -514,7 +505,7 @@ export class ExperiencesService {
       const rt = e.region.translations.find((x) => x.lang === lang) ?? e.region.translations.find((x) => x.lang === 'az');
       return {
         slug: e.slug,
-        title: e.titleAz,
+        title: titleFor(e, lang),
         status: e.status,
         priceAzn: Number(e.priceAzn),
         pricing: this.priceBreakdown(Number(e.priceAzn), EXPERT_PAYOUT_RATE),
