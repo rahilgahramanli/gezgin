@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { ImageBackground, StyleSheet, View } from 'react-native';
+import { Image, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, LogoMark, Text } from '@/components';
 import { useGuestLogin } from '@/api/hooks/auth';
@@ -12,18 +12,25 @@ export function SplashScreen({ navigation }: AuthScreenProps<'Splash'>) {
   const guest = useGuestLogin();
   const consumeAuthEntry = useAuth((st) => st.consumeAuthEntry);
 
-  // Qonaq "Hesab yarat" ilə çıxıbsa birbaşa Qeydiyyata keçirik
+  // Qonaq "Hesab yarat" ilə çıxıbsa birbaşa Qeydiyyata keçirik. Naviqator ilk
+  // render-də hələ hazır deyil (NAVIGATE "işlənmədi"), ona görə növbəti kadrda keçirik;
+  // dəyəri də yalnız keçid anında "istehlak" edirik — StrictMode-un ikiqat effekti itirməsin.
   useEffect(() => {
-    const entry = consumeAuthEntry();
-    if (entry) navigation.navigate(entry);
+    if (!useAuth.getState().pendingAuthEntry) return;
+    const id = requestAnimationFrame(() => {
+      const entry = consumeAuthEntry();
+      if (entry) navigation.navigate(entry);
+    });
+    return () => cancelAnimationFrame(id);
   }, [consumeAuthEntry, navigation]);
 
   return (
-    <ImageBackground
-      source={{ uri: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=900&q=70' }}
-      style={styles.bg}
-      imageStyle={styles.bgImage}
-    >
+    <View style={styles.bg}>
+      <Image
+        source={{ uri: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=900&q=70' }}
+        style={[StyleSheet.absoluteFill, styles.bgImage]}
+        resizeMode="cover"
+      />
       <View style={styles.shade} />
       <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
         <View style={styles.top}>
@@ -64,7 +71,7 @@ export function SplashScreen({ navigation }: AuthScreenProps<'Splash'>) {
           />
         </View>
       </SafeAreaView>
-    </ImageBackground>
+    </View>
   );
 }
 

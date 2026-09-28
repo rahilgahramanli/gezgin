@@ -49,7 +49,21 @@ function RouteCreator({ navigation }: { navigation: Nav }) {
     create.mutate(
       { title: title.trim(), region, days, difficulty },
       // `replace` — geri düyməsi boş formaya qayıtmasın
-      { onSuccess: (r) => navigation.replace('RouteBuilder', { slug: r.slug }) },
+      {
+        onSuccess: (r) => {
+          const xp = r.rewards?.xpGained ?? 0;
+          // Düymə "+350 XP" vəd edir — nəticəni göstəririk (gündəlik limit dolubsa bunu da deyirik)
+          Alert.alert(
+            xp > 0 ? `+${xp} XP` : 'Marşrut yaradıldı',
+            xp > 0
+              ? r.rewards?.leveledUp
+                ? `Level ${r.rewards.levelAfter}-ə yüksəldin! İndi dayanacaqları əlavə et.`
+                : 'İndi dayanacaqları əlavə et.'
+              : 'Bu gün marşrut üçün XP limiti dolub. İndi dayanacaqları əlavə et.',
+          );
+          navigation.replace('RouteBuilder', { slug: r.slug });
+        },
+      },
     );
   };
 
