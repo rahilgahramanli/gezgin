@@ -638,8 +638,52 @@ def mod():
         check("MOD-03b", s5 == 200, f"bərpadan sonra giriş {s5}")
 
 
+# ───────────────────────────── EXTRA ─────────────────────────────
+
+def expired_token(u: U) -> str:
+    """Eyni sirrlə imzalanmış, vaxtı keçmiş access token (node + jsonwebtoken)."""
+    secret = next(l.split("=", 1)[1].strip().strip('"') for l in open(os.path.join(os.path.dirname(__file__), "../../.env"))
+                  if l.startswith("JWT_ACCESS_SECRET="))
+    import base64
+    payload = json.loads(base64.urlsafe_b64decode(u.token.split(".")[1] + "==="))
+    js = ("const jwt=require('jsonwebtoken');const p=JSON.parse(process.argv[1]);delete p.iat;delete p.exp;"
+          "console.log(jwt.sign(p,process.argv[2],{expiresIn:-10}))")
+    return subprocess.run(["node", "-e", js, json.dumps(payload), secret], capture_output=True, text=True,
+                          cwd=os.path.join(os.path.dirname(__file__), "../../apps/api")).stdout.strip()
+
+
+@safe
+def extra():
+    u = new_user("qaex")
+    t = expired_token(u)
+    s, j = requests.get(API + "/feed", params={"tab": "for_you"}, headers={"Authorization": f"Bearer {t}", "X-Forwarded-For": u.ip}).status_code, None
+    check("X-TOKEN", s == 401, f"public endpoint + vaxtı keçmiş token → {s}")
+    s, j = U().get("/legal/privacy")
+    check("PROF-07", s == 200 and len(j.get("sections", [])) >= 5 and j.get("url", "").endswith("/legal/privacy/page"),
+          f"bölmə {len(j.get('sections', []))}, url {j.get('url')}")
+    r = requests.get(API + "/legal/terms/page")
+    check("PROF-07b", r.status_code == 200 and "text/html" in r.headers.get("content-type", ""), f"HTML səhifə {r.status_code}")
+    s, j = U().get("/places/map", region="baki", zoom=10)
+    singles = [c for c in j.get("items", []) if c.get("count") == 1]
+    check("EXP-06", singles and all(c.get("slug") for c in singles), f"tək klasterlərdə slug: {[c.get('slug') for c in singles]}")
+    s, j = u.get("/reviews/mine", targetType="place", target="laza")
+    u.post("/reviews", {"targetType": "place", "target": "laza", "rating": 4, "body": "Yaxsi", "tags": ["tebiet"]})
+    s2, j2 = u.get("/reviews/mine", targetType="place", target="laza")
+    check("REV-03b", j.get("review") is None and (j2.get("review") or {}).get("rating") == 4 and "tebiet" in (j2.get("review") or {}).get("tags", []),
+          f"əvvəl {j.get('review')}, sonra {(j2.get('review') or {}).get('rating')}")
+    adm = login(*ADMIN)
+    v = new_user("qasu")
+    adm.post(f"/admin/users/{v.username}/suspend", {"reason": "QA test"})
+    s, j = v.post("/auth/refresh", {"refreshToken": v.refresh})
+    check("MOD-03c", s == 401 and j.get("code") == "FORBIDDEN", f"dayandırılmış refresh → {s} {j.get('code')} '{j.get('message')}'")
+    adm.post(f"/admin/users/{v.username}/restore")
+    s, j = U().get("/badges")
+    rk = next((b for b in (j if isinstance(j, list) else j.get("data", [])) if b.get("slug") == "region-kesfcisi"), {})
+    check("PROF-11b", rk.get("conditionValue", rk.get("condition")) in (5, None) , f"region-kesfcisi şərti: {rk.get('conditionValue', rk.get('condition'))}")
+
+
 SECTIONS = [("AUTH", auth), ("ONB", onb), ("FEED", feed), ("STORY", story), ("USER", user), ("REV", rev),
-            ("ROUTE", route), ("TRIP", trip), ("CHK", chk), ("BOOK", book), ("PROF", prof), ("SAVED", saved), ("MOD", mod)]
+            ("ROUTE", route), ("TRIP", trip), ("CHK", chk), ("BOOK", book), ("PROF", prof), ("SAVED", saved), ("MOD", mod), ("EXTRA", extra)]
 
 if __name__ == "__main__":
     for prefix, fn in SECTIONS:

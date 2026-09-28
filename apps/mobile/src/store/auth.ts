@@ -1,3 +1,4 @@
+import { Alert } from 'react-native';
 import { create } from 'zustand';
 import { ApiError, NETWORK_ERROR, api, rawPost, setAccessToken, setRefreshHandler } from '@/api/client';
 import { STORAGE_KEYS, storage } from '@/lib/storage';
@@ -93,7 +94,16 @@ export const useAuth = create<AuthState>((set, get) => ({
         return next.accessToken;
       } catch (e) {
         // İnternet yoxdursa sessiyanı silmirik — server rədd edəndə çıxarırıq
-        if (!(e instanceof ApiError && e.code === NETWORK_ERROR)) await get().signOut();
+        if (e instanceof ApiError && e.code === NETWORK_ERROR) return null;
+        await get().signOut();
+        // Səssiz çıxış istifadəçini çaşdırır — səbəbi deyirik (dayandırılmış hesab, bitmiş sessiya)
+        const inactive = e instanceof ApiError && e.code === 'FORBIDDEN';
+        Alert.alert(
+          inactive ? 'Hesab aktiv deyil' : 'Sessiya bitdi',
+          inactive
+            ? 'Hesabın dayandırılıb və ya silinib. Ətraflı məlumat üçün GEZGIN dəstəyinə yaz.'
+            : 'Təhlükəsizlik üçün yenidən daxil ol.',
+        );
         return null;
       }
     });

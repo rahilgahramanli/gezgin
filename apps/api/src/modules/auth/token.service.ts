@@ -106,6 +106,12 @@ export class TokenService {
       throw new UnauthorizedException({ code: ERROR_CODES.UNAUTHORIZED, message: 'Refresh token tanınmadı' });
     }
 
+    // Dayandırılmış/silinmiş hesabın tokenləri ləğv olunub — "təkrar istifadə" yox,
+    // əsl səbəb qaytarılır ki, tətbiq istifadəçiyə nə baş verdiyini desin
+    if (stored.user.status !== 'active') {
+      throw new UnauthorizedException({ code: ERROR_CODES.FORBIDDEN, message: 'Hesab aktiv deyil' });
+    }
+
     if (stored.revokedAt) {
       await this.prisma.refreshToken.updateMany({
         where: { family: stored.family, revokedAt: null },
@@ -119,10 +125,6 @@ export class TokenService {
 
     if (stored.expiresAt < new Date()) {
       throw new UnauthorizedException({ code: ERROR_CODES.TOKEN_EXPIRED, message: 'Refresh token vaxtı bitib' });
-    }
-
-    if (stored.user.status !== 'active') {
-      throw new UnauthorizedException({ code: ERROR_CODES.FORBIDDEN, message: 'Hesab aktiv deyil' });
     }
 
     // Qonaq refresh-dən sonra da qonaq qalır — əks halda yeni access token `guest` iddiasını itirir

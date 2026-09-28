@@ -138,8 +138,9 @@ export async function rawPost<T>(path: string, body: unknown): Promise<T> {
   } catch {
     throw new ApiError(0, NETWORK_ERROR, 'Bağlantı problemi — internetini yoxla və yenidən cəhd et');
   }
-  if (!res.ok) throw new ApiError(res.status, 'REFRESH_FAILED', 'Sessiya yenilənmədi');
-  return (await res.json()) as T;
+  const payload = (await res.json().catch(() => null)) as { code?: string; message?: string } | null;
+  if (!res.ok) throw new ApiError(res.status, payload?.code ?? 'REFRESH_FAILED', payload?.message ?? 'Sessiya yenilənmədi');
+  return payload as T;
 }
 
 export const apiBaseUrl = BASE_URL;
