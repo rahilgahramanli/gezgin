@@ -596,15 +596,21 @@ def flow_settings(ctx: Ctx) -> str:
 
     wait('English', exact=True)
     tap('English', exact=True)
-    scroll_to('Push bildirişləri', exact=True)
-    tap('Push bildirişləri', exact=True)
+    # İnterfeys dərhal ingiliscəyə keçir — açarın adı da tərcümə olunub
+    scroll_to('Push notifications', exact=True)
+    tap('Push notifications', exact=True)
 
     after = call('/me/settings', ctx.token)
     assert after['language'] == 'en', f"dil serverdə dəyişmədi: {after['language']}"
     assert after['pushEnabled'] is False, 'push açarı serverdə dəyişmədi'
 
+    # Dil cihazda da saxlanılır — UI-dan geri qaytarılmasa sonrakı axınlar ingiliscə gedər
+    scroll_to('Azərbaycan', exact=True)
+    tap('Azərbaycan', exact=True)
+    wait('Push bildirişləri', exact=True)
+
     call('/me/settings', ctx.token, 'PATCH', {'language': before['language'], 'pushEnabled': before['pushEnabled']})
-    return f"dil az → en, push {before['pushEnabled']} → False (sonra geri)"
+    return f"dil az → en → az (interfeys tərcümə olunur), push {before['pushEnabled']} → False (sonra geri)"
 
 
 def flow_edit_profile(ctx: Ctx) -> str:

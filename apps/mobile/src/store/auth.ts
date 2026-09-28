@@ -2,8 +2,9 @@ import { Alert } from 'react-native';
 import i18n from '@/i18n';
 import { create } from 'zustand';
 import { ApiError, NETWORK_ERROR, api, rawPost, setAccessToken, setRefreshHandler } from '@/api/client';
+import { queryClient } from '@/api/queryClient';
 import { STORAGE_KEYS, storage } from '@/lib/storage';
-import { restoreLanguage } from '@/lib/language';
+import { restoreLanguage, syncAccountLanguage } from '@/lib/language';
 
 export interface SessionUser {
   publicId: string;
@@ -57,13 +58,18 @@ export const useAuth = create<AuthState>((set, get) => ({
   async signIn(session) {
     setAccessToken(session.accessToken);
     await storage.setJson(STORAGE_KEYS.session, session);
+    // Keşdə əvvəlki hesabın (və ya qonağın) məlumatı qalmasın — sorğu açarları istifadəçiyə bağlı deyil
+    queryClient.clear();
     set({ session });
+    void syncAccountLanguage(session.user);
   },
 
   async signOut(next) {
     setAccessToken(null);
     await storage.remove(STORAGE_KEYS.session);
     set({ session: null, pendingAuthEntry: next ?? null });
+    // Çıxışdan sonra növbəti hesab əvvəlkinin profilini, rezervasiyalarını, bildirişlərini görməməlidir
+    queryClient.clear();
   },
 
   consumeAuthEntry() {

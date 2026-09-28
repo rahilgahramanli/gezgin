@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import { api } from '@/api/client';
 import { useAuth, type Session } from '@/store/auth';
 
@@ -71,7 +71,6 @@ export function useLogout() {
  * cavabları yeni hesaba keçməsin) və giriş axını Qeydiyyat ekranında açılır.
  */
 export function useGuestSignUp() {
-  const qc = useQueryClient();
   const { session, signOut } = useAuth();
   return useMutation({
     mutationFn: async () => {
@@ -80,8 +79,7 @@ export function useGuestSignUp() {
           () => undefined,
         );
       }
-      await signOut('Register');
-      qc.clear();
+      await signOut('Register'); // keşi də təmizləyir
     },
   });
 }

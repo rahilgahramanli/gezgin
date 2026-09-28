@@ -1,6 +1,7 @@
 import type { QueryClient } from '@tanstack/react-query';
-import { setContentLanguage } from '@/api/client';
-import i18n from '@/i18n';
+import { api, setContentLanguage } from '@/api/client';
+import { queryClient } from '@/api/queryClient';
+import i18n, { currentLang } from '@/i18n';
 import { STORAGE_KEYS, storage } from './storage';
 
 export type AppLanguage = 'az' | 'en' | 'ru';
@@ -24,5 +25,28 @@ export async function restoreLanguage(): Promise<void> {
   if (saved && SUPPORTED.includes(saved)) {
     setContentLanguage(saved);
     void i18n.changeLanguage(saved);
+  }
+}
+
+/**
+ * Giriş anında cihaz və hesab dilini uzlaşdırır — dil hesab tənzimləməsidir
+ * (server bildirişləri də bu dildə göndərir):
+ *  - mövcud hesab (onboarding bitib): başqa cihazda seçilmiş dil interfeysə keçir;
+ *  - yeni hesab: server defoltu (az) cihazda artıq seçilmiş dili əzməsin — cihazın dili hesaba yazılır.
+ * Dil ikinci dərəcəlidir: xəta girişi bloklamır.
+ */
+export async function syncAccountLanguage(user: { isGuest: boolean; onboardingCompleted: boolean }): Promise<void> {
+  if (user.isGuest) return;
+  try {
+    if (!user.onboardingCompleted) {
+      await api('/me/settings', { method: 'PATCH', body: { language: currentLang() } });
+      return;
+    }
+    const settings = await api<{ language?: string }>('/me/settings');
+    const lang = settings.language as AppLanguage | undefined;
+    // Girişdən dərhal sonra başlayan sorğular köhnə dildə gedib — yenidən yüklənir
+    if (lang && SUPPORTED.includes(lang) && lang !== currentLang()) await applyLanguage(lang, queryClient);
+  } catch {
+    // şəbəkə/servis xətası — cihazdakı dil qalır
   }
 }

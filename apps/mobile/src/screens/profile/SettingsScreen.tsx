@@ -141,7 +141,7 @@ function ToggleRow({
 
 /** Ekran 34 — tənzimləmələr: hesab, dil, bildirişlər, məxfilik, hüquqi, çıxış. */
 export function SettingsScreen({ navigation }: AppScreenProps<'Settings'>) {
-  const { t: tr, tp: tpr } = useT('profile');
+  const { t: tr, tp: tpr, lang } = useT('profile');
   const me = useMe();
   const settings = useSettings();
   const update = useUpdateSettings();
@@ -199,7 +199,8 @@ export function SettingsScreen({ navigation }: AppScreenProps<'Settings'>) {
             <ChoiceRow
               key={code}
               label={tr(`settings.languages.${code}`)}
-              active={(s?.language ?? 'az') === code}
+              // İnterfeysin həqiqi dili — server dəyəri yenilənənə qədər fərqli ola bilər
+              active={lang === code}
               last={i === LANGS.length - 1}
               onPress={() => {
                 update.mutate({ language: code });
