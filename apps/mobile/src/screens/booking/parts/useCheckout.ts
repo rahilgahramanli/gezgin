@@ -73,7 +73,7 @@ export function useCheckout({ bookingId: existingId, onConfirmed, onCapacityErro
    */
   const [otp, setOtp] = useState<{ methodId: string; wrong: boolean; attempt: number } | null>(null);
 
-  const busy = create.isPending || pay.isPending;
+  const busy = create.isPending || pay.isPending || cancel.isPending;
 
   const fail = (e: unknown) => {
     setOtp(null);
@@ -115,7 +115,10 @@ export function useCheckout({ bookingId: existingId, onConfirmed, onCapacityErro
       const s = session.current;
       if (s.signature !== null && s.signature !== signature) {
         if (s.bookingId) {
-          cancel.mutate({ publicId: s.bookingId, reason: PARAMS_CHANGED_REASON });
+          // Ləğv GÖZLƏNİLİR: köhnə rezervasiya yerləri buraxmamış yenisi yaradılsa dolu
+          // tarixdə "yalnız 1 yer qalıb" alınırdı. Ləğv alınmasa da (vaxtı bitib,
+          // artıq ləğv olunub) yer onsuz da boşdur — axın davam edir.
+          await cancel.mutateAsync({ publicId: s.bookingId, reason: PARAMS_CHANGED_REASON }).catch(() => undefined);
         }
         session.current = { key: newIdempotencyKey(), signature: null, bookingId: null };
         setPending(null);

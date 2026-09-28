@@ -14,7 +14,7 @@ const MONTHS_SHORT: Record<Lang, readonly string[]> = {
 
 /** Həftə günləri `getDay()` sırası ilə (0 = bazar). */
 const WEEKDAYS_SHORT: Record<Lang, readonly string[]> = {
-  az: ['Ba', 'Be', 'Ça', 'Çr', 'Ca', 'Cü', 'Şə'],
+  az: ['Ba', 'Be', 'Ça', 'Çr', 'Ca', 'Cü', 'Şə'], // i18n-ignore — həftə günlərinin qısaltmaları dil üzrə
   en: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
   ru: ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'],
 };

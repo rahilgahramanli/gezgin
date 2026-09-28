@@ -84,7 +84,11 @@ if (litIdx !== -1) {
       }
       if (trimmed.startsWith('//') || trimmed.startsWith('*')) return;
       if (line.includes('i18n-ignore')) return;
-      const code = line.replace(/\/\/.*$/, '').replace(/\{\/\*.*?\*\/\}/g, '');
+      const code = line
+        // regex literalları (hərf qatlama, dil aşkarlama) mətn deyil
+        .replace(/(^|[(,=:!&|?{};>]\s*)\/(?![/*])(?:\\.|\[[^\]]*\]|[^/\\\n[])+\/[gimsuy]*/g, '$1RE')
+        .replace(/\/\/.*$/, '')
+        .replace(/\{\/\*.*?\*\/\}/g, '');
       // Identifikatorlar ASCII-dir — kod sətrində istənilən azərbaycanca hərf tərcüməsiz
       // mətndir: literal, ayrıca sətirdə JSX mətni və ya `{n} baxış` kimi qarışıq hal
       if (AZ.test(code)) report(`${path.relative(ROOT, file)}:${i + 1}: tərcüməsiz mətn: ${trimmed.slice(0, 90)}`);
