@@ -76,7 +76,7 @@ API səviyyəli qaydalar avtomatik yoxlanılır: `python3 scripts/qa/api_rules.p
 |---|---|
 | Sayt və API HTTP ilə işləyir, HTTPS yoxdur | Domen hələ yoxdur |
 | E-poçt gəlmir (şifrə bərpası kodu, xoş gəldin məktubu) | Real e-poçt provayderi seçilməyib; məktublar serverdə tutulur |
-| iOS tətbiqi **1 oktyabrdan** sonra açılmır | Pulsuz Apple ID ilə imza 7 gün etibarlıdır |
+| iOS tətbiqi **5 oktyabrdan** sonra açılmır | Pulsuz Apple ID ilə imza 7 gün etibarlıdır |
 | Paylaşılan linklər (`gezgin.app/…`) açılmır | Veb sayt yoxdur |
 | Push bildirişi gəlmir | Sprint 9 |
 | Tədbirlər, offline xəritə, PRO, expert paneli, "Local Expert ol", təcrübə yaratma ekranları yoxdur | Plan üzrə Sprint 8–9 |

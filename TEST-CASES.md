@@ -280,7 +280,7 @@ fon prosesləri) API səviyyəsində yoxlanılır.
 | Tur | Tarix | Nəticə |
 |---|---|---|
 | 1 | 2026-09-28 | UI: 97 qeyd, ~50 xəta. API skripti (`scripts/qa/api_rules.py`): 31/44 → 17 biznes məntiqi xətası |
-| 2 (reqressiya) | 2026-09-28 | Bütün 🔧 testlər simulyatorda təkrar keçirildi. API skripti **72/72**, API jest **269/269**, mobil jest **65/65**. 2-ci turda əlavə 4 xəta tapılıb düzəldildi (USER-05, EXP-09, REV-05, marşrut XP alerti) |
+| 2 (reqressiya) | 2026-09-28 | Bütün 🔧 testlər simulyatorda təkrar keçirildi. API skripti **72/72**, API jest **269/269**, mobil jest **65/65**, köhnə UI smoke axınları (`apps/mobile/e2e/smoke.py`) **13/13**. 2-ci turda əlavə 4 xəta tapılıb düzəldildi (USER-05, EXP-09, REV-05, marşrut XP alerti) |
 
 ## Tapılan xətalar — kateqoriyalar üzrə
 
