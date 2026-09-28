@@ -27,3 +27,6 @@ apps/mobile/e2e
 *.pdf
 design/assets
 seed/photos
+
+# Claude agent worktree-ləri (hər biri repo nüsxəsi + node_modules)
+.claude
