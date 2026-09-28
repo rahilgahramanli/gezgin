@@ -541,7 +541,10 @@ def flow_story(ctx: Ctx) -> str:
     tap_input()
     type_text('UI hekaye testi')
     tap_header('Paylaş')
-    wait('Nə yaradaq?', timeout=40)
+    # Paylaşılandan sonra təsdiq alerti çıxır ("Hekayə paylaşıldı")
+    wait('Hekayə paylaşıldı', timeout=40)
+    tap('OK', exact=True)
+    wait('Nə yaradaq?', timeout=10)
 
     assert call('/stories', ctx.token)['hasMine'], 'hekayə dairələrdə yoxdur'
     tap('Lent, tab')

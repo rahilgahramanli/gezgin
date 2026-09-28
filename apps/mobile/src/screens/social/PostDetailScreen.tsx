@@ -30,6 +30,9 @@ export function PostDetailScreen({ route, navigation }: AppScreenProps<'PostDeta
   const [replyTo, setReplyTo] = useState<{ publicId: string; name: string } | null>(null);
   const [sharing, setSharing] = useState(false);
   const input = useRef<ComponentRef<typeof TextInput>>(null);
+  const scroller = useRef<ComponentRef<typeof ScrollView>>(null);
+  /** Yeni kök şərh siyahının sonuna düşür — göndərəndən sonra ora sürüşdürürük ki, görünsün. */
+  const scrollToNewComment = useRef(false);
 
   // Lentdə şərh ikonuna toxunulubsa klaviatura dərhal açılır
   useEffect(() => {
@@ -68,6 +71,7 @@ export function PostDetailScreen({ route, navigation }: AppScreenProps<'PostDeta
         onSuccess: () => {
           setText('');
           setReplyTo(null);
+          scrollToNewComment.current = !replyTo;
         },
         onError: (e) => {
           if (isGuestBlocked(e)) promptGuestSignup('Şərh yazmaq üçün hesab yaratmalısınız');
@@ -131,7 +135,16 @@ export function PostDetailScreen({ route, navigation }: AppScreenProps<'PostDeta
       <TopBar title="Paylaşım" onBack={navigation.goBack} />
 
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        <ScrollView
+          ref={scroller}
+          contentContainerStyle={styles.content}
+          keyboardShouldPersistTaps="handled"
+          onContentSizeChange={() => {
+            if (!scrollToNewComment.current) return;
+            scrollToNewComment.current = false;
+            scroller.current?.scrollToEnd({ animated: true });
+          }}
+        >
           {!p.viewer.isMine ? (
             <View style={styles.followRow}>
               <Text variant="small" color="muted" style={styles.flex}>

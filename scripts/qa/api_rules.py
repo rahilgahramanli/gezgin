@@ -685,11 +685,23 @@ def extra():
 SECTIONS = [("AUTH", auth), ("ONB", onb), ("FEED", feed), ("STORY", story), ("USER", user), ("REV", rev),
             ("ROUTE", route), ("TRIP", trip), ("CHK", chk), ("BOOK", book), ("PROF", prof), ("SAVED", saved), ("MOD", mod), ("EXTRA", extra)]
 
+def cleanup():
+    """Bu işin test paylaşımlarını və hekayələrini gizlədir — dev lenti QA məlumatı ilə dolmasın."""
+    ids = db(f"select id from users where username like '%{RUN}%'")
+    if not ids:
+        return
+    uid = ",".join(r[0] for r in ids)
+    db(f"update posts set deleted_at = now() where user_id in ({uid}) and deleted_at is null")
+    db(f"update stories set deleted_at = now() where user_id in ({uid}) and deleted_at is null")
+
+
 if __name__ == "__main__":
     for prefix, fn in SECTIONS:
         if section(prefix):
             print(f"\n── {prefix}")
             fn()
+    if os.environ.get("QA_KEEP_DATA") != "1":
+        cleanup()
     failed = [r for r in RESULTS if not r[1]]
     print(f"\n{len(RESULTS) - len(failed)}/{len(RESULTS)} keçdi")
     sys.exit(1 if failed else 0)
