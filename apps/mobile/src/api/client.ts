@@ -17,15 +17,23 @@ export class ApiError extends Error {
 }
 
 /**
- * Validasiya xətasında server `details`-də sahə mesajlarını qaytarır — ümumi
- * "Validasiya xətası" əvəzinə istifadəçiyə konkret səbəbi göstəririk.
- * Azərbaycanca mesajlar üstündür (class-validator-un ingiliscə defoltları deyil).
+ * Validasiya xətasında server `details`-də sahə mesajlarını qaytarır (seçilmiş
+ * dildə) — ümumi "Validasiya xətası" əvəzinə istifadəçiyə konkret səbəbi
+ * göstəririk. Tərcüməsi olmayan class-validator defoltları ingiliscə qalır,
+ * ona görə yalnız cari dilin əlifbası ilə yazılmış sətir götürülür.
  */
+const SCRIPT: Record<'az' | 'en' | 'ru', RegExp> = {
+  az: /[əğıöüçşİƏ]/,
+  ru: /[а-яё]/i,
+  en: /^[\x20-\x7E]+$/,
+};
+
 function readableMessage(code: string | undefined, message: string | undefined, details: unknown): string {
   if (code === ERROR_CODES.VALIDATION_FAILED && Array.isArray(details)) {
     const texts = details.filter((d): d is string => typeof d === 'string');
-    const az = texts.find((d) => /[əğıöüçşİƏ]/.test(d));
-    if (az) return az;
+    const script = SCRIPT[contentLanguage];
+    const local = texts.find((d) => script.test(d));
+    if (local) return local;
   }
   return message ?? i18n.t('common:errors.networkShort');
 }

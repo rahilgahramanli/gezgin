@@ -207,6 +207,10 @@ export const EXACT_MESSAGES: Record<string, Tr> = {
     ru: 'У контента из жалобы нет автора — пользователя нельзя заблокировать',
   },
   'Admin hesabı dayandırıla bilməz': { en: 'An admin account cannot be suspended', ru: 'Аккаунт администратора нельзя заблокировать' },
+  'Profil şikayətində kontent silinmir — hesabı dayandır və ya şikayəti rədd et': {
+    en: 'A profile report has no content to remove — suspend the account or dismiss the report',
+    ru: 'В жалобе на профиль нечего удалять — заблокируйте аккаунт или отклоните жалобу',
+  },
   'Hesab onsuz da dayandırılıb': { en: 'The account is already suspended', ru: 'Аккаунт уже заблокирован' },
   'Hesab onsuz da aktivdir': { en: 'The account is already active', ru: 'Аккаунт уже активен' },
   'Bu kontent artıq silinib': { en: 'This content has already been removed', ru: 'Этот контент уже удалён' },

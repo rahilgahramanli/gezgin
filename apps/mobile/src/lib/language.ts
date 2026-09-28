@@ -1,6 +1,7 @@
 import type { QueryClient } from '@tanstack/react-query';
 import { api, setContentLanguage } from '@/api/client';
 import { queryClient } from '@/api/queryClient';
+import { refreshRealtimeLanguage } from '@/realtime/socket';
 import i18n, { currentLang } from '@/i18n';
 import { STORAGE_KEYS, storage } from './storage';
 
@@ -15,6 +16,7 @@ const SUPPORTED: readonly AppLanguage[] = ['az', 'en', 'ru'];
 export async function applyLanguage(lang: AppLanguage, qc?: QueryClient): Promise<void> {
   setContentLanguage(lang);
   void i18n.changeLanguage(lang);
+  refreshRealtimeLanguage();
   await storage.set(STORAGE_KEYS.language, lang);
   if (qc) await qc.invalidateQueries();
 }

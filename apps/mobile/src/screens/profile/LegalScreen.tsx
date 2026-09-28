@@ -8,6 +8,8 @@ import type { AppScreenProps } from '@/navigation/types';
 
 interface LegalDoc {
   slug: string;
+  /** Sorğunun dilində başlıq; köhnə API-də yalnız `titleAz` var. */
+  title?: string;
   titleAz: string;
   version: string;
   updatedAt: string;
@@ -16,15 +18,15 @@ interface LegalDoc {
 
 /** İstifadə şərtləri, məxfilik siyasəti — tətbiqin içində oxunur. */
 export function LegalScreen({ route, navigation }: AppScreenProps<'Legal'>) {
-  const { t: tr } = useT('profile');
+  const { t: tr, lang } = useT('profile');
   const { slug } = route.params;
-  const doc = useQuery({ queryKey: ['legal', slug], queryFn: () => api<LegalDoc>(`/legal/${slug}`) });
+  const doc = useQuery({ queryKey: ['legal', slug, lang], queryFn: () => api<LegalDoc>(`/legal/${slug}`) });
 
   if (doc.error) return <ErrorState error={doc.error} onRetry={() => void doc.refetch()} onBack={navigation.goBack} />;
 
   return (
     <Screen>
-      <TopBar title={doc.data?.titleAz ?? tr('legal.fallbackTitle')} onBack={navigation.goBack} />
+      <TopBar title={doc.data?.title ?? doc.data?.titleAz ?? tr('legal.fallbackTitle')} onBack={navigation.goBack} />
       {!doc.data ? (
         <Loading />
       ) : (

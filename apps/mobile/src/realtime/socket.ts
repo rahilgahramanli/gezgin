@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { io, type Socket } from 'socket.io-client';
+import { currentLang } from '@/i18n';
 import { env } from '@/config/env';
 import { api, getAccessToken } from '@/api/client';
 
@@ -24,7 +25,8 @@ export function connectRealtime(): Socket {
 
   const s = io(WS_URL, {
     transports: ['websocket'],
-    auth: (cb) => cb({ token: getAccessToken() ?? '' }),
+    // RN socket-i başlıq göndərə bilmir — canlı bildirişlərin dili `auth.lang` ilə
+    auth: (cb) => cb({ token: getAccessToken() ?? '', lang: currentLang() }),
     reconnectionDelayMax: 10_000,
   });
 
@@ -50,6 +52,13 @@ export function connectRealtime(): Socket {
 
   socket = s;
   return s;
+}
+
+/** Dil dəyişəndə canlı bildirişlər yeni dildə gəlsin — qoşulmada `auth.lang` təzədən oxunur. */
+export function refreshRealtimeLanguage(): void {
+  if (!socket?.connected) return;
+  socket.disconnect();
+  socket.connect();
 }
 
 export function disconnectRealtime(): void {
