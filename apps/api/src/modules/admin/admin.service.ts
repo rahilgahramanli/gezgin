@@ -36,8 +36,39 @@ export class AdminService {
 
   // ─────────────────── panel başlığı ───────────────────
 
+  /**
+   * Hədəfi artıq silinmiş açıq şikayətləri bağlayır — müəllif paylaşımını/şərhini
+   * silibsə, hesabını ləğv edibsə və ya kontent başqa şikayətlə silinibsə, moderator
+   * növbədə "artıq silinib" kontentə vaxt itirməsin. Bütün silmə yollarını (müəllif,
+   * hesab silmə, admin) tək yerdə tutmaq üçün növbə oxunmazdan əvvəl işləyir.
+   */
+  private async closeOrphanedReports(): Promise<number> {
+    const tables: Array<[string, string]> = [
+      ['post', 'posts'],
+      ['comment', 'comments'],
+      ['review', 'reviews'],
+    ];
+    let closed = 0;
+    for (const [type, table] of tables) {
+      closed += await this.prisma.$executeRawUnsafe(
+        `UPDATE reports r JOIN ${table} t ON t.id = r.target_id
+         SET r.status = 'resolved', r.resolved_at = NOW(3),
+             r.details = TRIM(CONCAT(COALESCE(r.details, ''), '\n[sistem] Kontent artıq silinib'))
+         WHERE r.target_type = '${type}' AND r.status IN ('open', 'reviewing') AND t.deleted_at IS NOT NULL`,
+      );
+    }
+    closed += await this.prisma.$executeRawUnsafe(
+      `UPDATE reports r JOIN users u ON u.id = r.target_id
+       SET r.status = 'resolved', r.resolved_at = NOW(3),
+           r.details = TRIM(CONCAT(COALESCE(r.details, ''), '\n[sistem] Hesab silinib'))
+       WHERE r.target_type = 'user' AND r.status IN ('open', 'reviewing') AND u.status = 'deleted'`,
+    );
+    return closed;
+  }
+
   /** Panelin yuxarı zolağı — moderatorun ilk baxışda görməli olduğu rəqəmlər. */
   async stats() {
+    await this.closeOrphanedReports();
     const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
     const [openReports, todayReports, users, suspended, newUsers, posts, todayPosts] = await Promise.all([
       this.prisma.report.count({ where: { status: { in: ['open', 'reviewing'] } } }),
@@ -71,6 +102,7 @@ export class AdminService {
   // ─────────────────── moderasiya növbəsi ───────────────────
 
   async reports(dto: ReportQueueDto) {
+    await this.closeOrphanedReports();
     const status = dto.status ?? 'open';
     const limit = dto.limit ?? 20;
     const where: Prisma.ReportWhereInput =

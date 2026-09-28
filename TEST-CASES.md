@@ -273,6 +273,21 @@ fon prosesləri) API səviyyəsində yoxlanılır.
 | X-04 | UI | Bütün ekranlarda "Geri" | Hər ekrandan geri çıxmaq olur | ✅ bütün yüklənmə/xəta ekranlarında Geri |
 | X-05 | UI | Azərbaycan interfeysində ingiliscə etiket | Yoxdur | 🔧 T1: "Regions/Places/Want to go" → azərbaycanca |
 
+## 17. Lokalizasiya (I18N)
+
+| ID | Üsul | Test | Gözlənilən nəticə | Status |
+|---|---|---|---|---|
+| I18N-01 | UI | Tənzimləmələr → Dil → English; bütün tabları və əsas ekranları gəz | Tablar, başlıqlar, düymələr, boş/xəta vəziyyətləri ingiliscə; kontent (məkan, region, kateqoriya adları) ingiliscə, tərcüməsi yoxdursa azərbaycanca | ⏳ |
+| I18N-02 | UI | Dil → Русский | Eyni ekranlar rusca; cəm formaları düzgün (1 отзыв / 2 отзыва / 5 отзывов) | ⏳ |
+| I18N-03 | UI | Dil seçilib, tətbiq bağlanıb açılır | Seçilmiş dil qalır | ⏳ |
+| I18N-04 | UI+API | en/ru-da yanlış şifrə, qapasitet xətası, check-in məsafə xətası | Server xətaları seçilmiş dildə | ⏳ |
+| I18N-05 | UI | en/ru-da bildirişlər | "X liked your post" / "X понравилась ваша публикация", səviyyə/nişan adları tərcümədə | ⏳ |
+| I18N-06 | UI | en/ru-da vaxt və tarixlər | "2 days ago" / "2 дня назад", ay adları (Oct / окт), Bakı vaxtı ilə bron saatı | ⏳ |
+| I18N-07 | UI | en/ru-da Gezgin Score, nailiyyətlər, liderlər | Tier, XP qaydası, badge adları seçilmiş dildə | ⏳ |
+| I18N-08 | UI | en/ru-da rezervasiya: qiymət sətirləri, ləğv siyasəti, rədd edilən kart | Hamısı seçilmiş dildə | ⏳ |
+| I18N-09 | UI | en/ru-da hüquqi sənədlər | Sənəd seçilmiş dildə | ⏳ |
+| I18N-10 | UI | Dil → Azərbaycan | İnterfeys əvvəlki kimi (avtomatik UI axınları 13/13) | ⏳ |
+
 ---
 
 ## Test turları
