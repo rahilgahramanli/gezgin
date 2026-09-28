@@ -1,6 +1,7 @@
 import { StyleSheet, View } from 'react-native';
 import { Card, Icon, Screen, Text } from '@/components';
 import { t } from '@/theme';
+import { useT } from '@/i18n';
 import type { IconName } from '@/components';
 import type { TabScreenProps } from '@/navigation/types';
 
@@ -11,35 +12,41 @@ import type { TabScreenProps } from '@/navigation/types';
  * yanaşı planlama axınları da toplanır — hamısı "yaratmaq" hərəkətidir.
  */
 export function CreateHubScreen({ navigation }: TabScreenProps<'Create'>) {
+  const { t: tr } = useT('social');
   const actions = [
     {
+      key: 'post',
       icon: 'image' as IconName,
-      title: 'Paylaşım et',
-      hint: 'Foto və hekayəni bölüş · +300 XP',
+      title: tr('createHub.post.title'),
+      hint: tr('createHub.post.hint'),
       onPress: () => navigation.navigate('CreatePost'),
     },
     {
+      key: 'story',
       icon: 'camera' as IconName,
-      title: 'Hekayə',
-      hint: '24 saat görünən an',
+      title: tr('shared.story'),
+      hint: tr('createHub.story.hint'),
       onPress: () => navigation.navigate('CreatePost', { mode: 'story' }),
     },
     {
+      key: 'trip',
       icon: 'map' as IconName,
-      title: 'Yeni səyahət',
-      hint: 'Tarix seç, məkanları plana yığ',
+      title: tr('createHub.trip.title'),
+      hint: tr('createHub.trip.hint'),
       onPress: () => navigation.navigate('CreateTrip'),
     },
     {
+      key: 'route',
       icon: 'route' as IconName,
-      title: 'Marşrut qur',
-      hint: 'Gün-gün dayanacaqlar · +350 XP',
+      title: tr('createHub.route.title'),
+      hint: tr('createHub.route.hint'),
       onPress: () => navigation.navigate('RouteBuilder'),
     },
     {
+      key: 'checkin',
       icon: 'pin' as IconName,
-      title: 'Check-in et',
-      hint: 'Olduğun məkanı qeyd et, XP qazan',
+      title: tr('createHub.checkin.title'),
+      hint: tr('createHub.checkin.hint'),
       // Əvvəl axtarışı açırdı — indi mövqeyə görə yaxın məkanlar siyahısı
       onPress: () => navigation.navigate('CheckinPicker'),
     },
@@ -48,15 +55,15 @@ export function CreateHubScreen({ navigation }: TabScreenProps<'Create'>) {
   return (
     <Screen>
       <Text variant="titleLg" style={styles.title}>
-        Nə yaradaq?
+        {tr('createHub.title')}
       </Text>
       <Text variant="small" color="ink2" style={styles.sub}>
-        Səyahətini paylaş, planla, kəşf et.
+        {tr('createHub.subtitle')}
       </Text>
 
       <View style={styles.list}>
         {actions.map((a) => (
-          <Card key={a.title} padded onPress={a.onPress} style={styles.action}>
+          <Card key={a.key} padded onPress={a.onPress} style={styles.action}>
             <View style={styles.iconBox}>
               <Icon name={a.icon} size={22} color={t.colors.green900} />
             </View>

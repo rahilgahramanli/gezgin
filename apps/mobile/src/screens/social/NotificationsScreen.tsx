@@ -7,15 +7,13 @@ import {
 import { useDeepLink } from '@/lib/deepLink';
 import { timeAgo } from '@/lib/time';
 import { t } from '@/theme';
+import { useT } from '@/i18n';
 import type { AppScreenProps } from '@/navigation/types';
 
 type Tab = 'all' | 'social' | 'system';
 
-const TABS: Array<{ key: Tab; label: string }> = [
-  { key: 'all', label: 'Hamısı' },
-  { key: 'social', label: 'Sosial' },
-  { key: 'system', label: 'Sistem' },
-];
+/** Etiketlər render zamanı `social:notifications.tabs.<key>`-dən gəlir. */
+const TABS: Tab[] = ['all', 'social', 'system'];
 
 /** Sistem bildirişlərinin ikonları — aktyor olmayanda avatar yerinə. */
 const SYSTEM_ICON: Record<string, IconName> = {
@@ -33,6 +31,7 @@ const SYSTEM_ICON: Record<string, IconName> = {
  * Dizayndakı "Xüsusi təkliflər" və "Gələcək tədbirlər" Sprint 9-dadır (events).
  */
 export function NotificationsScreen({ navigation }: AppScreenProps<'Notifications'>) {
+  const { t: tr } = useT('social');
   const [tab, setTab] = useState<Tab>('all');
   const list = useNotifications(tab);
   const readAll = useReadAllNotifications();
@@ -50,20 +49,20 @@ export function NotificationsScreen({ navigation }: AppScreenProps<'Notification
   return (
     <Screen padded={false} scroll={false}>
       <TopBar
-        title="Bildirişlər"
+        title={tr('notifications.title')}
         onBack={navigation.goBack}
         right={
           unread > 0 ? (
             <Text variant="small" color="green900" style={styles.readAll} onPress={() => readAll.mutate()}>
-              Hamısını oxu
+              {tr('notifications.readAll')}
             </Text>
           ) : null
         }
       />
 
       <View style={styles.chips}>
-        {TABS.map((x) => (
-          <Chip key={x.key} label={x.label} active={tab === x.key} onPress={() => setTab(x.key)} />
+        {TABS.map((key) => (
+          <Chip key={key} label={tr(`notifications.tabs.${key}`)} active={tab === key} onPress={() => setTab(key)} />
         ))}
       </View>
 
@@ -78,8 +77,8 @@ export function NotificationsScreen({ navigation }: AppScreenProps<'Notification
           ListEmptyComponent={
             <EmptyState
               icon="bell"
-              title="Hələ sakitlikdir"
-              message="Bəyənmə, şərh, izləmə və yeni nailiyyətlər burada görünəcək."
+              title={tr('notifications.emptyTitle')}
+              message={tr('notifications.emptyMessage')}
             />
           }
           onEndReached={() => {

@@ -5,7 +5,9 @@ import {
   useFollow, useFollowList, useSuggested, useUserProfile, type FollowRow, type SuggestedUser,
 } from '@/api/hooks/social';
 import { useUser } from '@/store/auth';
+import { formatNumber } from '@/lib/time';
 import { t } from '@/theme';
+import { useT } from '@/i18n';
 import type { AppScreenProps } from '@/navigation/types';
 
 type Kind = 'followers' | 'following';
@@ -13,6 +15,7 @@ type Kind = 'followers' | 'following';
 /** Ekran 42 — izləyicilər / izlədikləri; öz siyahında tövsiyələr də görünür. */
 export function FollowersScreen({ route, navigation }: AppScreenProps<'Followers'>) {
   const { username } = route.params;
+  const { t: tr } = useT('social');
   const me = useUser();
   const [kind, setKind] = useState<Kind>(route.params.tab ?? 'followers');
   const isMine = me?.username === username;
@@ -56,7 +59,7 @@ export function FollowersScreen({ route, navigation }: AppScreenProps<'Followers
       </Pressable>
       {'isMe' in p && p.isMe ? null : (
         <Button
-          label={p.isFollowing ? 'İzləyir' : 'İzlə'}
+          label={p.isFollowing ? tr('followers.followingButton') : tr('shared.follow')}
           size="xs"
           variant={p.isFollowing ? 'outline' : 'primary'}
           onPress={() => toggle(p)}
@@ -65,7 +68,8 @@ export function FollowersScreen({ route, navigation }: AppScreenProps<'Followers
     </View>
   );
 
-  const subtitleOf = (p: FollowRow) => `@${p.username} · ${p.isLocalExpert ? 'Local Expert' : `Level ${p.level}`}`;
+  const subtitleOf = (p: FollowRow) =>
+    `@${p.username} · ${p.isLocalExpert ? 'Local Expert' : tr('shared.level', { level: p.level })}`;
 
   return (
     <Screen padded={false} scroll={false}>
@@ -74,13 +78,13 @@ export function FollowersScreen({ route, navigation }: AppScreenProps<'Followers
       <View style={styles.tabs}>
         {(
           [
-            ['followers', 'İzləyicilər', profile.data?.stats.followers],
-            ['following', 'İzləyir', profile.data?.stats.following],
+            ['followers', tr('followers.tabFollowers'), profile.data?.stats.followers],
+            ['following', tr('followers.tabFollowing'), profile.data?.stats.following],
           ] as const
         ).map(([key, label, count]) => (
           <Pressable key={key} onPress={() => setKind(key)} style={[styles.tab, kind === key && styles.tabActive]}>
             <Text variant="small" color={kind === key ? 'green900' : 'muted'} style={styles.tabText}>
-              {label} {count !== undefined ? count.toLocaleString('az-AZ') : ''}
+              {label} {count !== undefined ? formatNumber(count) : ''}
             </Text>
           </Pressable>
         ))}
@@ -99,16 +103,27 @@ export function FollowersScreen({ route, navigation }: AppScreenProps<'Followers
           }}
           ListEmptyComponent={
             <EmptyState
-              title={total > 0 ? 'Siyahı qapalıdır' : kind === 'followers' ? 'Hələ izləyici yoxdur' : 'Hələ heç kimi izləmir'}
-              message={total > 0 ? 'Bu hesab qapalıdır — siyahını görmək üçün izlə.' : undefined}
+              title={
+                total > 0
+                  ? tr('followers.hiddenTitle')
+                  : kind === 'followers'
+                    ? tr('followers.noFollowers')
+                    : tr('followers.noFollowing')
+              }
+              message={total > 0 ? tr('followers.hiddenMessage') : undefined}
             />
           }
           ListFooterComponent={
             isMine && suggested.data?.data.length ? (
               <View style={styles.suggested}>
-                <SectionHead title="Tövsiyə olunan gezginlər" />
+                <SectionHead title={tr('followers.suggested')} />
                 {suggested.data.data.map((s) =>
-                  person(s, [s.region, s.isLocalExpert ? 'Local Expert' : `Level ${s.level}`].filter(Boolean).join(' · ')),
+                  person(
+                    s,
+                    [s.region, s.isLocalExpert ? 'Local Expert' : tr('shared.level', { level: s.level })]
+                      .filter(Boolean)
+                      .join(' · '),
+                  ),
                 )}
               </View>
             ) : undefined

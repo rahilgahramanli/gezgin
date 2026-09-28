@@ -12,19 +12,18 @@ import {
 import { getCurrentPosition, type Coords } from '@/lib/location';
 import { t } from '@/theme';
 import { errorText } from '@/lib/errors';
+import { useT } from '@/i18n';
 import type { TabScreenProps } from '@/navigation/types';
 import { ShareSheet } from './ShareSheet';
 
 // Mənbə dizaynda başlıqlar ingiliscə idi; interfeysin qalanı azərbaycanca
 // olduğu üçün naviqasiya da tərcümə olundu — qarışıq dil "şablon" hissi verirdi.
-const TABS: Array<{ key: FeedTab; label: string }> = [
-  { key: 'for_you', label: 'Sənin üçün' },
-  { key: 'following', label: 'İzlədiklərin' },
-  { key: 'nearby', label: 'Yaxınlıqda' },
-];
+// Etiketlər render zamanı `social:discover.tabs.<key>`-dən gəlir — dil dəyişəndə yenilənsin.
+const TABS: FeedTab[] = ['for_you', 'following', 'nearby'];
 
 /** Ekran 05 — sosial lent: hekayə dairələri, üç tab, paylaşımlar. */
 export function DiscoverScreen({ navigation }: TabScreenProps<'Discover'>) {
+  const { t: tr } = useT('social');
   const { width: screenWidth } = useWindowDimensions();
   const cardWidth = screenWidth - t.spacing.page * 2;
   const [tab, setTab] = useState<FeedTab>('for_you');
@@ -61,20 +60,20 @@ export function DiscoverScreen({ navigation }: TabScreenProps<'Discover'>) {
   const header = (
     <View style={styles.header}>
       <View style={styles.top}>
-        <Text variant="titleLg">Lent</Text>
+        <Text variant="titleLg">{tr('discover.title')}</Text>
         <View style={styles.topActions}>
-          <IconButton icon="bell" label="Bildirişlər" dot={(unread.data ?? 0) > 0} onPress={() => navigation.navigate('Notifications')} />
-          <IconButton icon="chat" label="Mesajlar" dot={(chatUnread.data ?? 0) > 0} onPress={() => navigation.navigate('Messages')} />
+          <IconButton icon="bell" label={tr('discover.notifications')} dot={(unread.data ?? 0) > 0} onPress={() => navigation.navigate('Notifications')} />
+          <IconButton icon="chat" label={tr('discover.messages')} dot={(chatUnread.data ?? 0) > 0} onPress={() => navigation.navigate('Messages')} />
         </View>
       </View>
 
       <View style={styles.tabs}>
-        {TABS.map((x) => {
-          const active = tab === x.key;
+        {TABS.map((key) => {
+          const active = tab === key;
           return (
-            <Pressable key={x.key} onPress={() => selectTab(x.key)} style={[styles.tab, active && styles.tabActive]}>
+            <Pressable key={key} onPress={() => selectTab(key)} style={[styles.tab, active && styles.tabActive]}>
               <Text variant="small" color={active ? 'paper' : 'ink2'} style={styles.tabText}>
-                {x.label}
+                {tr(`discover.tabs.${key}`)}
               </Text>
             </Pressable>
           );
@@ -106,7 +105,7 @@ export function DiscoverScreen({ navigation }: TabScreenProps<'Discover'>) {
             ) : null}
           </View>
           <Text variant="caption" numberOfLines={1}>
-            Sən
+            {tr('discover.you')}
           </Text>
         </Pressable>
 
@@ -134,21 +133,21 @@ export function DiscoverScreen({ navigation }: TabScreenProps<'Discover'>) {
 
   const empty =
     tab === 'nearby' && locating ? (
-      <Loading label="Mövqe müəyyən edilir…" />
+      <Loading label={tr('discover.locating')} />
     ) : tab === 'nearby' && !near ? (
       <EmptyState
         icon="navigation"
-        title="Hardasan?"
-        message="Yaxınlıqdakı paylaşımları göstərmək üçün mövqe icazəsi lazımdır."
-        action={<Button label="İcazə ver" variant="soft" size="sm" onPress={() => void locate()} />}
+        title={tr('discover.whereTitle')}
+        message={tr('discover.whereMessage')}
+        action={<Button label={tr('common:location.allow')} variant="soft" size="sm" onPress={() => void locate()} />}
       />
     ) : feed.isError ? (
       // Oflayn/server xətası "Lent hələ boşdur" kimi görünməsin
       <EmptyState
         icon="wifiOff"
-        title="Lent yüklənmədi"
-        message={errorText(feed.error, 'Bir az sonra yenidən cəhd et.')}
-        action={<Button label="Yenidən cəhd et" variant="soft" size="sm" onPress={() => void feed.refetch()} />}
+        title={tr('discover.loadFailed')}
+        message={errorText(feed.error, tr('common:states.tryLater'))}
+        action={<Button label={tr('common:actions.retry')} variant="soft" size="sm" onPress={() => void feed.refetch()} />}
       />
     ) : feed.isLoading ? (
       // Spinner əvəzinə kartın forması — ekran "sıçramır"
@@ -159,12 +158,12 @@ export function DiscoverScreen({ navigation }: TabScreenProps<'Discover'>) {
     ) : tab === 'following' ? (
       <EmptyState
         icon="users"
-        title="Hələ kimsəni izləmirsən"
-        message="İzlədiyin gezginlərin paylaşımları burada toplanacaq."
+        title={tr('discover.followingEmptyTitle')}
+        message={tr('discover.followingEmptyMessage')}
         action={
           myUsername ? (
             <Button
-              label="Gezginləri kəşf et"
+              label={tr('discover.findTravellers')}
               variant="soft"
               size="sm"
               onPress={() => navigation.navigate('Followers', { username: myUsername, tab: 'following' })}
@@ -175,10 +174,8 @@ export function DiscoverScreen({ navigation }: TabScreenProps<'Discover'>) {
     ) : (
       <EmptyState
         icon="compass"
-        title={tab === 'nearby' ? 'Bu ətrafda sakitlikdir' : 'Lent hələ boşdur'}
-        message={
-          tab === 'nearby' ? '50 km radiusda paylaşım yoxdur — başqa bölgəyə bax.' : 'İlk paylaşımı sən et.'
-        }
+        title={tab === 'nearby' ? tr('discover.nearbyEmptyTitle') : tr('discover.emptyTitle')}
+        message={tab === 'nearby' ? tr('discover.nearbyEmptyMessage') : tr('discover.emptyMessage')}
       />
     );
 
@@ -208,8 +205,8 @@ export function DiscoverScreen({ navigation }: TabScreenProps<'Discover'>) {
             {index === 0 && tab === 'for_you' && experiences.data?.data.length ? (
               <View style={styles.strip}>
                 <SectionHead
-                  title="Populyar təcrübələr"
-                  actionLabel="Hamısı"
+                  title={tr('discover.popularExperiences')}
+                  actionLabel={tr('shared.all')}
                   onAction={() => navigation.navigate('Experiences')}
                 />
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.hscroll}>
@@ -255,13 +252,14 @@ export function DiscoverScreen({ navigation }: TabScreenProps<'Discover'>) {
 }
 
 function IconButton({ icon, label, dot, onPress }: { icon: IconName; label: string; dot?: boolean; onPress: () => void }) {
+  const { t: tr } = useT('social');
   return (
     <Pressable
       onPress={onPress}
       hitSlop={8}
       style={styles.iconBtn}
       accessibilityRole="button"
-      accessibilityLabel={dot ? `${label}, oxunmamış var` : label}
+      accessibilityLabel={dot ? tr('discover.unreadA11y', { label }) : label}
     >
       <Icon name={icon} size={24} color={t.colors.ink} />
       {dot ? <View style={styles.dot} /> : null}

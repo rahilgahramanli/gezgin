@@ -13,13 +13,11 @@ import { useMe } from '@/api/hooks/me';
 import { useCreatePost, useCreateStory, type PostVisibility } from '@/api/hooks/social';
 import { PICKER_OPTIONS, uploadImage } from '@/api/upload';
 import { t } from '@/theme';
+import { tp, useT } from '@/i18n';
 import type { AppScreenProps } from '@/navigation/types';
 
-const VISIBILITY: Array<{ key: PostVisibility; label: string }> = [
-  { key: 'public', label: 'Hamı' },
-  { key: 'followers', label: 'İzləyicilər' },
-  { key: 'private', label: 'Yalnız mən' },
-];
+/** Etiketlər render zamanı `social:createPost.visibility.<key>`-dən gəlir. */
+const VISIBILITY: PostVisibility[] = ['public', 'followers', 'private'];
 
 interface Picked {
   slug: string;
@@ -33,6 +31,7 @@ interface Picked {
  */
 export function CreatePostScreen({ route, navigation }: AppScreenProps<'CreatePost'>) {
   const isStory = route.params?.mode === 'story';
+  const { t: tr } = useT('social');
   const me = useMe();
   const create = useCreatePost();
   const createStory = useCreateStory();
@@ -53,7 +52,7 @@ export function CreatePostScreen({ route, navigation }: AppScreenProps<'CreatePo
     const res = await launchImageLibrary({ ...PICKER_OPTIONS, selectionLimit: maxPhotos - (isStory ? 0 : assets.length) });
     if (res.didCancel) return;
     if (res.errorCode) {
-      setError(res.errorMessage ?? 'Qalereya açılmadı');
+      setError(res.errorMessage ?? tr('createPost.galleryFailed'));
       return;
     }
     const picked = res.assets ?? [];
@@ -72,7 +71,7 @@ export function CreatePostScreen({ route, navigation }: AppScreenProps<'CreatePo
         const media = uploaded[0];
         if (!media) return;
         await createStory.mutateAsync({ media, caption: body.trim() || undefined, place: place?.slug });
-        Alert.alert('Hekayə paylaşıldı', '24 saat ərzində izləyicilərin görəcək.');
+        Alert.alert(tr('createPost.storySharedTitle'), tr('createPost.storySharedMessage'));
         navigation.goBack();
         return;
       }
@@ -85,13 +84,16 @@ export function CreatePostScreen({ route, navigation }: AppScreenProps<'CreatePo
         visibility,
       });
       if (post.rewards?.xpGained) {
-        Alert.alert(`+${post.rewards.xpGained} XP`, post.rewards.leveledUp ? `Level ${post.rewards.levelAfter}-ə yüksəldin!` : 'Paylaşım üçün təşəkkürlər');
+        Alert.alert(
+          `+${post.rewards.xpGained} XP`,
+          post.rewards.leveledUp ? tr('shared.levelUp', { level: post.rewards.levelAfter }) : tr('createPost.thanks'),
+        );
       }
       navigation.replace('PostDetail', { publicId: post.publicId });
     } catch (e) {
       // Qonaq paylaşa bilməz — səbəbi deyib qeydiyyata yönləndiririk
-      if (isGuestBlocked(e)) promptGuestSignup('Paylaşım etmək üçün hesab yaratmalısınız');
-      setError(e instanceof ApiError ? e.message : 'Paylaşım alınmadı — yenidən cəhd edin');
+      if (isGuestBlocked(e)) promptGuestSignup(tr('createPost.guest'));
+      setError(e instanceof ApiError ? e.message : tr('createPost.failed'));
     } finally {
       setBusy(false);
     }
@@ -101,10 +103,10 @@ export function CreatePostScreen({ route, navigation }: AppScreenProps<'CreatePo
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.header}>
         <Text variant="body" color="muted" onPress={navigation.goBack}>
-          Ləğv et
+          {tr('shared.cancel')}
         </Text>
-        <Text variant="h3">{isStory ? 'Hekayə' : 'Paylaş'}</Text>
-        <Button label="Paylaş" size="xs" disabled={!canSubmit} loading={busy} onPress={() => void submit()} />
+        <Text variant="h3">{isStory ? tr('shared.story') : tr('common:actions.share')}</Text>
+        <Button label={tr('common:actions.share')} size="xs" disabled={!canSubmit} loading={busy} onPress={() => void submit()} />
       </View>
 
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
@@ -114,17 +116,17 @@ export function CreatePostScreen({ route, navigation }: AppScreenProps<'CreatePo
             <View style={styles.flex}>
               <Text variant="h3">{me.data?.username ?? ''}</Text>
               {isStory ? (
-                <Text variant="caption">24 saat görünəcək</Text>
+                <Text variant="caption">{tr('createPost.storyVisible')}</Text>
               ) : (
                 <View style={styles.visibility}>
-                  {VISIBILITY.map((v) => (
+                  {VISIBILITY.map((key) => (
                     <Pressable
-                      key={v.key}
-                      onPress={() => setVisibility(v.key)}
-                      style={[styles.visChip, visibility === v.key && styles.visChipActive]}
+                      key={key}
+                      onPress={() => setVisibility(key)}
+                      style={[styles.visChip, visibility === key && styles.visChipActive]}
                     >
-                      <Text variant="caption" color={visibility === v.key ? 'paper' : 'ink2'}>
-                        {v.label}
+                      <Text variant="caption" color={visibility === key ? 'paper' : 'ink2'}>
+                        {tr(`createPost.visibility.${key}`)}
                       </Text>
                     </Pressable>
                   ))}
@@ -135,7 +137,7 @@ export function CreatePostScreen({ route, navigation }: AppScreenProps<'CreatePo
 
           <TextInput
             style={styles.body}
-            placeholder={isStory ? 'Başlıq əlavə et…' : 'Nə kəşf etdin? #heşteq əlavə et'}
+            placeholder={isStory ? tr('createPost.storyPlaceholder') : tr('createPost.postPlaceholder')}
             placeholderTextColor={t.colors.muted}
             value={body}
             onChangeText={setBody}
@@ -151,7 +153,7 @@ export function CreatePostScreen({ route, navigation }: AppScreenProps<'CreatePo
                   <Pressable
                     style={styles.remove}
                     hitSlop={8}
-                    accessibilityLabel="Fotonu sil"
+                    accessibilityLabel={tr('shared.removePhoto')}
                     onPress={() => setAssets((prev) => prev.filter((_, j) => j !== i))}
                   >
                     <Icon name="x" size={12} color="#fff" strokeWidth={3} />
@@ -162,7 +164,7 @@ export function CreatePostScreen({ route, navigation }: AppScreenProps<'CreatePo
                 <Pressable
                   style={[styles.photo, styles.addPhoto]}
                   onPress={() => void pickPhotos()}
-                  accessibilityLabel="Daha çox foto"
+                  accessibilityLabel={tr('createPost.morePhotos')}
                 >
                   <Icon name="plus" size={22} color={t.colors.green900} />
                 </Pressable>
@@ -171,18 +173,18 @@ export function CreatePostScreen({ route, navigation }: AppScreenProps<'CreatePo
           ) : null}
 
           <View style={styles.attach}>
-            <Attach icon="image" label="Foto" onPress={() => void pickPhotos()} />
-            {!isStory ? <Attach icon="route" label="Marşrut" onPress={() => setPicker('route')} /> : null}
-            <Attach icon="pin" label="Yerləşmə" onPress={() => setPicker('place')} />
+            <Attach icon="image" label={tr('createPost.photo')} onPress={() => void pickPhotos()} />
+            {!isStory ? <Attach icon="route" label={tr('shared.route')} onPress={() => setPicker('route')} /> : null}
+            <Attach icon="pin" label={tr('createPost.location')} onPress={() => setPicker('place')} />
           </View>
 
           {place ? (
-            <Selected icon="pin" title="Yerləşmə" value={place.name} subtitle={place.subtitle} onClear={() => setPlace(null)} />
+            <Selected icon="pin" title={tr('createPost.location')} value={place.name} subtitle={place.subtitle} onClear={() => setPlace(null)} />
           ) : null}
           {linkedRoute ? (
             <Selected
               icon="route"
-              title="Marşruta bağla"
+              title={tr('createPost.linkRoute')}
               value={linkedRoute.name}
               subtitle={linkedRoute.subtitle}
               onClear={() => setLinkedRoute(null)}
@@ -194,8 +196,8 @@ export function CreatePostScreen({ route, navigation }: AppScreenProps<'CreatePo
               <Icon name="sparkle" size={18} color={t.colors.brown700} />
               <Text variant="small" color="brown700" style={styles.flex}>
                 {assets.length
-                  ? `Bu paylaşım üçün +${XP_RULES.media_shared.xp} XP qazanacaqsan`
-                  : `Foto əlavə et — +${XP_RULES.media_shared.xp} XP qazan`}
+                  ? tr('createPost.xpWithPhotos', { xp: XP_RULES.media_shared.xp })
+                  : tr('createPost.xpAddPhoto', { xp: XP_RULES.media_shared.xp })}
               </Text>
             </Card>
           ) : null}
@@ -283,31 +285,37 @@ const fold = (s: string) =>
  * süzülür; kontent yüzlərlə olanda `/search`-ə keçmək lazımdır.
  */
 function PickerSheet({ kind, onPick, onClose }: { kind: 'place' | 'route'; onPick: (x: Picked) => void; onClose: () => void }) {
+  const { t: tr, lang } = useT('social');
   const [q, setQ] = useState('');
   const places = usePlaces({ limit: 50 });
   const routes = useRoutes({ limit: 50 });
 
+  // `lang` asılılıqdadır — dil dəyişəndə alt yazı ("3 gün") yenidən qurulsun
   const items: Picked[] = useMemo(() => {
     const all: Picked[] =
       kind === 'place'
         ? (places.data?.data ?? []).map((p) => ({ slug: p.slug, name: p.name, subtitle: p.region.name }))
-        : (routes.data?.data ?? []).map((r) => ({ slug: r.slug, name: r.title, subtitle: `${r.days} gün · ${r.region.name}` }));
+        : (routes.data?.data ?? []).map((r) => ({
+            slug: r.slug,
+            name: r.title,
+            subtitle: `${tp('common:time.days', r.days)} · ${r.region.name}`,
+          }));
     const needle = fold(q.trim());
     return needle ? all.filter((x) => fold(`${x.name} ${x.subtitle ?? ''}`).includes(needle)) : all;
-  }, [kind, q, places.data, routes.data]);
+  },[kind, q, places.data, routes.data, lang]);
 
   return (
     <Modal visible animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       <SafeAreaView style={styles.safe} edges={['top']}>
         <View style={styles.header}>
           <Text variant="body" color="muted" onPress={onClose}>
-            Bağla
+            {tr('common:actions.close')}
           </Text>
-          <Text variant="h3">{kind === 'place' ? 'Yerləşmə' : 'Marşruta bağla'}</Text>
+          <Text variant="h3">{kind === 'place' ? tr('createPost.location') : tr('createPost.linkRoute')}</Text>
           <View style={styles.headerSpacer} />
         </View>
         <View style={styles.pickerSearch}>
-          <Input icon="search" placeholder={kind === 'place' ? 'Məkan axtar' : 'Marşrut axtar'} value={q} onChangeText={setQ} />
+          <Input icon="search" placeholder={kind === 'place' ? tr('createPost.searchPlace') : tr('createPost.searchRoute')} value={q} onChangeText={setQ} />
         </View>
         <FlatList
           data={items}
@@ -325,7 +333,7 @@ function PickerSheet({ kind, onPick, onClose }: { kind: 'place' | 'route'; onPic
           )}
           ListEmptyComponent={
             <Text variant="small" color="muted" center>
-              Nəticə yoxdur
+              {tr('createPost.noResults')}
             </Text>
           }
         />

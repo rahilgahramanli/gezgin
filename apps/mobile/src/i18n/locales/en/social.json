@@ -1,1 +1,265 @@
-{}
+{
+  "shared": {
+    "level": "Level {{level}}",
+    "levelUp": "You reached Level {{level}}!",
+    "follow": "Follow",
+    "youFollow": "Following",
+    "send": "Send",
+    "sendFailed": "Not sent",
+    "tryAgain": "Please try again",
+    "thanks": "Thank you",
+    "reportSent": "Your report has been sent to the moderators.",
+    "whyReport": "Why are you reporting this?",
+    "report": "Report",
+    "cancel": "Cancel",
+    "removePhoto": "Remove photo",
+    "all": "All",
+    "story": "Story",
+    "route": "Route",
+    "experience": "Experience",
+    "stops_one": "{{count}} stop",
+    "stops_other": "{{count}} stops"
+  },
+  "createHub": {
+    "title": "What would you like to create?",
+    "subtitle": "Share, plan and explore your trips.",
+    "post": {
+      "title": "Create a post",
+      "hint": "Share photos and your story · +300 XP"
+    },
+    "story": {
+      "hint": "A moment that stays up for 24 hours"
+    },
+    "trip": {
+      "title": "New trip",
+      "hint": "Pick dates and gather places into a plan"
+    },
+    "route": {
+      "title": "Build a route",
+      "hint": "Day-by-day stops · +350 XP"
+    },
+    "checkin": {
+      "title": "Check in",
+      "hint": "Mark the place you're at and earn XP"
+    }
+  },
+  "discover": {
+    "title": "Feed",
+    "tabs": {
+      "for_you": "For you",
+      "following": "Following",
+      "nearby": "Nearby"
+    },
+    "notifications": "Notifications",
+    "messages": "Messages",
+    "unreadA11y": "{{label}}, unread",
+    "you": "You",
+    "locating": "Finding your location…",
+    "whereTitle": "Where are you?",
+    "whereMessage": "We need location access to show posts nearby.",
+    "loadFailed": "Couldn't load the feed",
+    "followingEmptyTitle": "You're not following anyone yet",
+    "followingEmptyMessage": "Posts from travellers you follow will appear here.",
+    "findTravellers": "Discover travellers",
+    "nearbyEmptyTitle": "It's quiet around here",
+    "nearbyEmptyMessage": "No posts within 50 km — try another region.",
+    "emptyTitle": "The feed is empty for now",
+    "emptyMessage": "Be the first to post.",
+    "popularExperiences": "Popular experiences"
+  },
+  "postDetail": {
+    "title": "Post",
+    "notFoundTitle": "Post not found",
+    "notFoundMessage": "It may have been deleted or be visible to followers only.",
+    "commentGuest": "You need an account to comment",
+    "deleteTitle": "Delete comment",
+    "deleteWithReplies": "Its replies will be deleted too.",
+    "deleteMessage": "This comment will be deleted.",
+    "deleteFailed": "Couldn't delete the comment",
+    "reply": "Reply",
+    "likes_one": "{{count}} like",
+    "likes_other": "{{count}} likes",
+    "likeComment": "Like comment",
+    "unlikeComment": "Unlike comment",
+    "authorLevel": "{{name}} · Level {{level}}",
+    "view": "View",
+    "routeDays_one": "{{count}}-day route",
+    "routeDays_other": "{{count}}-day route",
+    "comments": "Comments ({{n}})",
+    "firstComment": "Be the first to comment.",
+    "moreComments": "More comments",
+    "replyingTo": "Replying to {{name}}",
+    "placeholder": "Write a comment…"
+  },
+  "shareSheet": {
+    "messageBody": "Post by {{name}}: {{url}}",
+    "sentTitle": "Sent",
+    "sentMessage": "Shared with {{name}}",
+    "externalMessage": "{{name}} shared on GEZGIN: {{url}}",
+    "reportDuplicate": "You've already reported this post — it's under review.",
+    "deletePost": "Delete post",
+    "deleteMessage": "This post will be deleted permanently.",
+    "quickSend": "Quick send",
+    "sending": "Sending…",
+    "otherApps": "Other apps and copy link"
+  },
+  "story": {
+    "delete": "Delete story",
+    "deleteMessage": "This story will be deleted permanently.",
+    "deleteFailed": "Couldn't delete the story",
+    "empty": "No active stories",
+    "prev": "Previous",
+    "next": "Next",
+    "views_one": "{{count}} view",
+    "views_other": "{{count}} views"
+  },
+  "createPost": {
+    "visibility": {
+      "public": "Everyone",
+      "followers": "Followers",
+      "private": "Only me"
+    },
+    "galleryFailed": "Couldn't open the gallery",
+    "storySharedTitle": "Story shared",
+    "storySharedMessage": "Your followers will see it for 24 hours.",
+    "thanks": "Thanks for posting",
+    "guest": "You need an account to post",
+    "failed": "Couldn't publish the post — please try again",
+    "storyVisible": "Visible for 24 hours",
+    "storyPlaceholder": "Add a caption…",
+    "postPlaceholder": "What did you discover? Add a #hashtag",
+    "morePhotos": "Add more photos",
+    "photo": "Photo",
+    "location": "Location",
+    "linkRoute": "Link a route",
+    "xpWithPhotos": "You'll earn +{{xp}} XP for this post",
+    "xpAddPhoto": "Add a photo — earn +{{xp}} XP",
+    "searchPlace": "Search places",
+    "searchRoute": "Search routes",
+    "noResults": "No results"
+  },
+  "review": {
+    "title": "Write a review",
+    "editTitle": "Edit review",
+    "rating": {
+      "1": "Poor",
+      "2": "Fair",
+      "3": "Good",
+      "4": "Very good",
+      "5": "Amazing"
+    },
+    "pickStars": "Choose a rating",
+    "stars_one": "{{count}} star",
+    "stars_other": "{{count}} stars",
+    "updatedTitle": "Review updated",
+    "thanksTitle": "Thank you!",
+    "xpGained": "You earned +{{xp}} XP for your review.",
+    "changesSaved": "Your changes have been saved.",
+    "shared": "Your review has been posted.",
+    "conflict": "You've already reviewed this — sending will update your earlier review.",
+    "failed": "Couldn't send the review — please try again",
+    "update": "Update review",
+    "submit": "Submit review",
+    "subtitleCountry": "{{subtitle}}, Azerbaijan",
+    "alreadyWritten": "You've already reviewed this — make your changes and update it.",
+    "howWasIt": "How was your trip?",
+    "tags": {
+      "tebiet": "Nature 🌿",
+      "samimi-insanlar": "Friendly people",
+      "yol-cetindir": "Tough road",
+      "yerli-metbex": "Local cuisine",
+      "usaqla-uygun": "Kid-friendly",
+      "fotogenik": "Photogenic"
+    },
+    "placeholder": "Share your impressions — they'll help other travellers",
+    "photosLocked": "Photos can't be changed when editing.",
+    "addPhoto": "Add photo",
+    "editNoXp": "Edits don't earn XP — XP is for your first review",
+    "xpHint": "+{{xp}} XP for your review"
+  },
+  "userProfile": {
+    "loading": "Loading profile…",
+    "chatFailed": "Couldn't open the chat",
+    "reportDuplicate": "You've already reported this user — it's under review.",
+    "reportFailed": "Couldn't send the report",
+    "blockTitle": "Block {{name}}?",
+    "blockMessage": "They won't be able to follow you, message you or see your posts. You can unblock them in Settings.",
+    "block": "Block",
+    "blockedTitle": "Blocked",
+    "blockedMessage": "{{name}} has been blocked.",
+    "blockFailed": "Couldn't block this user",
+    "levelTier": "Level {{level}} · {{tier}}",
+    "tiers": {
+      "baslangic": "Beginner",
+      "kesf_eden": "Explorer",
+      "seyyah": "Traveler",
+      "kesfci": "Discoverer",
+      "gezgin": "Gezgin"
+    },
+    "followsYou": "Follows you",
+    "followers": "Followers",
+    "following": "Following",
+    "message": "Message",
+    "experiences_one": "{{count}} experience",
+    "experiences_other": "{{count}} experiences",
+    "tabs": {
+      "posts": "Posts · {{n}}",
+      "routes": "Routes · {{n}}",
+      "badges": "Badges · {{n}}"
+    },
+    "locked": "This account is private — follow to see their posts.",
+    "noPosts": "No posts yet",
+    "noRoutesMine": "You don't have any routes yet",
+    "buildRoute": "Build a route",
+    "noPublicRoutes": "No public routes",
+    "privateRoute": "Private",
+    "earned": "Earned"
+  },
+  "followers": {
+    "tabFollowers": "Followers",
+    "tabFollowing": "Following",
+    "followingButton": "Following",
+    "hiddenTitle": "This list is private",
+    "hiddenMessage": "This account is private — follow to see the list.",
+    "noFollowers": "No followers yet",
+    "noFollowing": "Not following anyone yet",
+    "suggested": "Suggested travellers"
+  },
+  "messages": {
+    "title": "Messages",
+    "filters": {
+      "all": "All",
+      "experts": "Local Expert",
+      "business": "Business",
+      "travelers": "Travellers"
+    },
+    "guestTitle": "Messaging requires an account",
+    "guestMessage": "Create an account to message travellers and Local Experts.",
+    "emptyTitle": "No conversations yet",
+    "emptyMessage": "Tap \"Message\" on a traveller's or Local Expert's profile."
+  },
+  "chat": {
+    "sendFailed": "Message not sent",
+    "typing": "typing…",
+    "online": "online",
+    "lastActive": "last seen {{time}}",
+    "support": "GEZGIN Support",
+    "empty": "Say hello to start the conversation 👋",
+    "blocked": "You can't message this user.",
+    "placeholder": "Write a message…",
+    "perPerson": "{{price}} AZN / person",
+    "book": "Book",
+    "read": "seen"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "readAll": "Mark all as read",
+    "tabs": {
+      "all": "All",
+      "social": "Social",
+      "system": "System"
+    },
+    "emptyTitle": "All quiet for now",
+    "emptyMessage": "Likes, comments, follows and new badges will show up here."
+  }
+}

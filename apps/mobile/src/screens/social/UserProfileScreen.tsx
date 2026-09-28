@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { TIERS } from '@gezgin/shared';
 import { Alert, Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
 import {
   Avatar, Button, Card, ErrorState, Icon, Loading, Photo, Pill, Rating, RowCard, Screen, StatCell, Text, TopBar,
@@ -9,10 +10,11 @@ import {
 } from '@/api/hooks/social';
 import { useExperiences } from '@/api/hooks/content';
 import { useMyRoutes } from '@/api/hooks/routeBuilder';
-import { compactCount } from '@/lib/time';
+import { compactCount, formatNumber } from '@/lib/time';
 import { durationLabel } from '@/lib/labels';
 import { t } from '@/theme';
 import { alertError } from '@/lib/errors';
+import { useT } from '@/i18n';
 import type { AppScreenProps } from '@/navigation/types';
 
 type Tab = 'posts' | 'routes' | 'badges';
@@ -20,6 +22,7 @@ type Tab = 'posts' | 'routes' | 'badges';
 /** Ekran 41 — gezgin profili: statistika, izlə/mesaj, paylaşım şəbəkəsi, marşrutlar, nailiyyətlər. */
 export function UserProfileScreen({ route, navigation }: AppScreenProps<'UserProfile'>) {
   const { username } = route.params;
+  const { t: tr, tp: tpr } = useT('social');
   const { width: screen } = useWindowDimensions();
   const [tab, setTab] = useState<Tab>('posts');
 
@@ -46,7 +49,7 @@ export function UserProfileScreen({ route, navigation }: AppScreenProps<'UserPro
     return (
       <Screen padded={false} scroll={false}>
         <TopBar onBack={navigation.goBack} />
-        <Loading label="Profil yüklənir…" />
+        <Loading label={tr('userProfile.loading')} />
       </Screen>
     );
   }
@@ -54,15 +57,18 @@ export function UserProfileScreen({ route, navigation }: AppScreenProps<'UserPro
   const u = profile.data;
   const tile = (screen - t.spacing.page * 2 - t.spacing.xs * 2) / 3;
   const postList = posts.data?.pages.flatMap((p) => p.data) ?? [];
+  // API tier adını azərbaycanca verir — koda çevirib cari dildə göstəririk
+  const tierCode = TIERS.find((x) => x.nameAz === u.tier)?.code;
+  const tierLabel = tierCode ? tr(`userProfile.tiers.${tierCode}`) : u.tier;
 
   const message = () =>
     open.mutate(username, {
       onSuccess: (c) => navigation.navigate('Chat', { publicId: c.publicId }),
-      onError: (e) => alertError(e, 'Söhbət açılmadı'),
+      onError: (e) => alertError(e, tr('userProfile.chatFailed')),
     });
 
   const askReport = () =>
-    Alert.alert('Niyə şikayət edirsən?', undefined, [
+    Alert.alert(tr('shared.whyReport'), undefined, [
       ...REPORT_REASONS.map((r) => ({
         text: r.label,
         onPress: () =>
@@ -71,32 +77,32 @@ export function UserProfileScreen({ route, navigation }: AppScreenProps<'UserPro
             {
               onSuccess: (res) =>
                 Alert.alert(
-                  'Təşəkkürlər',
-                  res.duplicate ? 'Bu istifadəçini artıq şikayət etmisiniz — baxılır.' : 'Şikayətiniz moderatorlara göndərildi.',
+                  tr('shared.thanks'),
+                  res.duplicate ? tr('userProfile.reportDuplicate') : tr('shared.reportSent'),
                 ),
-              onError: (e) => alertError(e, 'Şikayət göndərilmədi'),
+              onError: (e) => alertError(e, tr('userProfile.reportFailed')),
             },
           ),
       })),
-      { text: 'İmtina', style: 'cancel' as const },
+      { text: tr('common:actions.cancel'), style: 'cancel' as const },
     ]);
 
   const askBlock = () =>
     Alert.alert(
-      `${u.fullName} bloklansın?`,
-      'O səni izləyə, sənə yaza və paylaşımlarını görə bilməyəcək. Bloku Tənzimləmələrdən götürə bilərsən.',
+      tr('userProfile.blockTitle', { name: u.fullName }),
+      tr('userProfile.blockMessage'),
       [
-        { text: 'İmtina', style: 'cancel' },
+        { text: tr('common:actions.cancel'), style: 'cancel' },
         {
-          text: 'Blokla',
+          text: tr('userProfile.block'),
           style: 'destructive',
           onPress: () =>
             block.mutate(username, {
               onSuccess: () => {
-                Alert.alert('Bloklandı', `${u.fullName} bloklandı.`);
+                Alert.alert(tr('userProfile.blockedTitle'), tr('userProfile.blockedMessage', { name: u.fullName }));
                 navigation.goBack();
               },
-              onError: (e) => alertError(e, 'Bloklanmadı'),
+              onError: (e) => alertError(e, tr('userProfile.blockFailed')),
             }),
         },
       ],
@@ -104,9 +110,9 @@ export function UserProfileScreen({ route, navigation }: AppScreenProps<'UserPro
 
   const openMenu = () =>
     Alert.alert(u.fullName, undefined, [
-      { text: 'Şikayət et', onPress: askReport },
-      { text: 'Blokla', style: 'destructive', onPress: askBlock },
-      { text: 'İmtina', style: 'cancel' },
+      { text: tr('shared.report'), onPress: askReport },
+      { text: tr('userProfile.block'), style: 'destructive', onPress: askBlock },
+      { text: tr('common:actions.cancel'), style: 'cancel' },
     ]);
 
   return (
@@ -119,7 +125,7 @@ export function UserProfileScreen({ route, navigation }: AppScreenProps<'UserPro
             light
             transparent
             onBack={navigation.goBack}
-            actions={u.viewer.isMe ? undefined : [{ icon: 'more', onPress: openMenu, label: 'Daha çox' }]}
+            actions={u.viewer.isMe ? undefined : [{ icon: 'more', onPress: openMenu, label: tr('common:actions.more') }]}
           />
         </View>
       </View>
@@ -135,36 +141,36 @@ export function UserProfileScreen({ route, navigation }: AppScreenProps<'UserPro
           {u.homeRegion ? ` · ${u.homeRegion.name}` : ''}
         </Text>
         <View style={styles.pills}>
-          <Pill label={`Level ${u.level} · ${u.tier}`} tone="green" />
+          <Pill label={tr('userProfile.levelTier', { level: u.level, tier: tierLabel })} tone="green" />
           {u.isLocalExpert ? <Pill label="Local Expert" tone="brown" /> : null}
-          {u.viewer.followsYou ? <Pill label="Səni izləyir" tone="gray" /> : null}
+          {u.viewer.followsYou ? <Pill label={tr('userProfile.followsYou')} tone="gray" /> : null}
         </View>
       </View>
 
       <View style={styles.body}>
         <View style={styles.stats}>
           <Pressable style={styles.stat} onPress={() => navigation.push('Followers', { username, tab: 'followers' })}>
-            <StatCell value={compactCount(u.stats.followers)} label="İzləyici" />
+            <StatCell value={compactCount(u.stats.followers)} label={tr('userProfile.followers')} />
           </Pressable>
           <Pressable style={styles.stat} onPress={() => navigation.push('Followers', { username, tab: 'following' })}>
-            <StatCell value={compactCount(u.stats.following)} label="İzləyir" />
+            <StatCell value={compactCount(u.stats.following)} label={tr('userProfile.following')} />
           </Pressable>
           <View style={styles.stat}>
-            <StatCell value={u.gezginScore.toLocaleString('az-AZ')} label="Gezgin Score" />
+            <StatCell value={formatNumber(u.gezginScore)} label="Gezgin Score" />
           </View>
         </View>
 
         {!u.viewer.isMe ? (
           <View style={styles.actions}>
             <Button
-              label={u.viewer.isFollowing ? 'İzləyirsən' : 'İzlə'}
+              label={u.viewer.isFollowing ? tr('shared.youFollow') : tr('shared.follow')}
               variant={u.viewer.isFollowing ? 'outline' : 'primary'}
               size="sm"
               style={styles.flex}
               onPress={() => follow.mutate({ username, follow: !u.viewer.isFollowing })}
             />
             <Button
-              label="Mesaj"
+              label={tr('userProfile.message')}
               variant="soft"
               size="sm"
               style={styles.flex}
@@ -186,7 +192,7 @@ export function UserProfileScreen({ route, navigation }: AppScreenProps<'UserPro
             <View style={styles.expertHead}>
               <Rating value={expertProfile.rating} count={expertProfile.ratingCount} />
               <Text variant="meta" color="muted">
-                {expertProfile.experienceCount} təcrübə
+                {tpr('userProfile.experiences', expertProfile.experienceCount)}
               </Text>
             </View>
             {expertProfile.specialties.length ? (
@@ -216,9 +222,9 @@ export function UserProfileScreen({ route, navigation }: AppScreenProps<'UserPro
         <View style={styles.tabs}>
           {(
             [
-              ['posts', `Paylaşımlar · ${u.stats.posts}`],
-              ['routes', `Marşrutlar · ${isMe && myRoutes.data ? myRoutes.data.data.length : u.stats.routes}`],
-              ['badges', `Nailiyyətlər · ${u.stats.badges}`],
+              ['posts', tr('userProfile.tabs.posts', { n: u.stats.posts })],
+              ['routes', tr('userProfile.tabs.routes', { n: isMe && myRoutes.data ? myRoutes.data.data.length : u.stats.routes })],
+              ['badges', tr('userProfile.tabs.badges', { n: u.stats.badges })],
             ] as const
           ).map(([key, label]) => (
             <Pressable key={key} onPress={() => setTab(key)} style={[styles.tab, tab === key && styles.tabActive]}>
@@ -233,7 +239,7 @@ export function UserProfileScreen({ route, navigation }: AppScreenProps<'UserPro
           <Card padded style={styles.locked}>
             <Icon name="lock" size={22} color={t.colors.muted} />
             <Text variant="small" color="ink2" style={styles.flex}>
-              Bu hesab qapalıdır — paylaşımlarını görmək üçün izlə.
+              {tr('userProfile.locked')}
             </Text>
           </Card>
         ) : tab === 'posts' ? (
@@ -241,7 +247,7 @@ export function UserProfileScreen({ route, navigation }: AppScreenProps<'UserPro
             <Loading />
           ) : postList.length === 0 ? (
             <Text variant="small" color="muted" center>
-              Hələ paylaşım yoxdur
+              {tr('userProfile.noPosts')}
             </Text>
           ) : (
             <View>
@@ -271,7 +277,7 @@ export function UserProfileScreen({ route, navigation }: AppScreenProps<'UserPro
               </View>
               {posts.hasNextPage ? (
                 <Button
-                  label="Daha çox"
+                  label={tr('common:actions.more')}
                   variant="ghost"
                   size="sm"
                   loading={posts.isFetchingNextPage}
@@ -287,13 +293,13 @@ export function UserProfileScreen({ route, navigation }: AppScreenProps<'UserPro
             isMe ? (
               <View style={styles.emptyRoutes}>
                 <Text variant="small" color="muted" center>
-                  Hələ marşrutun yoxdur
+                  {tr('userProfile.noRoutesMine')}
                 </Text>
-                <Button label="Marşrut qur" variant="soft" size="sm" onPress={() => navigation.navigate('RouteBuilder')} />
+                <Button label={tr('userProfile.buildRoute')} variant="soft" size="sm" onPress={() => navigation.navigate('RouteBuilder')} />
               </View>
             ) : (
               <Text variant="small" color="muted" center>
-                İctimai marşrut yoxdur
+                {tr('userProfile.noPublicRoutes')}
               </Text>
             )
           ) : (
@@ -303,12 +309,12 @@ export function UserProfileScreen({ route, navigation }: AppScreenProps<'UserPro
                   key={r.slug}
                   uri={r.coverUrl}
                   title={r.title}
-                  subtitle={`${r.days} gün · ${r.region.name}`}
+                  subtitle={`${tpr('common:time.days', r.days)} · ${r.region.name}`}
                   meta={
                     <View style={styles.meta}>
-                      {isMe && r.visibility === 'private' ? <Pill label="Şəxsi" tone="gray" /> : null}
+                      {isMe && r.visibility === 'private' ? <Pill label={tr('userProfile.privateRoute')} tone="gray" /> : null}
                       {r.ratingCount > 0 ? <Rating value={r.rating} count={r.ratingCount} /> : null}
-                      <Text variant="caption">{r.stopCount} dayanacaq</Text>
+                      <Text variant="caption">{tpr('shared.stops', r.stopCount)}</Text>
                     </View>
                   }
                   onPress={() => navigation.navigate('RouteDetail', { slug: r.slug })}
@@ -329,7 +335,7 @@ export function UserProfileScreen({ route, navigation }: AppScreenProps<'UserPro
                   {b.name}
                 </Text>
                 <Text variant="caption" center>
-                  {b.earned ? 'Qazanılıb' : `${b.percent}%`}
+                  {b.earned ? tr('userProfile.earned') : `${b.percent}%`}
                 </Text>
               </View>
             ))}

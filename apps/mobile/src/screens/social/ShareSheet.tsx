@@ -7,6 +7,7 @@ import {
   REPORT_REASONS, useConversations, useDeletePost, useReportPost, useSharePost, type ConversationItem, type Post,
 } from '@/api/hooks/social';
 import { t } from '@/theme';
+import { useT } from '@/i18n';
 
 interface Props {
   post: Post | null;
@@ -21,6 +22,7 @@ interface Props {
  * tətbiqlər) "Kopyala" var — clipboard üçün əlavə native modul lazım olmur.
  */
 export function ShareSheet({ post, onClose, onDeleted }: Props) {
+  const { t: tr } = useT('social');
   const [step, setStep] = useState<'main' | 'report'>('main');
   const [sendingTo, setSendingTo] = useState<string | null>(null);
   const qc = useQueryClient();
@@ -45,13 +47,13 @@ export function ShareSheet({ post, onClose, onDeleted }: Props) {
       const url = await link();
       await api(`/conversations/${c.publicId}/messages`, {
         method: 'POST',
-        body: { body: `${post.author.fullName} paylaşımı: ${url}` },
+        body: { body: tr('shareSheet.messageBody', { name: post.author.fullName, url }) },
       });
       void qc.invalidateQueries({ queryKey: ['conversations'] });
-      Alert.alert('Göndərildi', `${c.title} ilə paylaşıldı`);
+      Alert.alert(tr('shareSheet.sentTitle'), tr('shareSheet.sentMessage', { name: c.title }));
       close();
     } catch (e) {
-      Alert.alert('Göndərilmədi', e instanceof ApiError ? e.message : 'Yenidən cəhd edin');
+      Alert.alert(tr('shared.sendFailed'), e instanceof ApiError ? e.message : tr('shared.tryAgain'));
     } finally {
       setSendingTo(null);
     }
@@ -60,7 +62,7 @@ export function ShareSheet({ post, onClose, onDeleted }: Props) {
   const shareExternal = async () => {
     try {
       const url = await link();
-      await Share.share({ message: `${post.author.fullName} GEZGIN-də paylaşdı: ${url}`, url });
+      await Share.share({ message: tr('shareSheet.externalMessage', { name: post.author.fullName, url }), url });
       close();
     } catch {
       // İstifadəçi pəncərəni bağlayıb — xəta deyil
@@ -73,20 +75,20 @@ export function ShareSheet({ post, onClose, onDeleted }: Props) {
       {
         onSuccess: (res) => {
           Alert.alert(
-            'Təşəkkürlər',
-            res.duplicate ? 'Bu paylaşımı artıq şikayət etmisiniz — baxılır.' : 'Şikayətiniz moderatorlara göndərildi.',
+            tr('shared.thanks'),
+            res.duplicate ? tr('shareSheet.reportDuplicate') : tr('shared.reportSent'),
           );
           close();
         },
-        onError: (e) => Alert.alert('Göndərilmədi', e instanceof ApiError ? e.message : 'Yenidən cəhd edin'),
+        onError: (e) => Alert.alert(tr('shared.sendFailed'), e instanceof ApiError ? e.message : tr('shared.tryAgain')),
       },
     );
 
   const confirmDelete = () =>
-    Alert.alert('Paylaşımı sil', 'Bu paylaşım həmişəlik silinəcək.', [
-      { text: 'İmtina', style: 'cancel' },
+    Alert.alert(tr('shareSheet.deletePost'), tr('shareSheet.deleteMessage'), [
+      { text: tr('common:actions.cancel'), style: 'cancel' },
       {
-        text: 'Sil',
+        text: tr('common:actions.delete'),
         style: 'destructive',
         onPress: () =>
           remove.mutate(post.publicId, {
@@ -106,27 +108,27 @@ export function ShareSheet({ post, onClose, onDeleted }: Props) {
 
         {step === 'report' ? (
           <View style={styles.section}>
-            <Text variant="h2">Niyə şikayət edirsən?</Text>
+            <Text variant="h2">{tr('shared.whyReport')}</Text>
             {REPORT_REASONS.map((r) => (
               <Row key={r.code} icon="flag" label={r.label} onPress={() => sendReport(r.code)} />
             ))}
-            <Button label="Geri" variant="ghost" onPress={() => setStep('main')} />
+            <Button label={tr('common:actions.back')} variant="ghost" onPress={() => setStep('main')} />
           </View>
         ) : (
           <View style={styles.section}>
-            <Text variant="h2">Paylaş</Text>
+            <Text variant="h2">{tr('common:actions.share')}</Text>
 
             {quick.length ? (
               <View>
                 <Text variant="small" color="muted" style={styles.caption}>
-                  Sürətli göndər
+                  {tr('shareSheet.quickSend')}
                 </Text>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.quick}>
                   {quick.map((c) => (
                     <Pressable key={c.publicId} style={styles.quickItem} onPress={() => void sendTo(c)} disabled={!!sendingTo}>
                       <Avatar uri={c.other?.avatarUrl} size={52} name={c.other?.fullName} />
                       <Text variant="caption" numberOfLines={1}>
-                        {sendingTo === c.publicId ? 'Göndərilir…' : c.title.split(' ')[0]}
+                        {sendingTo === c.publicId ? tr('shareSheet.sending') : c.title.split(' ')[0]}
                       </Text>
                     </Pressable>
                   ))}
@@ -134,13 +136,13 @@ export function ShareSheet({ post, onClose, onDeleted }: Props) {
               </View>
             ) : null}
 
-            <Row icon="share" label="Digər tətbiqlər və linki kopyala" onPress={() => void shareExternal()} />
+            <Row icon="share" label={tr('shareSheet.otherApps')} onPress={() => void shareExternal()} />
             {post.viewer.isMine ? (
-              <Row icon="trash" label="Paylaşımı sil" danger onPress={confirmDelete} />
+              <Row icon="trash" label={tr('shareSheet.deletePost')} danger onPress={confirmDelete} />
             ) : (
-              <Row icon="flag" label="Şikayət et" danger onPress={() => setStep('report')} />
+              <Row icon="flag" label={tr('shared.report')} danger onPress={() => setStep('report')} />
             )}
-            <Button label="Ləğv et" variant="soft" onPress={close} />
+            <Button label={tr('shared.cancel')} variant="soft" onPress={close} />
           </View>
         )}
       </View>
