@@ -200,7 +200,10 @@ export function SettingsScreen({ navigation }: AppScreenProps<'Settings'>) {
           <Row icon="mail" label="E-mail" value={me.data?.email ?? '—'} last />
         </Group>
 
-        <SectionTitle>Dil</SectionTitle>
+        <SectionTitle>Kontent dili</SectionTitle>
+        <Text variant="caption" color="muted" style={styles.hint}>
+          Məkan, marşrut və region adları seçilmiş dildə göstərilir. Tətbiqin interfeysi hazırda azərbaycancadır.
+        </Text>
         <Group>
           {LANGS.map((l, i) => (
             <ChoiceRow
