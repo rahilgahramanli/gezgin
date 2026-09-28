@@ -1,1 +1,244 @@
-{}
+{
+  "shared": {
+    "title": "Rezervasiya",
+    "book": "Bron et",
+    "payAndBook": "{{total}} AZN ödə və bron et",
+    "hintPickCard": "Ödəniş üçün kart seçin və ya əlavə edin",
+    "hintCalculating": "Qiymət hesablanır…",
+    "price": "Qiymət",
+    "serviceFee": "Xidmət haqqı",
+    "total": "Cəmi",
+    "paymentMethod": "Ödəniş üsulu",
+    "adults": "Böyük",
+    "adultsHint": "13 yaş və yuxarı",
+    "reload": "Yenidən yüklə",
+    "cancel": "Ləğv et",
+    "bookingCode": "Bron kodu",
+    "bookingCodeA11y": "Bron kodu {{code}}",
+    "checkIn": "Giriş",
+    "checkOut": "Çıxış",
+    "date": "Tarix",
+    "time": "Vaxt",
+    "bakuTime": "{{time}} (Bakı vaxtı)",
+    "guests": "Nəfər",
+    "noDate": "Tarixsiz",
+    "people_other": "{{count}} nəfər",
+    "nights_other": "{{count}} gecə",
+    "days_other": "{{count}} gün"
+  },
+  "experience": {
+    "hintPickDate": "Ödəniş üçün əvvəlcə tarix seçin",
+    "hintSlotFull": "Bu tarixdə yer qalmayıb — başqa tarix seçin",
+    "pricePerPerson": "{{price}} AZN / nəfər",
+    "pickDate": "Tarix seç",
+    "slotsFailed": "Tarixlər yüklənmədi — {{error}}",
+    "noSlots": "Bu təcrübə üçün hələ tarix açılmayıb",
+    "slotInfo": "{{weekday}}, {{date}} · başlama {{time}} ·",
+    "soldOut": "yer qalmayıb",
+    "seatsLeft_other": "{{count}} yer qalıb",
+    "partySize": "Nəfər sayı",
+    "children": "Uşaq",
+    "childrenHint": "0–12 yaş · 50% endirim",
+    "capReached_other": "Seçilmiş tarixdə {{count}} yer qalıb — daha çox nəfər üçün başqa tarix seçin.",
+    "slotFull": "dolu",
+    "seats_other": "{{count}} yer",
+    "slotA11y": "Tarix {{date}}, {{time}}, {{seats}}"
+  },
+  "hotel": {
+    "hintNoPackages": "Bu obyektdə açıq paket yoxdur",
+    "noPackageSelected": "Paket seçilməyib",
+    "pricePerNights_other": "{{price}} AZN / {{count}} gecə",
+    "dates": "Tarixlər",
+    "checkInA11y": "Giriş {{date}}",
+    "stay_other": "Giriş {{checkIn}} ({{hour}}:00-dan) · Çıxış {{checkOut}} · {{count}} gecə",
+    "guests": "Qonaqlar",
+    "children": "Uşaq (0–12)",
+    "childrenHint": "Valideynlə pulsuz",
+    "packages": "Otaq və paket",
+    "packageA11y": "Paket {{title}}, {{price}} AZN",
+    "noPackages": "Bu obyektdə hazırda açıq paket yoxdur.",
+    "extras": "Əlavələr",
+    "xpNote": "Bu rezervasiya ilə +{{xp}} XP · {{region}} regionu"
+  },
+  "extras": {
+    "transfer": {
+      "name": "Transfer",
+      "hint": "Gediş-gəliş, rahat mikroavtobus"
+    },
+    "sigorta": {
+      "name": "Səyahət sığortası",
+      "hint": "Bütün səyahət müddəti"
+    },
+    "spa": {
+      "name": "Spa paketi",
+      "hint": "Sauna, hovuz, 45 dəq masaj"
+    },
+    "ferdi-beledci": {
+      "name": "Fərdi bələdçi",
+      "hint": "Yerli bələdçi müşayiəti"
+    }
+  },
+  "success": {
+    "title": "Rezervasiya təsdiqləndi!",
+    "subtitle": "Planla, yola çıx, xatirələr topla",
+    "preparingTicket": "Bilet hazırlanır…",
+    "paid": "Ödənilib",
+    "provider": "Təqdim edir",
+    "ticketNotLoaded": "Bilet hələ yüklənmədi",
+    "ticketLater": "Rezervasiyan qeydə alınıb. Bileti bir az sonra \"Rezervasiyalarım\" bölməsində də aça bilərsən.",
+    "openTicket": "Bileti aç",
+    "home": "Ana səhifəyə qayıt"
+  },
+  "myBookings": {
+    "title": "Rezervasiyalarım",
+    "guestMessage": "Rezervasiyaların və biletlərin hesabında saxlanılır. Qonaq rejimində bron etmək mümkün deyil.",
+    "tabs": {
+      "upcoming": "Gələcək",
+      "past": "Keçmiş",
+      "cancelled": "Ləğv edilmiş"
+    },
+    "emptyTitle": "Rezervasiya yoxdur",
+    "emptyMessage": "Təcrübə seç və bron et — biletin burada görünəcək.",
+    "cardA11y": "Rezervasiya {{code}}: {{title}}, {{status}}",
+    "completePayment": "Ödənişi tamamla ›",
+    "details": "Ətraflı ›"
+  },
+  "detail": {
+    "notOpened": "Rezervasiya açılmadı",
+    "paidTitle": "Ödəniş tamamlandı",
+    "paidMessage": "Rezervasiya təsdiqləndi — bilet aşağıdadır.",
+    "completePayment": "Ödənişi tamamla · {{total}} AZN",
+    "ticket": "Bilet",
+    "ticketCodeA11y": "Bilet kodu {{code}}",
+    "qrData": "QR məlumatı",
+    "showAtEntrance": "Girişdə bu kodu göstər",
+    "ticketFailed": "Bilet yüklənmədi — {{error}}",
+    "payment": "Ödəniş",
+    "status": "Status",
+    "amount": "Məbləğ",
+    "refunded": "Geri qaytarılıb",
+    "paidAt": "Ödəniş tarixi",
+    "lastAttempt": "Son cəhd: {{message}}",
+    "notPaidYet": "Ödəniş hələ edilməyib.",
+    "payNote": "Ödənilməmiş rezervasiya bir müddətdən sonra avtomatik ləğv olunur və yer boşalır.",
+    "policy": "Ləğv siyasəti",
+    "policyRefund": "{{timeLeft}} · geri qaytarma {{percent}}%",
+    "cancelBooking": "Rezervasiyanı ləğv et",
+    "cancel": {
+      "confirmTitle": "Rezervasiyanı ləğv etmək?",
+      "notPaid": "Ödəniş edilməyib — kartınızdan heç bir məbləğ çıxılmayıb.",
+      "willRefund": "{{amount}} AZN geri qaytarılacaq ({{percent}}%).",
+      "noRefund": "Ləğv siyasətinə görə geri qaytarma yoxdur.",
+      "doneTitle": "Rezervasiya ləğv edildi",
+      "refunded": "{{amount}} AZN kartınıza qaytarıldı ({{percent}}%).",
+      "noRefundNeeded": "Ödəniş edilmədiyi üçün geri qaytarma tələb olunmur."
+    }
+  },
+  "status": {
+    "booking": {
+      "confirmed": "Təsdiqlənib",
+      "awaiting_payment": "Ödəniş gözlənilir",
+      "pending": "Gözləyir",
+      "completed": "Tamamlandı",
+      "cancelled": "Ləğv edilib",
+      "refunded": "Geri qaytarılıb"
+    },
+    "payment": {
+      "created": "Başladılıb",
+      "requires_action": "Bank təsdiqi gözlənilir",
+      "succeeded": "Ödənilib",
+      "failed": "Alınmadı",
+      "refunded": "Geri qaytarılıb",
+      "partially_refunded": "Qismən geri qaytarılıb"
+    },
+    "adults_other": "{{count}} böyük",
+    "children_other": "{{count}} uşaq",
+    "started": "Başlama vaxtı keçib",
+    "hoursLeft_other": "Başlanğıca {{count}} saat qalıb",
+    "daysLeft_other": "Başlanğıca {{count}} gün qalıb"
+  },
+  "cards": {
+    "title": "Ödəniş üsullarım",
+    "add": "Kart əlavə et",
+    "removeTitle": "Kartı silmək?",
+    "removeMessage": "{{card}} ödəniş üsullarından silinəcək.",
+    "removeDefaultNote": "Əsas kart başqa karta keçəcək.",
+    "removeFailed": "Kart silinmədi",
+    "guestTitle": "Kart saxlamaq üçün hesab yarat",
+    "guestMessage": "Qonaq rejimində kart əlavə etmək və ödəniş etmək mümkün deyil.",
+    "loadFailed": "Kartlar yüklənmədi",
+    "emptyTitle": "Kart əlavə edilməyib",
+    "emptyMessage": "Rezervasiyanı tez ödəmək üçün bank kartını yadda saxla. Kart nömrəsi GEZGIN-də saxlanılmır.",
+    "default": "Əsas",
+    "expired": "Müddəti bitib",
+    "expires": "Bitmə tarixi {{date}}",
+    "setDefaultFailed": "Əsas kart dəyişmədi",
+    "makeDefault": "Əsas et",
+    "makeDefaultA11y": "Əsas et: {{card}}",
+    "removeA11y": "Kartı sil: {{card}}",
+    "note": "Əsas kart rezervasiyada avtomatik seçilir. Kart nömrəsi GEZGIN-də saxlanılmır — ödəniş provayderində tokenləşdirilir."
+  },
+  "picker": {
+    "loadFailed": "Kartlar yüklənmədi.",
+    "empty": "Saxlanmış kart yoxdur. Ödəniş üçün bank kartı əlavə edin."
+  },
+  "addCard": {
+    "failed": "Kart əlavə edilmədi — yenidən cəhd edin",
+    "number": "Kart nömrəsi",
+    "expiry": "Bitmə tarixi",
+    "expiryPlaceholder": "AA/İİ",
+    "holder": "Kart sahibi (istəyə bağlı)",
+    "holderA11y": "Kart sahibi",
+    "holderPlaceholder": "AD SOYAD",
+    "tokenNote": "Kart nömrəsi GEZGIN-də saxlanılmır — ödəniş provayderində tokenləşdirilir.",
+    "testMode": "Test rejimi: 4111 1111 1111 1111 — uğurlu · 4000 0000 0000 3220 — 3-D Secure · 4000 0000 0000 0002 — rədd",
+    "save": "Kartı yadda saxla"
+  },
+  "card": {
+    "brandCard": "Kart",
+    "errors": {
+      "numberRequired": "Kart nömrəsini daxil edin",
+      "numberLength": "Kart nömrəsi 13–19 rəqəm olmalıdır",
+      "expiryRequired": "Bitmə tarixini daxil edin",
+      "expiryFormat": "Tarixi AA/İİ formatında yazın",
+      "expiryMonth": "Ay 01–12 arasında olmalıdır",
+      "expired": "Kartın müddəti bitib",
+      "cvcRequired": "CVC kodunu daxil edin",
+      "cvcLength": "CVC 3–4 rəqəm olmalıdır",
+      "holderShort": "Ad ən azı 2 hərf olmalıdır"
+    }
+  },
+  "guest": {
+    "title": "Rezervasiya üçün hesab yarat",
+    "message": "Qonaq rejimində bron etmək, ödəniş etmək və kart saxlamaq mümkün deyil. Pulsuz hesab 1 dəqiqəyə açılır."
+  },
+  "stepper": {
+    "decrease": "{{label}}: azalt",
+    "increase": "{{label}}: artır"
+  },
+  "otp": {
+    "stop": "Ödənişi dayandır",
+    "title": "Bankın təsdiq kodu",
+    "message": "Bankınız ödənişi təsdiqləmək üçün 6 rəqəmli kod göndərdi. Kodu daxil edin.",
+    "codeA11y": "Təsdiq kodu",
+    "wrong": "Kod yanlışdır — yenidən yoxlayın",
+    "testCode": "Test kodu: 123456",
+    "confirm": "Təsdiqlə"
+  },
+  "errors": {
+    "network": "Şəbəkə xətası — internet bağlantısını yoxlayıb yenidən cəhd edin",
+    "paymentIncomplete": "Ödəniş tamamlanmadı — yenidən cəhd edin",
+    "otpCancelled": "Ödəniş bank tərəfindən təsdiqlənmədi — yenidən cəhd edin və ya başqa kart seçin"
+  },
+  "business": {
+    "photos_other": "{{count}} foto",
+    "verified": "Təsdiqlənib",
+    "services": "Xidmətlər",
+    "photosTitle": "Fotolar",
+    "packages": "Təkliflər və paketlər",
+    "perNight": "gecəsi {{price}} AZN",
+    "book": "Rezervasiya",
+    "call": "Zəng et",
+    "website": "Vebsayt"
+  }
+}

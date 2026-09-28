@@ -2,19 +2,18 @@ import { useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { Button, Chip, EmptyState, Icon, Loading, Photo, Pill, Screen, Text, TopBar } from '@/components';
 import { useBookings, type BookingFilter, type BookingList } from '@/api/hooks/booking';
+import { useT } from '@/i18n';
 import { useIsGuest } from '@/store/auth';
 import { t } from '@/theme';
 import type { AppScreenProps } from '@/navigation/types';
 import { GuestGate, bookingStatus, bookingWhen, errorText, isPayable } from './parts';
 
-const TABS: ReadonlyArray<{ key: BookingFilter; label: string }> = [
-  { key: 'upcoming', label: 'Gələcək' },
-  { key: 'past', label: 'Keçmiş' },
-  { key: 'cancelled', label: 'Ləğv edilmiş' },
-];
+/** Tab açarları — mətn renderdə `booking:myBookings.tabs.<key>`-dan. */
+const TABS: readonly BookingFilter[] = ['upcoming', 'past', 'cancelled'];
 
 /** Ekran 53 — rezervasiyalarım. Kart toxunanda detal açılır (ləğv, bilet, ödəniş). */
 export function MyBookingsScreen({ navigation }: AppScreenProps<'MyBookings'>) {
+  const { t: tr, tp: tpr } = useT('booking');
   const isGuest = useIsGuest();
   const [tab, setTab] = useState<BookingFilter>('upcoming');
   const bookings = useBookings(tab, !isGuest);
@@ -28,9 +27,9 @@ export function MyBookingsScreen({ navigation }: AppScreenProps<'MyBookings'>) {
   if (isGuest) {
     return (
       <Screen padded={false}>
-        <TopBar title="Rezervasiyalarım" onBack={navigation.goBack} />
+        <TopBar title={tr('myBookings.title')} onBack={navigation.goBack} />
         <View style={styles.body}>
-          <GuestGate message="Rezervasiyaların və biletlərin hesabında saxlanılır. Qonaq rejimində bron etmək mümkün deyil." />
+          <GuestGate message={tr('myBookings.guestMessage')} />
         </View>
       </Screen>
     );
@@ -38,17 +37,20 @@ export function MyBookingsScreen({ navigation }: AppScreenProps<'MyBookings'>) {
 
   return (
     <Screen padded={false}>
-      <TopBar title="Rezervasiyalarım" onBack={navigation.goBack} />
+      <TopBar title={tr('myBookings.title')} onBack={navigation.goBack} />
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
-        {TABS.map((tb) => (
-          <Chip
-            key={tb.key}
-            label={counts ? `${tb.label} (${counts[tb.key]})` : tb.label}
-            active={tab === tb.key}
-            onPress={() => setTab(tb.key)}
-          />
-        ))}
+        {TABS.map((key) => {
+          const label = tr(`myBookings.tabs.${key}`);
+          return (
+            <Chip
+              key={key}
+              label={counts ? `${label} (${counts[key]})` : label}
+              active={tab === key}
+              onPress={() => setTab(key)}
+            />
+          );
+        })}
       </ScrollView>
 
       <View style={styles.body}>
@@ -57,15 +59,15 @@ export function MyBookingsScreen({ navigation }: AppScreenProps<'MyBookings'>) {
         ) : bookings.isError ? (
           <EmptyState
             icon="info"
-            title="Yüklənmədi"
+            title={tr('common:states.failedTitle')}
             message={errorText(bookings.error)}
-            action={<Button label="Yenidən yüklə" variant="soft" onPress={() => void bookings.refetch()} />}
+            action={<Button label={tr('shared.reload')} variant="soft" onPress={() => void bookings.refetch()} />}
           />
         ) : !bookings.data?.data.length ? (
           <EmptyState
             icon="calendar"
-            title="Rezervasiya yoxdur"
-            message="Təcrübə seç və bron et — biletin burada görünəcək."
+            title={tr('myBookings.emptyTitle')}
+            message={tr('myBookings.emptyMessage')}
           />
         ) : (
           <View style={styles.list}>
@@ -77,7 +79,7 @@ export function MyBookingsScreen({ navigation }: AppScreenProps<'MyBookings'>) {
                   key={b.publicId}
                   onPress={() => navigation.navigate('BookingDetail', { publicId: b.publicId })}
                   accessibilityRole="button"
-                  accessibilityLabel={`Rezervasiya ${b.code}: ${b.title}, ${st.label}`}
+                  accessibilityLabel={tr('myBookings.cardA11y', { code: b.code, title: b.title, status: st.label })}
                   style={({ pressed }) => [styles.card, pressed && styles.pressed]}
                 >
                   <View style={styles.cardTop}>
@@ -94,7 +96,7 @@ export function MyBookingsScreen({ navigation }: AppScreenProps<'MyBookings'>) {
                       <View style={styles.metaRow}>
                         <Icon name="calendar" size={13} color={t.colors.muted} />
                         <Text variant="meta" style={styles.flex} numberOfLines={1}>
-                          {bookingWhen(b)} · {b.adults + b.children} nəfər
+                          {bookingWhen(b)} · {tpr('shared.people', b.adults + b.children)}
                         </Text>
                       </View>
                       <Text variant="small" color="green900" style={styles.price}>
@@ -106,13 +108,13 @@ export function MyBookingsScreen({ navigation }: AppScreenProps<'MyBookings'>) {
 
                   <View style={[styles.codeRow, payable && styles.codeRowPay]}>
                     <Text variant="caption">
-                      Bron kodu{' '}
+                      {tr('shared.bookingCode')}{' '}
                       <Text variant="small" style={styles.code}>
                         {b.code}
                       </Text>
                     </Text>
                     <Text variant="small" color={payable ? 'brown700' : 'green900'} style={styles.link}>
-                      {payable ? 'Ödənişi tamamla ›' : 'Ətraflı ›'}
+                      {payable ? tr('myBookings.completePayment') : tr('myBookings.details')}
                     </Text>
                   </View>
                 </Pressable>

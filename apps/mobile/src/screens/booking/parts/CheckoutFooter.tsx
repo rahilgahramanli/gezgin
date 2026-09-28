@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 import { Button, Card, Icon, Text } from '@/components';
 import { useGuestSignUp } from '@/api/hooks/auth';
+import { useT } from '@/i18n';
 import { t } from '@/theme';
 
 /**
@@ -66,13 +67,8 @@ export function CheckoutFooter({
  * Qonaq üçün: bütün rezervasiya endpoint-ləri 403 qaytarır. Düymə səssizcə
  * passiv qalmaq əvəzinə səbəbi deyir və qeydiyyata aparır.
  */
-export function GuestGate({
-  title = 'Rezervasiya üçün hesab yarat',
-  message = 'Qonaq rejimində bron etmək, ödəniş etmək və kart saxlamaq mümkün deyil. Pulsuz hesab 1 dəqiqəyə açılır.',
-}: {
-  title?: string;
-  message?: string;
-}) {
+export function GuestGate({ title, message }: { title?: string; message?: string }) {
+  const { t: tr } = useT('booking');
   const signUp = useGuestSignUp();
   return (
     <Card padded style={styles.guest}>
@@ -81,14 +77,14 @@ export function GuestGate({
           <Icon name="user" size={20} color={t.colors.green900} />
         </View>
         <View style={styles.flex}>
-          <Text variant="h3">{title}</Text>
+          <Text variant="h3">{title ?? tr('guest.title')}</Text>
           <Text variant="small" color="ink2">
-            {message}
+            {message ?? tr('guest.message')}
           </Text>
         </View>
       </View>
       <Button
-        label="Hesab yarat"
+        label={tr('common:actions.createAccount')}
         onPress={() => signUp.mutate()}
         loading={signUp.isPending}
         style={styles.cta}
@@ -113,6 +109,7 @@ export function Stepper({
   max: number;
   onChange: (v: number) => void;
 }) {
+  const { t: tr } = useT('booking');
   const canDec = value > min;
   const canInc = value < max;
   return (
@@ -128,7 +125,7 @@ export function Stepper({
           disabled={!canDec}
           hitSlop={6}
           accessibilityRole="button"
-          accessibilityLabel={`${label}: azalt`}
+          accessibilityLabel={tr('stepper.decrease', { label })}
           accessibilityState={{ disabled: !canDec }}
         >
           <Icon name="minus" size={14} color={canDec ? t.colors.green900 : t.colors.muted} strokeWidth={2.4} />
@@ -142,7 +139,7 @@ export function Stepper({
           disabled={!canInc}
           hitSlop={6}
           accessibilityRole="button"
-          accessibilityLabel={`${label}: artır`}
+          accessibilityLabel={tr('stepper.increase', { label })}
           accessibilityState={{ disabled: !canInc }}
         >
           <Icon name="plus" size={14} color={canInc ? t.colors.green900 : t.colors.muted} strokeWidth={2.4} />

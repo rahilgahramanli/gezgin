@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import { ERROR_CODES } from '@gezgin/shared';
 import { ApiError } from '@/api/client';
+import i18n from '@/i18n';
 import {
   needsPaymentAction, useCancelBooking, useCreateBooking, usePayBooking, type QuoteInput,
 } from '@/api/hooks/booking';
@@ -9,11 +10,20 @@ import {
 export const newIdempotencyKey = (): string =>
   `bk-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
 
-const NETWORK_ERROR = 'Şəbəkə xətası — internet bağlantısını yoxlayıb yenidən cəhd edin';
-
-export function errorText(error: unknown, fallback = NETWORK_ERROR): string {
+/**
+ * Server xətasının mətni (API onu özü tərcümə edir), əks halda şəbəkə xətası.
+ * Susmaya görə mətn çağırış anında cari dildə götürülür.
+ */
+export function errorText(error: unknown, fallback: string = i18n.t('booking:errors.network')): string {
   return error instanceof ApiError ? error.message : fallback;
 }
+
+/**
+ * Parametrlər dəyişəndə köhnə ödənilməmiş rezervasiyanın ləğv səbəbi — daxili
+ * qeyd (`cancelReason`), istifadəçiyə göstərilmir; server də `payment_timeout`
+ * kimi dildən asılı olmayan kod yazır.
+ */
+const PARAMS_CHANGED_REASON = 'params_changed';
 
 interface Options {
   /** Rezervasiya artıq varsa (Rezervasiya detalı → "Ödənişi tamamla") yalnız ödəniş edilir. */
@@ -91,7 +101,7 @@ export function useCheckout({ bookingId: existingId, onConfirmed, onCapacityErro
     setOtp(null);
     setError(res.payment && 'failureMessage' in res.payment && res.payment.failureMessage
       ? res.payment.failureMessage
-      : 'Ödəniş tamamlanmadı — yenidən cəhd edin');
+      : i18n.t('booking:errors.paymentIncomplete'));
   };
 
   /**
@@ -105,7 +115,7 @@ export function useCheckout({ bookingId: existingId, onConfirmed, onCapacityErro
       const s = session.current;
       if (s.signature !== null && s.signature !== signature) {
         if (s.bookingId) {
-          cancel.mutate({ publicId: s.bookingId, reason: 'Rezervasiya parametrləri dəyişdirildi' });
+          cancel.mutate({ publicId: s.bookingId, reason: PARAMS_CHANGED_REASON });
         }
         session.current = { key: newIdempotencyKey(), signature: null, bookingId: null };
         setPending(null);
@@ -154,7 +164,7 @@ export function useCheckout({ bookingId: existingId, onConfirmed, onCapacityErro
 
   const cancelOtp = () => {
     setOtp(null);
-    setError('Ödəniş bank tərəfindən təsdiqlənmədi — yenidən cəhd edin və ya başqa kart seçin');
+    setError(i18n.t('booking:errors.otpCancelled'));
   };
 
   return { busy, error, setError, otp, pending, submit, payExisting, submitOtp, cancelOtp };

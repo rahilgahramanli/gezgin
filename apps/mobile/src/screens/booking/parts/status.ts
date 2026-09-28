@@ -1,45 +1,51 @@
 import type { Booking } from '@/api/hooks/booking';
+import i18n, { tp } from '@/i18n';
 import { bakuDate, bakuShortDate, bakuTime } from '@/lib/time';
 
 type Tone = 'teal' | 'gold' | 'gray' | 'brown';
 
-export const BOOKING_STATUS: Record<string, { label: string; tone: Tone }> = {
-  confirmed: { label: 'Təsdiqlənib', tone: 'teal' },
-  awaiting_payment: { label: 'Ödəniş gözlənilir', tone: 'gold' },
-  pending: { label: 'Gözləyir', tone: 'gold' },
-  completed: { label: 'Tamamlandı', tone: 'gray' },
-  cancelled: { label: 'Ləğv edilib', tone: 'gray' },
+/** Status rəngi; mətn `booking:status.booking.<status>`-dan, oxunanda cari dildə. */
+const BOOKING_STATUS_TONE: Record<string, Tone> = {
+  confirmed: 'teal',
+  awaiting_payment: 'gold',
+  pending: 'gold',
+  completed: 'gray',
+  cancelled: 'gray',
   // Ləğv edilib və pul karta qaytarılıb
-  refunded: { label: 'Geri qaytarılıb', tone: 'brown' },
+  refunded: 'brown',
 };
 
-export const bookingStatus = (status: string) => BOOKING_STATUS[status] ?? { label: status, tone: 'gray' as const };
-
-export const PAYMENT_STATUS: Record<string, string> = {
-  created: 'Başladılıb',
-  requires_action: 'Bank təsdiqi gözlənilir',
-  succeeded: 'Ödənilib',
-  failed: 'Alınmadı',
-  refunded: 'Geri qaytarılıb',
-  partially_refunded: 'Qismən geri qaytarılıb',
+/** Naməlum status xam dəyəri ilə göstərilir — ekranda boş yer qalmasın. */
+const statusText = (group: 'booking' | 'payment', status: string): string => {
+  const key = `booking:status.${group}.${status}`;
+  return i18n.exists(key) ? i18n.t(key) : status;
 };
+
+export const bookingStatus = (status: string): { label: string; tone: Tone } => ({
+  label: statusText('booking', status),
+  tone: BOOKING_STATUS_TONE[status] ?? 'gray',
+});
+
+/** Ödəniş statusu: "Ödənilib", "Bank təsdiqi gözlənilir"… */
+export const paymentStatusLabel = (status: string): string => statusText('payment', status);
 
 /** Ödənilməmiş rezervasiya — "Ödənişi tamamla" göstərilir. */
 export const isPayable = (b: Pick<Booking, 'status'>): boolean =>
   b.status === 'awaiting_payment' || b.status === 'pending';
 
+/** "2 böyük + 1 uşaq" */
 export const guestsLabel = (b: { adults: number; children: number }): string =>
-  `${b.adults} böyük${b.children ? ` + ${b.children} uşaq` : ''}`;
+  `${tp('booking:status.adults', b.adults)}${b.children ? ` + ${tp('booking:status.children', b.children)}` : ''}`;
 
 /**
  * Siyahı kartındakı tarix sətri (Bakı vaxtı):
  * təcrübə — "22 noy 2026, 13:00", otel — "5 – 7 iyl 2026 · 2 gecə".
  */
 export function bookingWhen(b: Pick<Booking, 'startAt' | 'endAt'>): string {
-  if (!b.startAt) return 'Tarixsiz';
+  if (!b.startAt) return i18n.t('booking:shared.noDate');
   if (b.endAt) {
     const nights = Math.round((Date.parse(b.endAt) - Date.parse(b.startAt)) / 86_400_000);
-    return `${bakuShortDate(b.startAt)} – ${bakuDate(b.endAt)}${nights > 0 ? ` · ${nights} gecə` : ''}`;
+    return `${bakuShortDate(b.startAt)} – ${bakuDate(b.endAt)}${nights > 0 ? ` · ${tp('booking:shared.nights', nights)}` : ''}`;
   }
   return `${bakuDate(b.startAt)}, ${bakuTime(b.startAt)}`;
 }
@@ -52,9 +58,9 @@ export function refundPreview(b: Pick<Booking, 'payment' | 'cancellation'>): { a
   return { amountAzn: Math.round(paid * percent) / 100, percent };
 }
 
-/** "55 gün qalıb", "5 saat qalıb", "Başlayıb". */
+/** "Başlanğıca 55 gün qalıb", "Başlanğıca 5 saat qalıb", "Başlama vaxtı keçib". */
 export function timeLeftLabel(hoursLeft: number): string {
-  if (hoursLeft <= 0) return 'Başlama vaxtı keçib';
-  if (hoursLeft < 48) return `Başlanğıca ${hoursLeft} saat qalıb`;
-  return `Başlanğıca ${Math.floor(hoursLeft / 24)} gün qalıb`;
+  if (hoursLeft <= 0) return i18n.t('booking:status.started');
+  if (hoursLeft < 48) return tp('booking:status.hoursLeft', hoursLeft);
+  return tp('booking:status.daysLeft', Math.floor(hoursLeft / 24));
 }

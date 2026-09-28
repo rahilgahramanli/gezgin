@@ -4,8 +4,9 @@ import { BOOKING_EXTRAS } from '@gezgin/shared';
 import { Card, Icon, Loading, Photo, Pill, Screen, Text, TopBar } from '@/components';
 import { useQuote, type QuoteInput } from '@/api/hooks/booking';
 import { useBusiness } from '@/api/hooks/business';
+import { useT } from '@/i18n';
 import { AMENITY_LABEL, label } from '@/lib/labels';
-import { bakuDate, bakuDayAt, bakuDayKey, bakuParts, bakuShortDate, bakuWeekday, AZ_MONTHS_SHORT } from '@/lib/time';
+import { bakuDate, bakuDayAt, bakuDayKey, bakuParts, bakuShortDate, bakuWeekday, monthShort } from '@/lib/time';
 import { useIsGuest } from '@/store/auth';
 import { t } from '@/theme';
 import type { AppScreenProps } from '@/navigation/types';
@@ -36,6 +37,7 @@ function checkInAt(days: number, now = Date.now()): string {
 /** Ekran 49 — otel/qonaq evi paket rezervasiyası. */
 export function HotelBookingScreen({ route, navigation }: AppScreenProps<'HotelBooking'>) {
   const { business: slug, package: initialPackage } = route.params;
+  const { t: tr, tp: tpr } = useT('booking');
   const isGuest = useIsGuest();
 
   const business = useBusiness(slug);
@@ -90,16 +92,16 @@ export function HotelBookingScreen({ route, navigation }: AppScreenProps<'HotelB
     void checkout.submit(input, cardId, signature);
   };
 
-  if (business.isLoading) return <Loading label="Yüklənir…" />;
+  if (business.isLoading) return <Loading label={tr('common:states.loading')} />;
   if (!business.data) return null;
 
   const quoteReady = !!quote.data && !quote.isPlaceholderData;
   const hint = !pkg
-    ? 'Bu obyektdə açıq paket yoxdur'
+    ? tr('hotel.hintNoPackages')
     : !cardId
-      ? 'Ödəniş üçün kart seçin və ya əlavə edin'
+      ? tr('shared.hintPickCard')
       : !quoteReady
-        ? 'Qiymət hesablanır…'
+        ? tr('shared.hintCalculating')
         : null;
   const error = checkout.error ?? (quote.error ? errorText(quote.error) : null);
 
@@ -113,7 +115,7 @@ export function HotelBookingScreen({ route, navigation }: AppScreenProps<'HotelB
           <CheckoutFooter
             error={error}
             hint={hint}
-            label={quote.data ? `${quote.data.totalAzn} AZN ödə və bron et` : 'Bron et'}
+            label={quote.data ? tr('shared.payAndBook', { total: quote.data.totalAzn }) : tr('shared.book')}
             onPress={pay}
             loading={checkout.busy}
             disabled={!pkg || !cardId || !quoteReady}
@@ -121,7 +123,7 @@ export function HotelBookingScreen({ route, navigation }: AppScreenProps<'HotelB
         )
       }
     >
-      <TopBar title="Rezervasiya" onBack={navigation.goBack} />
+      <TopBar title={tr('shared.title')} onBack={navigation.goBack} />
 
       <View style={styles.body}>
         <Card padded style={styles.summary}>
@@ -132,11 +134,11 @@ export function HotelBookingScreen({ route, navigation }: AppScreenProps<'HotelB
                 {business.data.name}
               </Text>
               <Text variant="caption" numberOfLines={2}>
-                {pkg?.title ?? 'Paket seçilməyib'}
+                {pkg?.title ?? tr('hotel.noPackageSelected')}
               </Text>
               {pkg ? (
                 <Text variant="h3" color="green900" style={styles.summaryPrice}>
-                  {pkg.priceAzn} AZN / {pkg.nights} gecə
+                  {tpr('hotel.pricePerNights', pkg.nights, { replace: { price: pkg.priceAzn } })}
                 </Text>
               ) : null}
             </View>
@@ -147,7 +149,7 @@ export function HotelBookingScreen({ route, navigation }: AppScreenProps<'HotelB
         {/* Tarixlər — giriş seçilir, çıxış paketin gecə sayından çıxır. Hamısı Bakı təqvimi ilə */}
         <View>
           <Text variant="h2" style={styles.sectionTitle}>
-            Tarixlər
+            {tr('hotel.dates')}
           </Text>
           <View style={styles.dateRow}>
             {START_OPTIONS.map((days) => {
@@ -159,18 +161,18 @@ export function HotelBookingScreen({ route, navigation }: AppScreenProps<'HotelB
                   key={days}
                   onPress={() => setStartsIn(days)}
                   accessibilityRole="radio"
-                  accessibilityLabel={`Giriş ${bakuDate(at)}`}
+                  accessibilityLabel={tr('hotel.checkInA11y', { date: bakuDate(at) })}
                   accessibilityState={{ checked: active }}
                   style={[styles.date, active && styles.dateActive]}
                 >
                   <Text variant="caption" color={active ? 'paper' : 'muted'}>
-                    {days === 0 ? 'Bu gün' : bakuWeekday(at)}
+                    {days === 0 ? tr('common:time.today') : bakuWeekday(at)}
                   </Text>
                   <Text variant="h3" color={active ? 'paper' : 'ink'}>
                     {p.day}
                   </Text>
                   <Text variant="caption" color={active ? 'paper' : 'muted'}>
-                    {AZ_MONTHS_SHORT[p.month]}
+                    {monthShort(p.month)}
                   </Text>
                 </Pressable>
               );
@@ -180,8 +182,9 @@ export function HotelBookingScreen({ route, navigation }: AppScreenProps<'HotelB
             <View style={styles.stayRow}>
               <Icon name="calendar" size={15} color={t.colors.muted} />
               <Text variant="caption" style={styles.flex}>
-                Giriş {bakuShortDate(displayCheckIn)} ({CHECK_IN_HOUR}:00-dan) · Çıxış {bakuDate(checkOut)} · {nights}{' '}
-                gecə
+                {tpr('hotel.stay', nights, {
+                  replace: { checkIn: bakuShortDate(displayCheckIn), hour: CHECK_IN_HOUR, checkOut: bakuDate(checkOut) },
+                })}
               </Text>
             </View>
           ) : null}
@@ -189,16 +192,30 @@ export function HotelBookingScreen({ route, navigation }: AppScreenProps<'HotelB
 
         <View>
           <Text variant="h2" style={styles.sectionTitle}>
-            Qonaqlar
+            {tr('hotel.guests')}
           </Text>
-          <Stepper label="Böyük" hint="13 yaş və yuxarı" value={adults} min={1} max={20} onChange={setAdults} />
-          <Stepper label="Uşaq (0–12)" hint="Valideynlə pulsuz" value={children} min={0} max={20} onChange={setChildren} />
+          <Stepper
+            label={tr('shared.adults')}
+            hint={tr('shared.adultsHint')}
+            value={adults}
+            min={1}
+            max={20}
+            onChange={setAdults}
+          />
+          <Stepper
+            label={tr('hotel.children')}
+            hint={tr('hotel.childrenHint')}
+            value={children}
+            min={0}
+            max={20}
+            onChange={setChildren}
+          />
         </View>
 
         {packages.length ? (
           <View>
             <Text variant="h2" style={styles.sectionTitle}>
-              Otaq və paket
+              {tr('hotel.packages')}
             </Text>
             {packages.map((p) => {
               const active = p.publicId === pkg?.publicId;
@@ -207,7 +224,7 @@ export function HotelBookingScreen({ route, navigation }: AppScreenProps<'HotelB
                   key={p.publicId}
                   onPress={() => setSelected(p.publicId)}
                   accessibilityRole="radio"
-                  accessibilityLabel={`Paket ${p.title}, ${p.priceAzn} AZN`}
+                  accessibilityLabel={tr('hotel.packageA11y', { title: p.title, price: p.priceAzn })}
                   accessibilityState={{ checked: active }}
                 >
                   <Card padded style={[styles.option, active && styles.optionActive]}>
@@ -219,7 +236,7 @@ export function HotelBookingScreen({ route, navigation }: AppScreenProps<'HotelB
                         {p.title}
                       </Text>
                       <Text variant="caption" numberOfLines={1}>
-                        {p.nights} gecə / {p.days} gün
+                        {tpr('shared.nights', p.nights)} / {tpr('shared.days', p.days)}
                         {p.includes.length ? ` · ${p.includes.map((i) => label(AMENITY_LABEL, i)).join(', ')}` : ''}
                       </Text>
                     </View>
@@ -235,24 +252,27 @@ export function HotelBookingScreen({ route, navigation }: AppScreenProps<'HotelB
           <Card padded style={styles.notice}>
             <Icon name="info" size={20} color={t.colors.brown700} />
             <Text variant="small" color="ink2" style={styles.flex}>
-              Bu obyektdə hazırda açıq paket yoxdur.
+              {tr('hotel.noPackages')}
             </Text>
           </Card>
         )}
 
         <View>
           <Text variant="h2" style={styles.sectionTitle}>
-            Əlavələr
+            {tr('hotel.extras')}
           </Text>
           {HOTEL_EXTRAS.map((code) => {
             const extra = BOOKING_EXTRAS[code];
+            // Ad və izah tətbiqin öz kataloqudur (API mətni deyil) — cari dildə
+            const name = tr(`extras.${code}.name`, { defaultValue: extra.nameAz });
+            const hintText = tr(`extras.${code}.hint`, { defaultValue: extra.hintAz });
             const on = extras.includes(code);
             return (
               <Pressable
                 key={code}
                 onPress={() => setExtras((v) => (on ? v.filter((c) => c !== code) : [...v, code]))}
                 accessibilityRole="checkbox"
-                accessibilityLabel={`${extra.nameAz}, +${extra.priceAzn} AZN`}
+                accessibilityLabel={`${name}, +${extra.priceAzn} AZN`}
                 accessibilityState={{ checked: on }}
               >
                 <Card padded style={[styles.option, on && styles.optionActive]}>
@@ -260,8 +280,8 @@ export function HotelBookingScreen({ route, navigation }: AppScreenProps<'HotelB
                     {on ? <Icon name="check" size={13} color="#fff" strokeWidth={3} /> : null}
                   </View>
                   <View style={styles.flex}>
-                    <Text variant="h3">{extra.nameAz}</Text>
-                    <Text variant="caption">{extra.hintAz}</Text>
+                    <Text variant="h3">{name}</Text>
+                    <Text variant="caption">{hintText}</Text>
                   </View>
                   <Text variant="h3" color="green900">
                     +{extra.priceAzn} AZN
@@ -275,7 +295,7 @@ export function HotelBookingScreen({ route, navigation }: AppScreenProps<'HotelB
         {!isGuest ? (
           <View>
             <Text variant="h2" style={styles.sectionTitle}>
-              Ödəniş üsulu
+              {tr('shared.paymentMethod')}
             </Text>
             <PaymentPicker selected={cardId} onSelect={setCardId} />
           </View>
@@ -284,7 +304,7 @@ export function HotelBookingScreen({ route, navigation }: AppScreenProps<'HotelB
         {quote.data ? (
           <View>
             <Text variant="h2" style={styles.sectionTitle}>
-              Qiymət
+              {tr('shared.price')}
             </Text>
             <Card padded style={styles.price}>
               {quote.data.lines.map((line) => (
@@ -294,13 +314,13 @@ export function HotelBookingScreen({ route, navigation }: AppScreenProps<'HotelB
                   value={`${line.totalAzn} AZN`}
                 />
               ))}
-              <PriceRow label="Xidmət haqqı" value={`${quote.data.serviceFeeAzn} AZN`} />
+              <PriceRow label={tr('shared.serviceFee')} value={`${quote.data.serviceFeeAzn} AZN`} />
               <View style={styles.total}>
-                <PriceRow label="Cəmi" value={`${quote.data.totalAzn} AZN`} strong />
+                <PriceRow label={tr('shared.total')} value={`${quote.data.totalAzn} AZN`} strong />
               </View>
             </Card>
             <Text variant="caption" style={styles.xpNote}>
-              Bu rezervasiya ilə +{quote.data.rewards.bookingXp} XP · {business.data.region.name} regionu
+              {tr('hotel.xpNote', { xp: quote.data.rewards.bookingXp, region: business.data.region.name })}
             </Text>
           </View>
         ) : quote.isLoading ? (
