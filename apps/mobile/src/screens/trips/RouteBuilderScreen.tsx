@@ -304,7 +304,13 @@ function RouteEditor({ slug, navigation }: { slug: string; navigation: Nav }) {
                     </Text>
                   </View>
                   <View style={styles.stopActions}>
-                    <Pressable onPress={() => move(i, -1)} disabled={i === 0} style={styles.iconBtn}>
+                    <Pressable
+                      onPress={() => move(i, -1)}
+                      disabled={i === 0}
+                      style={styles.iconBtn}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Yuxarı: ${s.place.name}`}
+                    >
                       <Icon
                         name="chevronDown"
                         size={16}
@@ -316,6 +322,8 @@ function RouteEditor({ slug, navigation }: { slug: string; navigation: Nav }) {
                       onPress={() => move(i, 1)}
                       disabled={i === stops.length - 1}
                       style={styles.iconBtn}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Aşağı: ${s.place.name}`}
                     >
                       <Icon
                         name="chevronDown"
@@ -323,7 +331,12 @@ function RouteEditor({ slug, navigation }: { slug: string; navigation: Nav }) {
                         color={i === stops.length - 1 ? t.colors.line : t.colors.muted}
                       />
                     </Pressable>
-                    <Pressable onPress={() => confirmRemove(s.stopId, s.place.name)} style={styles.iconBtn}>
+                    <Pressable
+                      onPress={() => confirmRemove(s.stopId, s.place.name)}
+                      style={styles.iconBtn}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Dayanacağı sil: ${s.place.name}`}
+                    >
                       <Icon name="trash" size={16} color={t.colors.danger} />
                     </Pressable>
                   </View>

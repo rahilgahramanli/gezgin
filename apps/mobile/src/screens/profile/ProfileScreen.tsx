@@ -46,6 +46,11 @@ export function ProfileScreen({ navigation }: TabScreenProps<'Profile'>) {
           {me.data.fullName}
         </Text>
         <Text variant="meta">@{me.data.username}</Text>
+        {me.data.bio ? (
+          <Text variant="small" color="ink2" center numberOfLines={3} style={styles.bio}>
+            {me.data.bio}
+          </Text>
+        ) : null}
         {me.data.homeRegion ? (
           <Text variant="meta">📍 {me.data.homeRegion.name}</Text>
         ) : null}
@@ -138,6 +143,7 @@ export function ProfileScreen({ navigation }: TabScreenProps<'Profile'>) {
 }
 
 const styles = StyleSheet.create({
+  bio: { marginTop: 6, paddingHorizontal: t.spacing.page },
   coverBar: { position: 'absolute', top: 0, left: 0, right: 0 },
   cover: { height: 150, backgroundColor: t.colors.green900 },
   coverImage: { width: '100%', height: 150 },

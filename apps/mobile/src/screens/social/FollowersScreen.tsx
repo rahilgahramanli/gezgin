@@ -28,8 +28,17 @@ export function FollowersScreen({ route, navigation }: AppScreenProps<'Followers
   const toggle = (p: { username: string; isFollowing: boolean }) =>
     follow.mutate(
       { username: p.username, follow: !p.isFollowing },
-      // Tövsiyələr optimistik yenilənmir — izləndikdən sonra siyahıdan çıxır
-      { onSuccess: () => void suggested.refetch() },
+      // Tövsiyələr optimistik yenilənmir — izləndikdən sonra siyahıdan çıxır; öz siyahımda
+      // "İzləyir" sayı və siyahısı da yenilənir (əks halda yeni izlənən görünmürdü)
+      {
+        onSuccess: () => {
+          void suggested.refetch();
+          if (isMine) {
+            void list.refetch();
+            void profile.refetch();
+          }
+        },
+      },
     );
 
   const person = (p: FollowRow | SuggestedUser, subtitle: string) => (
