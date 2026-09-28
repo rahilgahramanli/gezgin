@@ -1,10 +1,11 @@
 import { StyleSheet, View } from 'react-native';
 import { Button, Card, Icon, Loading, Screen, Text } from '@/components';
 import { useTicket } from '@/api/hooks/booking';
+import { useT } from '@/i18n';
 import { bakuDate, bakuTime } from '@/lib/time';
 import { t } from '@/theme';
 import type { AppScreenProps } from '@/navigation/types';
-import { errorText } from './parts';
+import { errorText, guestsLabel } from './parts';
 
 /**
  * Ekran 19 — rezervasiya təsdiqi və bilet.
@@ -13,6 +14,7 @@ import { errorText } from './parts';
  */
 export function BookingSuccessScreen({ route, navigation }: AppScreenProps<'BookingSuccess'>) {
   const { publicId } = route.params;
+  const { t: tr } = useT('booking');
   const ticket = useTicket(publicId);
   const tk = ticket.data;
 
@@ -23,40 +25,48 @@ export function BookingSuccessScreen({ route, navigation }: AppScreenProps<'Book
           <Icon name="check" size={40} color="#fff" strokeWidth={2.6} />
         </View>
         <Text variant="titleLg" center style={styles.title}>
-          Rezervasiya təsdiqləndi!
+          {tr('success.title')}
         </Text>
         <Text variant="meta" center>
-          Planla, yola çıx, xatirələr topla
+          {tr('success.subtitle')}
         </Text>
       </View>
 
       <View style={styles.body}>
         {ticket.isLoading ? (
-          <Loading label="Bilet hazırlanır…" />
+          <Loading label={tr('success.preparingTicket')} />
         ) : tk ? (
           <Card padded style={styles.ticket}>
             <Text variant="h3">{tk.title}</Text>
 
             <View style={styles.rows}>
-              <Row label={tk.endAt ? 'Giriş' : 'Tarix'} value={tk.startAt ? bakuDate(tk.startAt) : '—'} />
-              {tk.endAt ? (
-                <Row label="Çıxış" value={bakuDate(tk.endAt)} />
-              ) : (
-                <Row label="Vaxt" value={tk.startAt ? `${bakuTime(tk.startAt)} (Bakı vaxtı)` : '—'} />
-              )}
               <Row
-                label="Nəfər"
-                value={`${tk.guests.adults} böyük${tk.guests.children ? ` + ${tk.guests.children} uşaq` : ''}`}
+                label={tk.endAt ? tr('shared.checkIn') : tr('shared.date')}
+                value={tk.startAt ? bakuDate(tk.startAt) : '—'}
               />
-              <Row label="Ödənilib" value={`${tk.totalAzn} AZN`} />
-              {tk.subtitle ? <Row label="Təqdim edir" value={tk.subtitle} /> : null}
+              {tk.endAt ? (
+                <Row label={tr('shared.checkOut')} value={bakuDate(tk.endAt)} />
+              ) : (
+                <Row
+                  label={tr('shared.time')}
+                  value={tk.startAt ? tr('shared.bakuTime', { time: bakuTime(tk.startAt) }) : '—'}
+                />
+              )}
+              <Row label={tr('shared.guests')} value={guestsLabel(tk.guests)} />
+              <Row label={tr('success.paid')} value={`${tk.totalAzn} AZN`} />
+              {tk.subtitle ? <Row label={tr('success.provider')} value={tk.subtitle} /> : null}
             </View>
 
             <View style={styles.dashed} />
 
             <View style={styles.codeBlock}>
-              <Text variant="caption">Bron kodu</Text>
-              <Text variant="titleLg" color="green900" style={styles.code} accessibilityLabel={`Bron kodu ${tk.code}`}>
+              <Text variant="caption">{tr('shared.bookingCode')}</Text>
+              <Text
+                variant="titleLg"
+                color="green900"
+                style={styles.code}
+                accessibilityLabel={tr('shared.bookingCodeA11y', { code: tk.code })}
+              >
                 {tk.code}
               </Text>
             </View>
@@ -65,31 +75,36 @@ export function BookingSuccessScreen({ route, navigation }: AppScreenProps<'Book
           <Card padded style={styles.errorCard}>
             <Icon name="info" size={22} color={t.colors.brown700} />
             <View style={styles.flex}>
-              <Text variant="h3">Bilet hələ yüklənmədi</Text>
+              <Text variant="h3">{tr('success.ticketNotLoaded')}</Text>
               <Text variant="small" color="ink2">
-                Rezervasiyan qeydə alınıb. Bileti bir az sonra "Rezervasiyalarım" bölməsində də aça bilərsən.
+                {tr('success.ticketLater')}
               </Text>
               <Text variant="caption" color="muted">
                 {errorText(ticket.error)}
               </Text>
             </View>
-            <Button label="Yenidən yüklə" size="sm" variant="soft" onPress={() => void ticket.refetch()} />
+            <Button label={tr('shared.reload')} size="sm" variant="soft" onPress={() => void ticket.refetch()} />
           </Card>
         )}
 
         <View style={styles.actions}>
           <Button
-            label="Bileti aç"
+            label={tr('success.openTicket')}
             onPress={() => navigation.replace('BookingDetail', { publicId })}
             style={styles.wide}
           />
           <Button
-            label="Rezervasiyalarım"
+            label={tr('myBookings.title')}
             variant="soft"
             onPress={() => navigation.replace('MyBookings')}
             style={styles.wide}
           />
-          <Button label="Ana səhifəyə qayıt" variant="ghost" onPress={() => navigation.navigate('Tabs')} style={styles.wide} />
+          <Button
+            label={tr('success.home')}
+            variant="ghost"
+            onPress={() => navigation.navigate('Tabs')}
+            style={styles.wide}
+          />
         </View>
       </View>
     </Screen>

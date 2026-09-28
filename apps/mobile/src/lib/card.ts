@@ -1,8 +1,11 @@
+import i18n from '@/i18n';
+
 /**
  * Kart formasının müştəri tərəfi yoxlaması.
  *
  * Server (`AddPaymentMethodDto`) eyni qaydaları yoxlayır, amma istifadəçi
- * səhvi sorğu göndərmədən, sahənin altında azərbaycanca görməlidir.
+ * səhvi sorğu göndərmədən, sahənin altında öz dilində görməlidir — mətnlər
+ * çağırış anında `booking:card.*`-dan götürülür (modul yüklənəndə yox).
  * PAN heç yerdə saxlanılmır — yalnız `POST /payments/methods`-a gedir.
  */
 
@@ -58,9 +61,11 @@ export function cardBrand(number: string): 'visa' | 'mastercard' | 'card' {
   return 'card';
 }
 
-const BRAND_LABEL: Record<string, string> = { visa: 'VISA', mastercard: 'Mastercard', card: 'Kart' };
+const BRAND_LABEL: Record<string, string> = { visa: 'VISA', mastercard: 'Mastercard' };
 
-export const brandLabel = (brand: string): string => BRAND_LABEL[brand] ?? brand.toUpperCase();
+/** Marka adları dildən asılı deyil; tanınmayan kart "Kart" / "Card" / "Карта" kimi göstərilir. */
+export const brandLabel = (brand: string): string =>
+  brand === 'card' ? i18n.t('booking:card.brandCard') : BRAND_LABEL[brand] ?? brand.toUpperCase();
 
 /** "VISA •••• 4242" — siyahılarda və accessibility etiketlərində eyni mətn. */
 export const cardTitle = (card: { brand: string; last4: string }): string =>
@@ -82,27 +87,27 @@ export function validateCard(
   const number = digitsOnly(values.number);
   const cvc = digitsOnly(values.cvc);
 
-  if (!number) errors.number = 'Kart nömrəsini daxil edin';
-  else if (number.length < 13 || number.length > 19) errors.number = 'Kart nömrəsi 13–19 rəqəm olmalıdır';
+  if (!number) errors.number = i18n.t('booking:card.errors.numberRequired');
+  else if (number.length < 13 || number.length > 19) errors.number = i18n.t('booking:card.errors.numberLength');
 
   const exp = parseExpiry(values.expiry);
   if (!values.expiry.trim()) {
-    errors.expiry = 'Bitmə tarixini daxil edin';
+    errors.expiry = i18n.t('booking:card.errors.expiryRequired');
   } else if (!exp) {
-    errors.expiry = 'Tarixi AA/İİ formatında yazın';
+    errors.expiry = i18n.t('booking:card.errors.expiryFormat');
   } else if (exp.month < 1 || exp.month > 12) {
-    errors.expiry = 'Ay 01–12 arasında olmalıdır';
+    errors.expiry = i18n.t('booking:card.errors.expiryMonth');
   } else {
     const thisMonth = now.getFullYear() * 12 + now.getMonth();
     const cardMonth = exp.year * 12 + (exp.month - 1);
-    if (cardMonth < thisMonth) errors.expiry = 'Kartın müddəti bitib';
+    if (cardMonth < thisMonth) errors.expiry = i18n.t('booking:card.errors.expired');
   }
 
-  if (!cvc) errors.cvc = 'CVC kodunu daxil edin';
-  else if (cvc.length < 3 || cvc.length > 4) errors.cvc = 'CVC 3–4 rəqəm olmalıdır';
+  if (!cvc) errors.cvc = i18n.t('booking:card.errors.cvcRequired');
+  else if (cvc.length < 3 || cvc.length > 4) errors.cvc = i18n.t('booking:card.errors.cvcLength');
 
   const holderName = values.holderName.trim();
-  if (holderName && holderName.length < 2) errors.holderName = 'Ad ən azı 2 hərf olmalıdır';
+  if (holderName && holderName.length < 2) errors.holderName = i18n.t('booking:card.errors.holderShort');
 
   if (Object.keys(errors).length || !exp) return { errors, payload: null };
   return {

@@ -3,6 +3,7 @@ import {
   Button, Card, Icon, Loading, Photo, Pill, Rating, Screen, SectionHead, Text, TopBar,
 } from '@/components';
 import { useBusiness } from '@/api/hooks/business';
+import { useT } from '@/i18n';
 import { AMENITY_LABEL, BUSINESS_TYPE_LABEL, label } from '@/lib/labels';
 import { shareItem } from '@/lib/share';
 import { t } from '@/theme';
@@ -11,9 +12,10 @@ import type { AppScreenProps } from '@/navigation/types';
 /** Ekran 22 — biznes profili və paketlər. */
 export function BusinessProfileScreen({ route, navigation }: AppScreenProps<'BusinessProfile'>) {
   const { slug } = route.params;
+  const { t: tr, tp: tpr } = useT('booking');
   const business = useBusiness(slug);
 
-  if (business.isLoading) return <Loading label="Yüklənir…" />;
+  if (business.isLoading) return <Loading label={tr('common:states.loading')} />;
   if (!business.data) return null;
   const b = business.data;
 
@@ -27,14 +29,16 @@ export function BusinessProfileScreen({ route, navigation }: AppScreenProps<'Bus
             light
             transparent
             onBack={navigation.goBack}
-            actions={[{ icon: 'share', label: 'Paylaş', onPress: () => void shareItem('business', slug, b.name) }]}
+            actions={[
+              { icon: 'share', label: tr('common:actions.share'), onPress: () => void shareItem('business', slug, b.name) },
+            ]}
           />
         </View>
         {b.photoCount > 0 ? (
           <View style={styles.photoBadge}>
             <Icon name="camera" size={13} color="#fff" />
             <Text variant="caption" style={styles.photoBadgeText}>
-              {b.photoCount} foto
+              {tpr('business.photos', b.photoCount)}
             </Text>
           </View>
         ) : null}
@@ -56,7 +60,7 @@ export function BusinessProfileScreen({ route, navigation }: AppScreenProps<'Bus
           <Text variant="meta">
             {label(BUSINESS_TYPE_LABEL, b.type)} · {b.region.name}
           </Text>
-          {b.isVerified ? <Pill label="Təsdiqlənib" tone="teal" /> : null}
+          {b.isVerified ? <Pill label={tr('business.verified')} tone="teal" /> : null}
         </View>
         {b.ratingCount > 0 ? <Rating value={b.rating} count={b.ratingCount} size={18} /> : null}
       </View>
@@ -70,7 +74,7 @@ export function BusinessProfileScreen({ route, navigation }: AppScreenProps<'Bus
 
         {b.services.length ? (
           <View>
-            <SectionHead title="Xidmətlər" />
+            <SectionHead title={tr('business.services')} />
             <View style={styles.services}>
               {b.services.map((s) => (
                 <Pill key={s} label={label(AMENITY_LABEL, s)} tone="gray" />
@@ -81,7 +85,7 @@ export function BusinessProfileScreen({ route, navigation }: AppScreenProps<'Bus
 
         {b.photos.length > 1 ? (
           <View>
-            <SectionHead title="Fotolar" />
+            <SectionHead title={tr('business.photosTitle')} />
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.hscroll}>
               {b.photos.map((p, i) => (
                 <Photo key={i} uri={p.url} style={styles.galleryPhoto} radius={t.radius.md} />
@@ -92,13 +96,13 @@ export function BusinessProfileScreen({ route, navigation }: AppScreenProps<'Bus
 
         {b.packages.length ? (
           <View>
-            <SectionHead title="Təkliflər və paketlər" />
+            <SectionHead title={tr('business.packages')} />
             <View style={styles.packages}>
               {b.packages.map((p) => (
                 <Card key={p.publicId} padded style={styles.package}>
                   <Text variant="h3">{p.title}</Text>
                   <Text variant="meta">
-                    {p.nights} gecə / {p.days} gün
+                    {tpr('shared.nights', p.nights)} / {tpr('shared.days', p.days)}
                   </Text>
                   {p.description ? (
                     <Text variant="small" color="ink2" numberOfLines={2}>
@@ -118,11 +122,11 @@ export function BusinessProfileScreen({ route, navigation }: AppScreenProps<'Bus
                         {p.priceAzn} AZN
                       </Text>
                       {p.pricePerNightAzn ? (
-                        <Text variant="caption">gecəsi {p.pricePerNightAzn} AZN</Text>
+                        <Text variant="caption">{tr('business.perNight', { price: p.pricePerNightAzn })}</Text>
                       ) : null}
                     </View>
                     <Button
-                      label="Rezervasiya"
+                      label={tr('business.book')}
                       size="sm"
                       onPress={() =>
                         navigation.navigate('HotelBooking', { business: slug, package: p.publicId })
@@ -138,7 +142,7 @@ export function BusinessProfileScreen({ route, navigation }: AppScreenProps<'Bus
         <View style={styles.contact}>
           {b.phone ? (
             <Button
-              label="Zəng et"
+              label={tr('business.call')}
               variant="outline"
               left={<Icon name="chat" size={17} color={t.colors.green900} />}
               onPress={() => Linking.openURL(`tel:${b.phone}`)}
@@ -147,7 +151,7 @@ export function BusinessProfileScreen({ route, navigation }: AppScreenProps<'Bus
           ) : null}
           {b.website ? (
             <Button
-              label="Vebsayt"
+              label={tr('business.website')}
               variant="soft"
               left={<Icon name="globe" size={17} color={t.colors.green900} />}
               onPress={() => Linking.openURL(`https://${b.website?.replace(/^https?:\/\//, '')}`)}

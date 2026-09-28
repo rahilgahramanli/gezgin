@@ -3,6 +3,7 @@ import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { Card, Icon, Loading, Pill, Screen, Text, TopBar } from '@/components';
 import { useAvailability, useQuote, type Slot } from '@/api/hooks/booking';
 import { useExperienceDetail } from '@/api/hooks/details';
+import { useT } from '@/i18n';
 import { durationLabel } from '@/lib/labels';
 import { bakuDate, bakuShortDate, bakuTime, bakuWeekday } from '@/lib/time';
 import { useIsGuest } from '@/store/auth';
@@ -18,6 +19,7 @@ const MAX_PARTY = 20;
 /** Ekran 18 — rezervasiya: tarix, nəfər sayı, qiymət bölgüsü, ödəniş. */
 export function BookingScreen({ route, navigation }: AppScreenProps<'Booking'>) {
   const { experience: slug } = route.params;
+  const { t: tr, tp: tpr } = useT('booking');
   const isGuest = useIsGuest();
   const [adults, setAdults] = useState(2);
   const [children, setChildren] = useState(0);
@@ -77,17 +79,17 @@ export function BookingScreen({ route, navigation }: AppScreenProps<'Booking'>) 
 
   const quoteReady = !!quote.data && !quote.isPlaceholderData;
   const hint = !slot
-    ? 'Ödəniş üçün əvvəlcə tarix seçin'
+    ? tr('experience.hintPickDate')
     : slotFull
-      ? 'Bu tarixdə yer qalmayıb — başqa tarix seçin'
+      ? tr('experience.hintSlotFull')
       : !cardId
-        ? 'Ödəniş üçün kart seçin və ya əlavə edin'
+        ? tr('shared.hintPickCard')
         : !quoteReady
-          ? 'Qiymət hesablanır…'
+          ? tr('shared.hintCalculating')
           : null;
   const error = checkout.error ?? (quote.error ? errorText(quote.error) : null);
 
-  if (detail.isLoading) return <Loading label="Yüklənir…" />;
+  if (detail.isLoading) return <Loading label={tr('common:states.loading')} />;
 
   return (
     <Screen
@@ -99,7 +101,7 @@ export function BookingScreen({ route, navigation }: AppScreenProps<'Booking'>) 
           <CheckoutFooter
             error={error}
             hint={hint}
-            label={quote.data ? `${quote.data.totalAzn} AZN ödə və bron et` : 'Bron et'}
+            label={quote.data ? tr('shared.payAndBook', { total: quote.data.totalAzn }) : tr('shared.book')}
             onPress={pay}
             loading={checkout.busy}
             disabled={!slot || slotFull || !cardId || !quoteReady}
@@ -107,7 +109,7 @@ export function BookingScreen({ route, navigation }: AppScreenProps<'Booking'>) 
         )
       }
     >
-      <TopBar title="Rezervasiya" onBack={navigation.goBack} />
+      <TopBar title={tr('shared.title')} onBack={navigation.goBack} />
 
       <View style={styles.body}>
         {detail.data ? (
@@ -119,7 +121,7 @@ export function BookingScreen({ route, navigation }: AppScreenProps<'Booking'>) 
             </Text>
             <View style={styles.summaryRow}>
               <Text variant="h3" color="green900">
-                {detail.data.pricing.priceAzn} AZN / nəfər
+                {tr('experience.pricePerPerson', { price: detail.data.pricing.priceAzn })}
               </Text>
               <Pill label={`+${detail.data.gezginRewards.bookingXp} XP`} tone="teal" />
             </View>
@@ -129,16 +131,16 @@ export function BookingScreen({ route, navigation }: AppScreenProps<'Booking'>) 
         {/* Tarix seçimi — ekran 18 date strip, vaxtlar Bakı saatı ilə */}
         <View>
           <Text variant="h2" style={styles.sectionTitle}>
-            Tarix seç
+            {tr('experience.pickDate')}
           </Text>
           {availability.isLoading ? (
             <Loading />
           ) : availability.isError ? (
             <Text variant="meta" color="danger">
-              Tarixlər yüklənmədi — {errorText(availability.error)}
+              {tr('experience.slotsFailed', { error: errorText(availability.error) })}
             </Text>
           ) : !slots.length ? (
-            <Text variant="meta">Bu təcrübə üçün hələ tarix açılmayıb</Text>
+            <Text variant="meta">{tr('experience.noSlots')}</Text>
           ) : (
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.slots}>
               {slots.map((s) => (
@@ -156,9 +158,13 @@ export function BookingScreen({ route, navigation }: AppScreenProps<'Booking'>) 
             <View style={styles.slotInfo}>
               <Icon name="calendar" size={15} color={t.colors.muted} />
               <Text variant="caption" style={styles.flex}>
-                {bakuWeekday(slot.startAt)}, {bakuDate(slot.startAt)} · başlama {bakuTime(slot.startAt)} ·{' '}
+                {tr('experience.slotInfo', {
+                  weekday: bakuWeekday(slot.startAt),
+                  date: bakuDate(slot.startAt),
+                  time: bakuTime(slot.startAt),
+                })}{' '}
                 <Text variant="caption" color={slotFull ? 'danger' : 'green900'} style={styles.bold}>
-                  {slotFull ? 'yer qalmayıb' : `${seatsLeft} yer qalıb`}
+                  {slotFull ? tr('experience.soldOut') : tpr('experience.seatsLeft', seatsLeft)}
                 </Text>
               </Text>
             </View>
@@ -167,19 +173,19 @@ export function BookingScreen({ route, navigation }: AppScreenProps<'Booking'>) 
 
         <View>
           <Text variant="h2" style={styles.sectionTitle}>
-            Nəfər sayı
+            {tr('experience.partySize')}
           </Text>
           <Stepper
-            label="Böyük"
-            hint="13 yaş və yuxarı"
+            label={tr('shared.adults')}
+            hint={tr('shared.adultsHint')}
             value={adults}
             min={1}
             max={Math.max(1, cap - children)}
             onChange={setAdults}
           />
           <Stepper
-            label="Uşaq"
-            hint="0–12 yaş · 50% endirim"
+            label={tr('experience.children')}
+            hint={tr('experience.childrenHint')}
             value={children}
             min={0}
             max={Math.max(0, cap - adults)}
@@ -187,7 +193,7 @@ export function BookingScreen({ route, navigation }: AppScreenProps<'Booking'>) 
           />
           {seatsLeft !== undefined && !slotFull && adults + children >= cap ? (
             <Text variant="caption" color="brown700">
-              Seçilmiş tarixdə {seatsLeft} yer qalıb — daha çox nəfər üçün başqa tarix seçin.
+              {tpr('experience.capReached', seatsLeft)}
             </Text>
           ) : null}
         </View>
@@ -195,17 +201,17 @@ export function BookingScreen({ route, navigation }: AppScreenProps<'Booking'>) 
         {quote.data ? (
           <View>
             <Text variant="h2" style={styles.sectionTitle}>
-              Qiymət
+              {tr('shared.price')}
             </Text>
             <Card padded style={styles.price}>
               {quote.data.lines.map((line) => (
                 <PriceRow key={line.code} label={`${line.label} × ${line.quantity}`} value={`${line.totalAzn} AZN`} />
               ))}
               {quote.data.serviceFeeAzn > 0 ? (
-                <PriceRow label="Xidmət haqqı" value={`${quote.data.serviceFeeAzn} AZN`} />
+                <PriceRow label={tr('shared.serviceFee')} value={`${quote.data.serviceFeeAzn} AZN`} />
               ) : null}
               <View style={styles.total}>
-                <PriceRow label="Cəmi" value={`${quote.data.totalAzn} AZN`} strong />
+                <PriceRow label={tr('shared.total')} value={`${quote.data.totalAzn} AZN`} strong />
               </View>
             </Card>
           </View>
@@ -216,7 +222,7 @@ export function BookingScreen({ route, navigation }: AppScreenProps<'Booking'>) 
         {!isGuest ? (
           <View>
             <Text variant="h2" style={styles.sectionTitle}>
-              Ödəniş üsulu
+              {tr('shared.paymentMethod')}
             </Text>
             <PaymentPicker selected={cardId} onSelect={setCardId} />
           </View>
@@ -241,15 +247,16 @@ function SlotChip({
   active: boolean;
   onPress: () => void;
 }) {
+  const { t: tr, tp: tpr } = useT('booking');
   const full = seatsLeft <= 0;
-  const seats = full ? 'dolu' : `${seatsLeft} yer`;
+  const seats = full ? tr('experience.slotFull') : tpr('experience.seats', seatsLeft);
   const fg = active ? 'paper' : 'muted';
   return (
     <Pressable
       onPress={onPress}
       disabled={full}
       accessibilityRole="radio"
-      accessibilityLabel={`Tarix ${bakuDate(slot.startAt)}, ${bakuTime(slot.startAt)}, ${seats}`}
+      accessibilityLabel={tr('experience.slotA11y', { date: bakuDate(slot.startAt), time: bakuTime(slot.startAt), seats })}
       accessibilityState={{ checked: active, disabled: full }}
       style={[styles.slot, active && styles.slotActive, full && styles.slotFull]}
     >

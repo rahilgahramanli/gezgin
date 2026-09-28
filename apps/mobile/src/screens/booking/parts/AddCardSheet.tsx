@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Input, Text, TopBar } from '@/components';
 import { useAddCard, type AddedCard } from '@/api/hooks/booking';
 import { useAppConfig } from '@/api/queries';
+import { useT } from '@/i18n';
 import {
   cardBrand, brandLabel, formatCardNumber, formatExpiry, validateCard, type CardFormErrors, type CardFormValues,
 } from '@/lib/card';
@@ -27,6 +28,7 @@ export function AddCardSheet({
   onClose: () => void;
   onAdded?: (card: AddedCard) => void;
 }) {
+  const { t: tr } = useT('booking');
   const add = useAddCard();
   const config = useAppConfig();
   const [values, setValues] = useState<CardFormValues>(EMPTY);
@@ -57,7 +59,7 @@ export function AddCardSheet({
         onAdded?.(card);
         close();
       },
-      onError: (e) => setServerError(errorText(e, 'Kart əlavə edilmədi — yenidən cəhd edin')),
+      onError: (e) => setServerError(errorText(e, tr('addCard.failed'))),
     });
   };
 
@@ -72,11 +74,14 @@ export function AddCardSheet({
     >
       <SafeAreaView style={styles.safe} edges={Platform.OS === 'ios' ? [] : ['top', 'bottom']}>
         <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-          <TopBar title="Kart əlavə et" actions={[{ icon: 'x', label: 'Bağla', onPress: close }]} />
+          <TopBar
+            title={tr('cards.add')}
+            actions={[{ icon: 'x', label: tr('common:actions.close'), onPress: close }]}
+          />
           <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
             <Input
-              label="Kart nömrəsi"
-              accessibilityLabel="Kart nömrəsi"
+              label={tr('addCard.number')}
+              accessibilityLabel={tr('addCard.number')}
               placeholder="0000 0000 0000 0000"
               keyboardType="number-pad"
               textContentType="creditCardNumber"
@@ -96,9 +101,9 @@ export function AddCardSheet({
             <View style={styles.row}>
               <View style={styles.flex}>
                 <Input
-                  label="Bitmə tarixi"
-                  accessibilityLabel="Bitmə tarixi"
-                  placeholder="AA/İİ"
+                  label={tr('addCard.expiry')}
+                  accessibilityLabel={tr('addCard.expiry')}
+                  placeholder={tr('addCard.expiryPlaceholder')}
                   keyboardType="number-pad"
                   autoComplete="cc-exp"
                   value={values.expiry}
@@ -123,9 +128,9 @@ export function AddCardSheet({
               </View>
             </View>
             <Input
-              label="Kart sahibi (istəyə bağlı)"
-              accessibilityLabel="Kart sahibi"
-              placeholder="AD SOYAD"
+              label={tr('addCard.holder')}
+              accessibilityLabel={tr('addCard.holderA11y')}
+              placeholder={tr('addCard.holderPlaceholder')}
               autoCapitalize="characters"
               autoComplete="cc-name"
               value={values.holderName}
@@ -135,18 +140,17 @@ export function AddCardSheet({
             />
 
             <Text variant="caption" color="muted">
-              Kart nömrəsi GEZGIN-də saxlanılmır — ödəniş provayderində tokenləşdirilir.
+              {tr('addCard.tokenNote')}
             </Text>
             {config.data?.payments.isMock ? (
               <Text variant="caption" color="muted">
-                Test rejimi: 4111 1111 1111 1111 — uğurlu · 4000 0000 0000 3220 — 3-D Secure · 4000 0000 0000
-                0002 — rədd
+                {tr('addCard.testMode')}
               </Text>
             ) : null}
 
             {serverError ? <ErrorNotice message={serverError} /> : null}
 
-            <Button label="Kartı yadda saxla" onPress={save} loading={add.isPending} style={styles.cta} />
+            <Button label={tr('addCard.save')} onPress={save} loading={add.isPending} style={styles.cta} />
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>

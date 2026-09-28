@@ -1,1 +1,257 @@
-{}
+{
+  "shared": {
+    "title": "Booking",
+    "book": "Book",
+    "payAndBook": "Pay {{total}} AZN and book",
+    "hintPickCard": "Select or add a card to pay",
+    "hintCalculating": "Calculating price…",
+    "price": "Price",
+    "serviceFee": "Service fee",
+    "total": "Total",
+    "paymentMethod": "Payment method",
+    "adults": "Adults",
+    "adultsHint": "Ages 13 and up",
+    "reload": "Reload",
+    "cancel": "Cancel",
+    "bookingCode": "Booking code",
+    "bookingCodeA11y": "Booking code {{code}}",
+    "checkIn": "Check-in",
+    "checkOut": "Check-out",
+    "date": "Date",
+    "time": "Time",
+    "bakuTime": "{{time}} (Baku time)",
+    "guests": "Guests",
+    "noDate": "No date",
+    "people_one": "{{count}} guest",
+    "people_other": "{{count}} guests",
+    "nights_one": "{{count}} night",
+    "nights_other": "{{count}} nights",
+    "days_one": "{{count}} day",
+    "days_other": "{{count}} days"
+  },
+  "experience": {
+    "hintPickDate": "Pick a date first to pay",
+    "hintSlotFull": "No spots left on this date — pick another one",
+    "pricePerPerson": "{{price}} AZN / person",
+    "pickDate": "Pick a date",
+    "slotsFailed": "Couldn't load dates — {{error}}",
+    "noSlots": "No dates available for this experience yet",
+    "slotInfo": "{{weekday}}, {{date}} · starts {{time}} ·",
+    "soldOut": "sold out",
+    "seatsLeft_one": "{{count}} spot left",
+    "seatsLeft_other": "{{count}} spots left",
+    "partySize": "Number of guests",
+    "children": "Children",
+    "childrenHint": "Ages 0–12 · 50% off",
+    "capReached_one": "Only {{count}} spot left on this date — pick another date for a larger group.",
+    "capReached_other": "Only {{count}} spots left on this date — pick another date for a larger group.",
+    "slotFull": "full",
+    "seats_one": "{{count}} spot",
+    "seats_other": "{{count}} spots",
+    "slotA11y": "Date {{date}}, {{time}}, {{seats}}"
+  },
+  "hotel": {
+    "hintNoPackages": "This property has no available packages",
+    "noPackageSelected": "No package selected",
+    "pricePerNights_one": "{{price}} AZN / {{count}} night",
+    "pricePerNights_other": "{{price}} AZN / {{count}} nights",
+    "dates": "Dates",
+    "checkInA11y": "Check-in {{date}}",
+    "stay_one": "Check-in {{checkIn}} (from {{hour}}:00) · Check-out {{checkOut}} · {{count}} night",
+    "stay_other": "Check-in {{checkIn}} (from {{hour}}:00) · Check-out {{checkOut}} · {{count}} nights",
+    "guests": "Guests",
+    "children": "Children (0–12)",
+    "childrenHint": "Free with a parent",
+    "packages": "Room & package",
+    "packageA11y": "Package {{title}}, {{price}} AZN",
+    "noPackages": "This property has no available packages right now.",
+    "extras": "Extras",
+    "xpNote": "+{{xp}} XP for this booking · {{region}} region"
+  },
+  "extras": {
+    "transfer": {
+      "name": "Transfer",
+      "hint": "Round trip in a comfy minibus"
+    },
+    "sigorta": {
+      "name": "Travel insurance",
+      "hint": "Covers the whole trip"
+    },
+    "spa": {
+      "name": "Spa package",
+      "hint": "Sauna, pool, 45-min massage"
+    },
+    "ferdi-beledci": {
+      "name": "Private guide",
+      "hint": "Accompanied by a local guide"
+    }
+  },
+  "success": {
+    "title": "Booking confirmed!",
+    "subtitle": "Plan it, go, collect memories",
+    "preparingTicket": "Preparing your ticket…",
+    "paid": "Paid",
+    "provider": "Provided by",
+    "ticketNotLoaded": "Ticket hasn't loaded yet",
+    "ticketLater": "Your booking has been placed. You can also open the ticket later in \"My bookings\".",
+    "openTicket": "Open ticket",
+    "home": "Back to home"
+  },
+  "myBookings": {
+    "title": "My bookings",
+    "guestMessage": "Your bookings and tickets are stored in your account. Booking isn't available in guest mode.",
+    "tabs": {
+      "upcoming": "Upcoming",
+      "past": "Past",
+      "cancelled": "Cancelled"
+    },
+    "emptyTitle": "No bookings",
+    "emptyMessage": "Pick an experience and book it — your ticket will appear here.",
+    "cardA11y": "Booking {{code}}: {{title}}, {{status}}",
+    "completePayment": "Complete payment ›",
+    "details": "Details ›"
+  },
+  "detail": {
+    "notOpened": "Couldn't open booking",
+    "paidTitle": "Payment complete",
+    "paidMessage": "Booking confirmed — your ticket is below.",
+    "completePayment": "Complete payment · {{total}} AZN",
+    "ticket": "Ticket",
+    "ticketCodeA11y": "Ticket code {{code}}",
+    "qrData": "QR data",
+    "showAtEntrance": "Show this code at the entrance",
+    "ticketFailed": "Couldn't load ticket — {{error}}",
+    "payment": "Payment",
+    "status": "Status",
+    "amount": "Amount",
+    "refunded": "Refunded",
+    "paidAt": "Payment date",
+    "lastAttempt": "Last attempt: {{message}}",
+    "notPaidYet": "No payment made yet.",
+    "payNote": "Unpaid bookings are cancelled automatically after a while and the spots are released.",
+    "policy": "Cancellation policy",
+    "policyRefund": "{{timeLeft}} · {{percent}}% refund",
+    "cancelBooking": "Cancel booking",
+    "cancel": {
+      "confirmTitle": "Cancel this booking?",
+      "notPaid": "No payment was made — nothing has been charged to your card.",
+      "willRefund": "{{amount}} AZN will be refunded ({{percent}}%).",
+      "noRefund": "No refund under the cancellation policy.",
+      "doneTitle": "Booking cancelled",
+      "refunded": "{{amount}} AZN refunded to your card ({{percent}}%).",
+      "noRefundNeeded": "No payment was made, so no refund is needed."
+    }
+  },
+  "status": {
+    "booking": {
+      "confirmed": "Confirmed",
+      "awaiting_payment": "Awaiting payment",
+      "pending": "Pending",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "refunded": "Refunded"
+    },
+    "payment": {
+      "created": "Started",
+      "requires_action": "Awaiting bank confirmation",
+      "succeeded": "Paid",
+      "failed": "Failed",
+      "refunded": "Refunded",
+      "partially_refunded": "Partially refunded"
+    },
+    "adults_one": "{{count}} adult",
+    "adults_other": "{{count}} adults",
+    "children_one": "{{count}} child",
+    "children_other": "{{count}} children",
+    "started": "Already started",
+    "hoursLeft_one": "Starts in {{count}} hour",
+    "hoursLeft_other": "Starts in {{count}} hours",
+    "daysLeft_one": "Starts in {{count}} day",
+    "daysLeft_other": "Starts in {{count}} days"
+  },
+  "cards": {
+    "title": "My payment methods",
+    "add": "Add card",
+    "removeTitle": "Remove card?",
+    "removeMessage": "{{card}} will be removed from your payment methods.",
+    "removeDefaultNote": "Another card will become the default.",
+    "removeFailed": "Couldn't remove the card",
+    "guestTitle": "Create an account to save cards",
+    "guestMessage": "Adding cards and paying isn't available in guest mode.",
+    "loadFailed": "Couldn't load cards",
+    "emptyTitle": "No cards added",
+    "emptyMessage": "Save a bank card to pay for bookings faster. GEZGIN never stores your card number.",
+    "default": "Default",
+    "expired": "Expired",
+    "expires": "Expires {{date}}",
+    "setDefaultFailed": "Couldn't change the default card",
+    "makeDefault": "Make default",
+    "makeDefaultA11y": "Make default: {{card}}",
+    "removeA11y": "Remove card: {{card}}",
+    "note": "Your default card is selected automatically when booking. GEZGIN never stores your card number — it's tokenized by the payment provider."
+  },
+  "picker": {
+    "loadFailed": "Couldn't load cards.",
+    "empty": "No saved cards. Add a bank card to pay."
+  },
+  "addCard": {
+    "failed": "Couldn't add the card — please try again",
+    "number": "Card number",
+    "expiry": "Expiry date",
+    "expiryPlaceholder": "MM/YY",
+    "holder": "Cardholder (optional)",
+    "holderA11y": "Cardholder",
+    "holderPlaceholder": "FULL NAME",
+    "tokenNote": "GEZGIN never stores your card number — it's tokenized by the payment provider.",
+    "testMode": "Test mode: 4111 1111 1111 1111 — success · 4000 0000 0000 3220 — 3-D Secure · 4000 0000 0000 0002 — declined",
+    "save": "Save card"
+  },
+  "card": {
+    "brandCard": "Card",
+    "errors": {
+      "numberRequired": "Enter the card number",
+      "numberLength": "Card number must be 13–19 digits",
+      "expiryRequired": "Enter the expiry date",
+      "expiryFormat": "Use the MM/YY format",
+      "expiryMonth": "Month must be between 01 and 12",
+      "expired": "This card has expired",
+      "cvcRequired": "Enter the CVC code",
+      "cvcLength": "CVC must be 3–4 digits",
+      "holderShort": "Name must be at least 2 letters"
+    }
+  },
+  "guest": {
+    "title": "Create an account to book",
+    "message": "Booking, paying and saving cards aren't available in guest mode. A free account takes a minute to set up."
+  },
+  "stepper": {
+    "decrease": "{{label}}: decrease",
+    "increase": "{{label}}: increase"
+  },
+  "otp": {
+    "stop": "Stop payment",
+    "title": "Bank verification code",
+    "message": "Your bank sent a 6-digit code to confirm the payment. Enter it below.",
+    "codeA11y": "Verification code",
+    "wrong": "Incorrect code — please check and try again",
+    "testCode": "Test code: 123456",
+    "confirm": "Confirm"
+  },
+  "errors": {
+    "network": "Network error — check your internet connection and try again",
+    "paymentIncomplete": "Payment wasn't completed — please try again",
+    "otpCancelled": "The bank didn't confirm the payment — try again or choose another card"
+  },
+  "business": {
+    "photos_one": "{{count}} photo",
+    "photos_other": "{{count}} photos",
+    "verified": "Verified",
+    "services": "Services",
+    "photosTitle": "Photos",
+    "packages": "Offers & packages",
+    "perNight": "{{price}} AZN per night",
+    "book": "Book",
+    "call": "Call",
+    "website": "Website"
+  }
+}

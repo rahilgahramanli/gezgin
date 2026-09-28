@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Alert, Pressable, StyleSheet, View } from 'react-native';
 import { Button, Card, EmptyState, Icon, Loading, Pill, Screen, Text, TopBar } from '@/components';
 import { usePaymentMethods, useRemoveCard, useSetDefaultCard, type PaymentMethod } from '@/api/hooks/booking';
+import { useT } from '@/i18n';
 import { alertError } from '@/lib/errors';
 import { cardTitle, expiryLabel } from '@/lib/card';
 import { useIsGuest } from '@/store/auth';
@@ -11,6 +12,7 @@ import { AddCardSheet, GuestGate, errorText } from './parts';
 
 /** "Ödəniş üsullarım" — saxlanmış kartlar: əsas et, sil, yeni kart əlavə et. */
 export function PaymentMethodsScreen({ navigation }: AppScreenProps<'PaymentMethods'>) {
+  const { t: tr } = useT('booking');
   const isGuest = useIsGuest();
   const methods = usePaymentMethods(!isGuest);
   const setDefault = useSetDefaultCard();
@@ -19,14 +21,14 @@ export function PaymentMethodsScreen({ navigation }: AppScreenProps<'PaymentMeth
 
   const confirmRemove = (m: PaymentMethod) =>
     Alert.alert(
-      'Kartı silmək?',
-      `${cardTitle(m)} ödəniş üsullarından silinəcək.${m.isDefault ? ' Əsas kart başqa karta keçəcək.' : ''}`,
+      tr('cards.removeTitle'),
+      `${tr('cards.removeMessage', { card: cardTitle(m) })}${m.isDefault ? ` ${tr('cards.removeDefaultNote')}` : ''}`,
       [
-        { text: 'İmtina', style: 'cancel' },
+        { text: tr('common:actions.cancel'), style: 'cancel' },
         {
-          text: 'Sil',
+          text: tr('common:actions.delete'),
           style: 'destructive',
-          onPress: () => remove.mutate(m.publicId, { onError: (e) => alertError(e, 'Kart silinmədi') }),
+          onPress: () => remove.mutate(m.publicId, { onError: (e) => alertError(e, tr('cards.removeFailed')) }),
         },
       ],
     );
@@ -39,7 +41,7 @@ export function PaymentMethodsScreen({ navigation }: AppScreenProps<'PaymentMeth
       footer={
         !isGuest && list.length ? (
           <Button
-            label="Kart əlavə et"
+            label={tr('cards.add')}
             left={<Icon name="plus" size={18} color="#fff" />}
             onPress={() => setAdding(true)}
             style={styles.wide}
@@ -47,31 +49,31 @@ export function PaymentMethodsScreen({ navigation }: AppScreenProps<'PaymentMeth
         ) : undefined
       }
     >
-      <TopBar title="Ödəniş üsullarım" onBack={navigation.goBack} />
+      <TopBar title={tr('cards.title')} onBack={navigation.goBack} />
 
       <View style={styles.body}>
         {isGuest ? (
           <GuestGate
-            title="Kart saxlamaq üçün hesab yarat"
-            message="Qonaq rejimində kart əlavə etmək və ödəniş etmək mümkün deyil."
+            title={tr('cards.guestTitle')}
+            message={tr('cards.guestMessage')}
           />
         ) : methods.isLoading ? (
           <Loading />
         ) : methods.isError ? (
           <EmptyState
             icon="info"
-            title="Kartlar yüklənmədi"
+            title={tr('cards.loadFailed')}
             message={errorText(methods.error)}
-            action={<Button label="Yenidən yüklə" variant="soft" onPress={() => void methods.refetch()} />}
+            action={<Button label={tr('shared.reload')} variant="soft" onPress={() => void methods.refetch()} />}
           />
         ) : !list.length ? (
           <EmptyState
             icon="coins"
-            title="Kart əlavə edilməyib"
-            message="Rezervasiyanı tez ödəmək üçün bank kartını yadda saxla. Kart nömrəsi GEZGIN-də saxlanılmır."
+            title={tr('cards.emptyTitle')}
+            message={tr('cards.emptyMessage')}
             action={
               <Button
-                label="Kart əlavə et"
+                label={tr('cards.add')}
                 left={<Icon name="plus" size={18} color="#fff" />}
                 onPress={() => setAdding(true)}
               />
@@ -91,23 +93,25 @@ export function PaymentMethodsScreen({ navigation }: AppScreenProps<'PaymentMeth
                   <View style={styles.flex}>
                     <View style={styles.titleRow}>
                       <Text variant="h3">{title}</Text>
-                      {m.isDefault ? <Pill label="Əsas" tone="green" /> : null}
+                      {m.isDefault ? <Pill label={tr('cards.default')} tone="green" /> : null}
                     </View>
                     <Text variant="caption" color={m.isExpired ? 'danger' : 'muted'}>
-                      {m.isExpired ? 'Müddəti bitib' : `Bitmə tarixi ${expiryLabel(m)}`}
+                      {m.isExpired ? tr('cards.expired') : tr('cards.expires', { date: expiryLabel(m) })}
                       {m.holderName ? ` · ${m.holderName}` : ''}
                     </Text>
                     {!m.isDefault && !m.isExpired ? (
                       <Pressable
-                        onPress={() => setDefault.mutate(m.publicId, { onError: (e) => alertError(e, 'Əsas kart dəyişmədi') })}
+                        onPress={() =>
+                          setDefault.mutate(m.publicId, { onError: (e) => alertError(e, tr('cards.setDefaultFailed')) })
+                        }
                         disabled={busy}
                         hitSlop={8}
                         accessibilityRole="button"
-                        accessibilityLabel={`Əsas et: ${title}`}
+                        accessibilityLabel={tr('cards.makeDefaultA11y', { card: title })}
                         style={styles.makeDefault}
                       >
                         <Text variant="small" color="green900" style={styles.link}>
-                          Əsas et
+                          {tr('cards.makeDefault')}
                         </Text>
                       </Pressable>
                     ) : null}
@@ -117,7 +121,7 @@ export function PaymentMethodsScreen({ navigation }: AppScreenProps<'PaymentMeth
                     disabled={busy}
                     hitSlop={10}
                     accessibilityRole="button"
-                    accessibilityLabel={`Kartı sil: ${title}`}
+                    accessibilityLabel={tr('cards.removeA11y', { card: title })}
                     style={({ pressed }) => [styles.remove, pressed && styles.pressed]}
                   >
                     <Icon name="trash" size={20} color={t.colors.danger} />
@@ -126,8 +130,7 @@ export function PaymentMethodsScreen({ navigation }: AppScreenProps<'PaymentMeth
               );
             })}
             <Text variant="caption" color="muted" style={styles.note}>
-              Əsas kart rezervasiyada avtomatik seçilir. Kart nömrəsi GEZGIN-də saxlanılmır — ödəniş
-              provayderində tokenləşdirilir.
+              {tr('cards.note')}
             </Text>
           </View>
         )}

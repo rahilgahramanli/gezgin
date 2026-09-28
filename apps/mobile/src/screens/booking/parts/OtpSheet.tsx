@@ -3,6 +3,7 @@ import { KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, View } f
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Icon, Input, Text, TopBar } from '@/components';
 import { useAppConfig } from '@/api/queries';
+import { useT } from '@/i18n';
 import { t } from '@/theme';
 import { ErrorNotice } from './CheckoutFooter';
 import type { useCheckout } from './useCheckout';
@@ -28,6 +29,7 @@ export function OtpSheet({
   onSubmit: (code: string) => void;
   onCancel: () => void;
 }) {
+  const { t: tr } = useT('booking');
   const config = useAppConfig();
   const [code, setCode] = useState('');
 
@@ -47,20 +49,20 @@ export function OtpSheet({
     >
       <SafeAreaView style={styles.safe} edges={Platform.OS === 'ios' ? [] : ['top', 'bottom']}>
         <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-          <TopBar title="3-D Secure" actions={[{ icon: 'x', label: 'Ödənişi dayandır', onPress: onCancel }]} />
+          <TopBar title="3-D Secure" actions={[{ icon: 'x', label: tr('otp.stop'), onPress: onCancel }]} />
           <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
             <View style={styles.icon}>
               <Icon name="lock" size={28} color={t.colors.green900} />
             </View>
             <Text variant="titleLg" center>
-              Bankın təsdiq kodu
+              {tr('otp.title')}
             </Text>
             <Text variant="body" color="ink2" center>
-              Bankınız ödənişi təsdiqləmək üçün 6 rəqəmli kod göndərdi. Kodu daxil edin.
+              {tr('otp.message')}
             </Text>
 
             <Input
-              accessibilityLabel="Təsdiq kodu"
+              accessibilityLabel={tr('otp.codeA11y')}
               placeholder="••••••"
               keyboardType="number-pad"
               textContentType="oneTimeCode"
@@ -72,21 +74,21 @@ export function OtpSheet({
               style={styles.codeInput}
             />
 
-            {wrong ? <ErrorNotice message="Kod yanlışdır — yenidən yoxlayın" /> : null}
+            {wrong ? <ErrorNotice message={tr('otp.wrong')} /> : null}
             {config.data?.payments.isMock ? (
               <Text variant="caption" color="muted" center>
-                Test kodu: 123456
+                {tr('otp.testCode')}
               </Text>
             ) : null}
 
             <Button
-              label="Təsdiqlə"
+              label={tr('otp.confirm')}
               onPress={() => onSubmit(code)}
               disabled={!ready}
               loading={busy}
               style={styles.cta}
             />
-            <Button label="Ləğv et" variant="ghost" onPress={onCancel} disabled={busy} style={styles.cta} />
+            <Button label={tr('shared.cancel')} variant="ghost" onPress={onCancel} disabled={busy} style={styles.cta} />
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>

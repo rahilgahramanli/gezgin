@@ -2,12 +2,13 @@ import { useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
 import { Button, Card, EmptyState, Icon, Loading, Photo, Pill, Screen, Text, TopBar } from '@/components';
 import { useBooking, useCancelBooking, useTicket, type Booking } from '@/api/hooks/booking';
+import { useT } from '@/i18n';
 import { bakuDate, bakuTime } from '@/lib/time';
 import { t } from '@/theme';
 import type { AppScreenProps } from '@/navigation/types';
 import {
-  CheckoutFooter, CheckoutOtp, ErrorNotice, PAYMENT_STATUS, PaymentPicker, PriceRow, bookingStatus, errorText,
-  guestsLabel, isPayable, refundPreview, timeLeftLabel, useCheckout,
+  CheckoutFooter, CheckoutOtp, ErrorNotice, PaymentPicker, PriceRow, bookingStatus, errorText,
+  guestsLabel, isPayable, paymentStatusLabel, refundPreview, timeLeftLabel, useCheckout,
 } from './parts';
 
 /**
@@ -17,18 +18,19 @@ import {
  */
 export function BookingDetailScreen({ route, navigation }: AppScreenProps<'BookingDetail'>) {
   const { publicId } = route.params;
+  const { t: tr } = useT('booking');
   const booking = useBooking(publicId);
 
-  if (booking.isLoading) return <Loading label="Yüklənir…" />;
+  if (booking.isLoading) return <Loading label={tr('common:states.loading')} />;
   if (!booking.data) {
     return (
       <Screen padded={false}>
-        <TopBar title="Rezervasiya" onBack={navigation.goBack} />
+        <TopBar title={tr('shared.title')} onBack={navigation.goBack} />
         <EmptyState
           icon="info"
-          title="Rezervasiya açılmadı"
+          title={tr('detail.notOpened')}
           message={errorText(booking.error)}
-          action={<Button label="Yenidən yüklə" variant="soft" onPress={() => void booking.refetch()} />}
+          action={<Button label={tr('shared.reload')} variant="soft" onPress={() => void booking.refetch()} />}
         />
       </Screen>
     );
@@ -38,6 +40,7 @@ export function BookingDetailScreen({ route, navigation }: AppScreenProps<'Booki
 }
 
 function BookingDetailBody({ booking: b, onBack }: { booking: Booking; onBack: () => void }) {
+  const { t: tr } = useT('booking');
   const st = bookingStatus(b.status);
   const payable = isPayable(b);
   const hasTicket = b.status === 'confirmed' || b.status === 'completed';
@@ -48,21 +51,21 @@ function BookingDetailBody({ booking: b, onBack }: { booking: Booking; onBack: (
   const checkout = useCheckout({
     bookingId: b.publicId,
     // Detal və siyahılar `usePayBooking` tərəfindən invalidate olunur — status yerindəcə yenilənir
-    onConfirmed: () => Alert.alert('Ödəniş tamamlandı', 'Rezervasiya təsdiqləndi — bilet aşağıdadır.'),
+    onConfirmed: () => Alert.alert(tr('detail.paidTitle'), tr('detail.paidMessage')),
   });
 
   const confirmCancel = () => {
     const refund = refundPreview(b);
     const paid = b.payment && (b.payment.status === 'succeeded' || b.payment.status === 'partially_refunded');
     const refundLine = !paid
-      ? 'Ödəniş edilməyib — kartınızdan heç bir məbləğ çıxılmayıb.'
+      ? tr('detail.cancel.notPaid')
       : refund.amountAzn > 0
-        ? `${refund.amountAzn} AZN geri qaytarılacaq (${refund.percent}%).`
-        : 'Ləğv siyasətinə görə geri qaytarma yoxdur.';
-    Alert.alert('Rezervasiyanı ləğv etmək?', `${b.cancellation.label}\n\n${refundLine}`, [
-      { text: 'İmtina', style: 'cancel' },
+        ? tr('detail.cancel.willRefund', { amount: refund.amountAzn, percent: refund.percent })
+        : tr('detail.cancel.noRefund');
+    Alert.alert(tr('detail.cancel.confirmTitle'), `${b.cancellation.label}\n\n${refundLine}`, [
+      { text: tr('common:actions.cancel'), style: 'cancel' },
       {
-        text: 'Ləğv et',
+        text: tr('shared.cancel'),
         style: 'destructive',
         onPress: () =>
           cancel.mutate(
@@ -70,12 +73,12 @@ function BookingDetailBody({ booking: b, onBack }: { booking: Booking; onBack: (
             {
               onSuccess: (res) =>
                 Alert.alert(
-                  'Rezervasiya ləğv edildi',
+                  tr('detail.cancel.doneTitle'),
                   res.refund.refunded
-                    ? `${res.refund.amountAzn} AZN kartınıza qaytarıldı (${res.policy.refundPercent}%).`
+                    ? tr('detail.cancel.refunded', { amount: res.refund.amountAzn, percent: res.policy.refundPercent })
                     : paid
-                      ? 'Ləğv siyasətinə görə geri qaytarma yoxdur.'
-                      : 'Ödəniş edilmədiyi üçün geri qaytarma tələb olunmur.',
+                      ? tr('detail.cancel.noRefund')
+                      : tr('detail.cancel.noRefundNeeded'),
                 ),
             },
           ),
@@ -83,7 +86,7 @@ function BookingDetailBody({ booking: b, onBack }: { booking: Booking; onBack: (
     ]);
   };
 
-  const payHint = !cardId ? 'Ödəniş üçün kart seçin və ya əlavə edin' : null;
+  const payHint = !cardId ? tr('shared.hintPickCard') : null;
 
   return (
     <Screen
@@ -93,7 +96,7 @@ function BookingDetailBody({ booking: b, onBack }: { booking: Booking; onBack: (
           <CheckoutFooter
             error={checkout.error}
             hint={payHint}
-            label={`Ödənişi tamamla · ${b.pricing.totalAzn} AZN`}
+            label={tr('detail.completePayment', { total: b.pricing.totalAzn })}
             onPress={() => cardId && void checkout.payExisting(cardId)}
             loading={checkout.busy}
             disabled={!cardId}
@@ -101,7 +104,7 @@ function BookingDetailBody({ booking: b, onBack }: { booking: Booking; onBack: (
         ) : undefined
       }
     >
-      <TopBar title="Rezervasiya" onBack={onBack} />
+      <TopBar title={tr('shared.title')} onBack={onBack} />
 
       <View style={styles.body}>
         <Card padded style={styles.head}>
@@ -123,17 +126,23 @@ function BookingDetailBody({ booking: b, onBack }: { booking: Booking; onBack: (
           <View style={styles.rows}>
             {b.endAt ? (
               <>
-                <InfoRow label="Giriş" value={b.startAt ? `${bakuDate(b.startAt)}, ${bakuTime(b.startAt)}` : '—'} />
-                <InfoRow label="Çıxış" value={bakuDate(b.endAt)} />
+                <InfoRow
+                  label={tr('shared.checkIn')}
+                  value={b.startAt ? `${bakuDate(b.startAt)}, ${bakuTime(b.startAt)}` : '—'}
+                />
+                <InfoRow label={tr('shared.checkOut')} value={bakuDate(b.endAt)} />
               </>
             ) : (
               <>
-                <InfoRow label="Tarix" value={b.startAt ? bakuDate(b.startAt) : 'Tarixsiz'} />
-                <InfoRow label="Vaxt" value={b.startAt ? `${bakuTime(b.startAt)} (Bakı vaxtı)` : '—'} />
+                <InfoRow label={tr('shared.date')} value={b.startAt ? bakuDate(b.startAt) : tr('shared.noDate')} />
+                <InfoRow
+                  label={tr('shared.time')}
+                  value={b.startAt ? tr('shared.bakuTime', { time: bakuTime(b.startAt) }) : '—'}
+                />
               </>
             )}
-            <InfoRow label="Nəfər" value={guestsLabel(b)} />
-            <InfoRow label="Bron kodu" value={b.code} />
+            <InfoRow label={tr('shared.guests')} value={guestsLabel(b)} />
+            <InfoRow label={tr('shared.bookingCode')} value={b.code} />
           </View>
         </Card>
 
@@ -141,40 +150,40 @@ function BookingDetailBody({ booking: b, onBack }: { booking: Booking; onBack: (
         {hasTicket ? (
           <View>
             <Text variant="h2" style={styles.sectionTitle}>
-              Bilet
+              {tr('detail.ticket')}
             </Text>
             <Card padded style={styles.ticket}>
               {ticket.isLoading ? (
                 <Loading />
               ) : ticket.data ? (
                 <>
-                  <Text variant="caption">Bron kodu</Text>
+                  <Text variant="caption">{tr('shared.bookingCode')}</Text>
                   <Text
                     variant="titleXl"
                     color="green900"
                     style={styles.code}
-                    accessibilityLabel={`Bilet kodu ${ticket.data.code}`}
+                    accessibilityLabel={tr('detail.ticketCodeA11y', { code: ticket.data.code })}
                   >
                     {ticket.data.code}
                   </Text>
                   <View style={styles.qr}>
                     <Text variant="caption" color="muted">
-                      QR məlumatı
+                      {tr('detail.qrData')}
                     </Text>
                     <Text variant="small" selectable style={styles.mono}>
                       {ticket.data.qrPayload}
                     </Text>
                   </View>
                   <Text variant="caption" center>
-                    Girişdə bu kodu göstər
+                    {tr('detail.showAtEntrance')}
                   </Text>
                 </>
               ) : (
                 <View style={styles.ticketError}>
                   <Text variant="small" color="ink2" center>
-                    Bilet yüklənmədi — {errorText(ticket.error)}
+                    {tr('detail.ticketFailed', { error: errorText(ticket.error) })}
                   </Text>
-                  <Button label="Yenidən yüklə" size="sm" variant="soft" onPress={() => void ticket.refetch()} />
+                  <Button label={tr('shared.reload')} size="sm" variant="soft" onPress={() => void ticket.refetch()} />
                 </View>
               )}
             </Card>
@@ -183,7 +192,7 @@ function BookingDetailBody({ booking: b, onBack }: { booking: Booking; onBack: (
 
         <View>
           <Text variant="h2" style={styles.sectionTitle}>
-            Qiymət
+            {tr('shared.price')}
           </Text>
           <Card padded style={styles.price}>
             {b.pricing.lines.map((line) => (
@@ -194,38 +203,41 @@ function BookingDetailBody({ booking: b, onBack }: { booking: Booking; onBack: (
               />
             ))}
             {b.pricing.serviceFeeAzn > 0 ? (
-              <PriceRow label="Xidmət haqqı" value={`${b.pricing.serviceFeeAzn} AZN`} />
+              <PriceRow label={tr('shared.serviceFee')} value={`${b.pricing.serviceFeeAzn} AZN`} />
             ) : null}
             <View style={styles.total}>
-              <PriceRow label="Cəmi" value={`${b.pricing.totalAzn} AZN`} strong />
+              <PriceRow label={tr('shared.total')} value={`${b.pricing.totalAzn} AZN`} strong />
             </View>
           </Card>
         </View>
 
         <View>
           <Text variant="h2" style={styles.sectionTitle}>
-            Ödəniş
+            {tr('detail.payment')}
           </Text>
           <Card padded style={styles.rows}>
             {b.payment ? (
               <>
-                <InfoRow label="Status" value={PAYMENT_STATUS[b.payment.status] ?? b.payment.status} />
-                <InfoRow label="Məbləğ" value={`${b.payment.amountAzn} AZN`} />
+                <InfoRow label={tr('detail.status')} value={paymentStatusLabel(b.payment.status)} />
+                <InfoRow label={tr('detail.amount')} value={`${b.payment.amountAzn} AZN`} />
                 {b.payment.refundedAzn > 0 ? (
-                  <InfoRow label="Geri qaytarılıb" value={`${b.payment.refundedAzn} AZN`} />
+                  <InfoRow label={tr('detail.refunded')} value={`${b.payment.refundedAzn} AZN`} />
                 ) : null}
                 {b.payment.paidAt ? (
-                  <InfoRow label="Ödəniş tarixi" value={`${bakuDate(b.payment.paidAt)}, ${bakuTime(b.payment.paidAt)}`} />
+                  <InfoRow
+                    label={tr('detail.paidAt')}
+                    value={`${bakuDate(b.payment.paidAt)}, ${bakuTime(b.payment.paidAt)}`}
+                  />
                 ) : null}
                 {b.payment.status === 'failed' && b.payment.failureMessage ? (
                   <Text variant="small" color="danger">
-                    Son cəhd: {b.payment.failureMessage}
+                    {tr('detail.lastAttempt', { message: b.payment.failureMessage })}
                   </Text>
                 ) : null}
               </>
             ) : (
               <Text variant="small" color="ink2">
-                Ödəniş hələ edilməyib.
+                {tr('detail.notPaidYet')}
               </Text>
             )}
           </Card>
@@ -234,10 +246,10 @@ function BookingDetailBody({ booking: b, onBack }: { booking: Booking; onBack: (
         {payable ? (
           <View>
             <Text variant="h2" style={styles.sectionTitle}>
-              Ödəniş üsulu
+              {tr('shared.paymentMethod')}
             </Text>
             <Text variant="caption" style={styles.payNote}>
-              Ödənilməmiş rezervasiya bir müddətdən sonra avtomatik ləğv olunur və yer boşalır.
+              {tr('detail.payNote')}
             </Text>
             <PaymentPicker selected={cardId} onSelect={setCardId} />
           </View>
@@ -246,14 +258,17 @@ function BookingDetailBody({ booking: b, onBack }: { booking: Booking; onBack: (
         {/* Ləğv siyasəti — serverdən, başlanğıca qalan vaxta görə */}
         <View>
           <Text variant="h2" style={styles.sectionTitle}>
-            Ləğv siyasəti
+            {tr('detail.policy')}
           </Text>
           <Card padded style={styles.policy}>
             <Icon name="info" size={20} color={t.colors.brown700} />
             <View style={styles.flex}>
               <Text variant="body">{b.cancellation.label}</Text>
               <Text variant="caption">
-                {timeLeftLabel(b.cancellation.hoursLeft)} · geri qaytarma {b.cancellation.refundPercent}%
+                {tr('detail.policyRefund', {
+                  timeLeft: timeLeftLabel(b.cancellation.hoursLeft),
+                  percent: b.cancellation.refundPercent,
+                })}
               </Text>
             </View>
           </Card>
@@ -265,7 +280,7 @@ function BookingDetailBody({ booking: b, onBack }: { booking: Booking; onBack: (
 
         {b.cancellation.canCancel ? (
           <Button
-            label="Rezervasiyanı ləğv et"
+            label={tr('detail.cancelBooking')}
             variant="danger"
             onPress={confirmCancel}
             loading={cancel.isPending}

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { Button, Card, Icon, Loading, Pill, Text } from '@/components';
 import { usePaymentMethods, type PaymentMethod } from '@/api/hooks/booking';
+import { useT } from '@/i18n';
 import { cardTitle, expiryLabel } from '@/lib/card';
 import { t } from '@/theme';
 import { AddCardSheet } from './AddCardSheet';
@@ -21,6 +22,7 @@ export function PaymentPicker({
   selected: string | null;
   onSelect: (publicId: string | null) => void;
 }) {
+  const { t: tr } = useT('booking');
   const methods = usePaymentMethods();
   const [adding, setAdding] = useState(false);
 
@@ -41,9 +43,9 @@ export function PaymentPicker({
         <Card padded style={styles.notice}>
           <Icon name="info" size={20} color={t.colors.danger} />
           <Text variant="small" color="ink2" style={styles.flex}>
-            Kartlar yüklənmədi.
+            {tr('picker.loadFailed')}
           </Text>
-          <Button label="Yenidən yüklə" size="xs" variant="soft" onPress={() => void methods.refetch()} />
+          <Button label={tr('shared.reload')} size="xs" variant="soft" onPress={() => void methods.refetch()} />
         </Card>
       ) : methods.data?.length ? (
         methods.data.map((m) => (
@@ -53,13 +55,13 @@ export function PaymentPicker({
         <Card padded style={styles.notice}>
           <Icon name="info" size={20} color={t.colors.brown700} />
           <Text variant="small" color="ink2" style={styles.flex}>
-            Saxlanmış kart yoxdur. Ödəniş üçün bank kartı əlavə edin.
+            {tr('picker.empty')}
           </Text>
         </Card>
       )}
 
       <Button
-        label="Kart əlavə et"
+        label={tr('cards.add')}
         variant="outline"
         size="sm"
         left={<Icon name="plus" size={16} color={t.colors.green900} />}
@@ -72,6 +74,7 @@ export function PaymentPicker({
 }
 
 function CardOption({ method, active, onPress }: { method: PaymentMethod; active: boolean; onPress: () => void }) {
+  const { t: tr } = useT('booking');
   const title = cardTitle(method);
   return (
     <Pressable
@@ -86,11 +89,11 @@ function CardOption({ method, active, onPress }: { method: PaymentMethod; active
         <View style={styles.flex}>
           <Text variant="h3">{title}</Text>
           <Text variant="caption">
-            {method.isExpired ? 'Müddəti bitib' : `Bitmə tarixi ${expiryLabel(method)}`}
+            {method.isExpired ? tr('cards.expired') : tr('cards.expires', { date: expiryLabel(method) })}
             {method.holderName ? ` · ${method.holderName}` : ''}
           </Text>
         </View>
-        {method.isDefault ? <Pill label="Əsas" tone="green" /> : null}
+        {method.isDefault ? <Pill label={tr('cards.default')} tone="green" /> : null}
       </Card>
     </Pressable>
   );
