@@ -93,8 +93,11 @@ export function tp(key: string, count: number, options: Record<string, unknown> 
   const k = i18n.exists(specific) ? specific : `${key}_other`;
   // `count` birbaşa verilsə i18next öz cəm məntiqini (Intl.PluralRules) işə salır —
   // formanı artıq seçmişik, ona görə say yalnız mətnə qoyulur
-  const replace = { ...((options.replace as Record<string, unknown> | undefined) ?? {}), count };
-  return i18n.t(k, { ...options, replace });
+  // `replace` verilən kimi i18next yuxarı səviyyəli dəyişənlərə baxmır — `tp(k, n, { region })`
+  // da işləsin deyə hamısı `replace`-ə yığılır
+  const { replace: extra, ...rest } = options;
+  const replace = { ...rest, ...((extra as Record<string, unknown> | undefined) ?? {}), count };
+  return i18n.t(k, { ...rest, replace });
 }
 
 /**

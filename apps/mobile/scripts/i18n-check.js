@@ -83,10 +83,11 @@ if (litIdx !== -1) {
         return;
       }
       if (trimmed.startsWith('//') || trimmed.startsWith('*')) return;
+      if (line.includes('i18n-ignore')) return;
       const code = line.replace(/\/\/.*$/, '').replace(/\{\/\*.*?\*\/\}/g, '');
-      // sətir literalı və ya JSX mətni içində azərbaycanca hərf
-      const strings = code.match(/'[^']*'|"[^"]*"|`[^`]*`|>[^<>{}]+</g) ?? [];
-      if (strings.some((s) => AZ.test(s))) report(`${path.relative(ROOT, file)}:${i + 1}: tərcüməsiz mətn: ${trimmed.slice(0, 90)}`);
+      // Identifikatorlar ASCII-dir — kod sətrində istənilən azərbaycanca hərf tərcüməsiz
+      // mətndir: literal, ayrıca sətirdə JSX mətni və ya `{n} baxış` kimi qarışıq hal
+      if (AZ.test(code)) report(`${path.relative(ROOT, file)}:${i + 1}: tərcüməsiz mətn: ${trimmed.slice(0, 90)}`);
     });
   }
 }
