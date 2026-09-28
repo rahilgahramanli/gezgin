@@ -10,6 +10,7 @@ import { durationLabel } from '@/lib/labels';
 import { clockTime, dayLabel, isSameDay, timeAgo } from '@/lib/time';
 import { t } from '@/theme';
 import { alertError } from '@/lib/errors';
+import { useT } from '@/i18n';
 import type { AppScreenProps } from '@/navigation/types';
 
 /** Ardıcıl mesajlar qruplaşır — saat yalnız qrupun sonuncusunda görünür. */
@@ -23,6 +24,7 @@ const TYPING_TTL_MS = 4000;
 /** Ekran 09 — söhbət. Mesajlar HTTP ilə gedir, socket ilə canlı gəlir. */
 export function ChatScreen({ route, navigation }: AppScreenProps<'Chat'>) {
   const { publicId } = route.params;
+  const { t: tr } = useT('social');
   const insets = useSafeAreaInsets();
   const conv = useConversation(publicId);
   const messages = useMessages(publicId);
@@ -81,7 +83,7 @@ export function ChatScreen({ route, navigation }: AppScreenProps<'Chat'>) {
         // Mətn itmir və səbəb göstərilir — əvvəl səssizcə geri qayıdırdı
         onError: (e) => {
           setText(body);
-          alertError(e, 'Mesaj göndərilmədi');
+          alertError(e, tr('chat.sendFailed'));
         },
       },
     );
@@ -91,7 +93,13 @@ export function ChatScreen({ route, navigation }: AppScreenProps<'Chat'>) {
   const status = other
     ? [
         other.isLocalExpert ? 'Local Expert' : null,
-        typing ? 'yazır…' : other.isOnline ? 'onlayn' : other.lastActiveAt ? `son aktivlik ${timeAgo(other.lastActiveAt)}` : null,
+        typing
+          ? tr('chat.typing')
+          : other.isOnline
+            ? tr('chat.online')
+            : other.lastActiveAt
+              ? tr('chat.lastActive', { time: timeAgo(other.lastActiveAt) })
+              : null,
       ]
         .filter(Boolean)
         .join(' · ')
@@ -100,7 +108,7 @@ export function ChatScreen({ route, navigation }: AppScreenProps<'Chat'>) {
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.header}>
-        <Pressable onPress={navigation.goBack} hitSlop={10} accessibilityLabel="Geri">
+        <Pressable onPress={navigation.goBack} hitSlop={10} accessibilityLabel={tr('common:actions.back')}>
           <Icon name="chevronLeft" size={24} color={t.colors.ink} />
         </Pressable>
         <Pressable
@@ -108,10 +116,10 @@ export function ChatScreen({ route, navigation }: AppScreenProps<'Chat'>) {
           disabled={!other}
           onPress={() => other && navigation.navigate('UserProfile', { username: other.username })}
         >
-          <Avatar uri={other?.avatarUrl} size={40} name={other?.fullName ?? 'GEZGIN Dəstək'} />
+          <Avatar uri={other?.avatarUrl} size={40} name={other?.fullName ?? tr('chat.support')} />
           <View style={styles.flex}>
             <Text variant="h3" numberOfLines={1}>
-              {other?.fullName ?? 'GEZGIN Dəstək'}
+              {other?.fullName ?? tr('chat.support')}
             </Text>
             {status ? (
               <Text variant="caption" color={typing || other?.isOnline ? 'success' : 'muted'} numberOfLines={1}>
@@ -129,7 +137,7 @@ export function ChatScreen({ route, navigation }: AppScreenProps<'Chat'>) {
           // Inverted siyahıda boş vəziyyət tərsinə çevrilir — ona görə siyahıdan kənarda
           <View style={styles.empty}>
             <Text variant="small" color="muted" center>
-              Söhbətə salamla başla 👋
+              {tr('chat.empty')}
             </Text>
           </View>
         ) : (
@@ -179,13 +187,13 @@ export function ChatScreen({ route, navigation }: AppScreenProps<'Chat'>) {
         <View style={[styles.bar, { paddingBottom: Math.max(insets.bottom, t.spacing.md) }]}>
           {conv.data?.isBlocked ? (
             <Text variant="small" color="muted" center>
-              Bu istifadəçi ilə yazışma mümkün deyil.
+              {tr('chat.blocked')}
             </Text>
           ) : (
             <View style={styles.inputRow}>
               <TextInput
                 style={styles.input}
-                placeholder="Mesaj yaz…"
+                placeholder={tr('chat.placeholder')}
                 placeholderTextColor={t.colors.muted}
                 value={text}
                 onChangeText={onChange}
@@ -196,7 +204,7 @@ export function ChatScreen({ route, navigation }: AppScreenProps<'Chat'>) {
                 onPress={submit}
                 disabled={!text.trim()}
                 style={[styles.send, !text.trim() && styles.sendOff]}
-                accessibilityLabel="Göndər"
+                accessibilityLabel={tr('shared.send')}
               >
                 <Icon name="send" size={18} color="#fff" />
               </Pressable>
@@ -223,6 +231,7 @@ function Bubble({
   onBook: (slug: string) => void;
   onOpenRoute: (slug: string) => void;
 }) {
+  const { t: tr, tp: tpr } = useT('social');
   const payload = m.payload;
 
   let content: React.ReactNode;
@@ -233,7 +242,7 @@ function Bubble({
           <Photo uri={payload.imageUrl} style={styles.cardImage} radius={0} />
         </Pressable>
         <View style={styles.cardBody}>
-          <Pill label="Təcrübə" tone="brown" />
+          <Pill label={tr('shared.experience')} tone="brown" />
           <Text variant="h3">{payload.title}</Text>
           <Text variant="caption">
             {[durationLabel(payload.durationText), payload.region, payload.rating ? `★ ${payload.rating.toFixed(1)}` : null]
@@ -242,9 +251,9 @@ function Bubble({
           </Text>
           <View style={styles.cardFooter}>
             <Text variant="h3" color="green900">
-              {payload.priceAzn} AZN / nəfər
+              {tr('chat.perPerson', { price: payload.priceAzn })}
             </Text>
-            <Button label="Bron et" size="xs" onPress={() => onBook(payload.slug)} />
+            <Button label={tr('chat.book')} size="xs" onPress={() => onBook(payload.slug)} />
           </View>
         </View>
       </View>
@@ -254,10 +263,12 @@ function Bubble({
       <Pressable style={styles.cardBubble} onPress={() => onOpenRoute(payload.slug)}>
         <Photo uri={payload.imageUrl} style={styles.cardImage} radius={0} />
         <View style={styles.cardBody}>
-          <Pill label="Marşrut" tone="teal" />
+          <Pill label={tr('shared.route')} tone="teal" />
           <Text variant="h3">{payload.title}</Text>
           <Text variant="caption">
-            {payload.days} gün · {payload.stopCount} dayanacaq{payload.region ? ` · ${payload.region}` : ''}
+            {[tpr('common:time.days', payload.days), tpr('shared.stops', payload.stopCount), payload.region]
+              .filter(Boolean)
+              .join(' · ')}
           </Text>
         </View>
       </Pressable>
@@ -280,7 +291,7 @@ function Bubble({
       {showTime ? (
         <Text variant="caption" style={styles.time}>
           {clockTime(m.createdAt)}
-          {m.isMine && m.isRead ? ' · oxundu' : ''}
+          {m.isMine && m.isRead ? ` · ${tr('chat.read')}` : ''}
         </Text>
       ) : null}
     </View>

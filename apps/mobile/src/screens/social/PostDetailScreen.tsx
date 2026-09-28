@@ -10,12 +10,14 @@ import { ApiError } from '@/api/client';
 import { timeAgo } from '@/lib/time';
 import { t } from '@/theme';
 import { alertError, isGuestBlocked, promptGuestSignup } from '@/lib/errors';
+import { useT } from '@/i18n';
 import type { AppScreenProps } from '@/navigation/types';
 import { ShareSheet } from './ShareSheet';
 
 /** Ekran 06 — paylaşım detalı, məkan kartı və bir səviyyəli şərh ağacı. */
 export function PostDetailScreen({ route, navigation }: AppScreenProps<'PostDetail'>) {
   const { publicId, focusComment } = route.params;
+  const { t: tr, tp: tpr } = useT('social');
   const insets = useSafeAreaInsets();
   const post = usePost(publicId);
   const comments = useComments(publicId);
@@ -41,12 +43,12 @@ export function PostDetailScreen({ route, navigation }: AppScreenProps<'PostDeta
     return () => clearTimeout(timer);
   }, [focusComment]);
 
-  if (post.isLoading) return <Loading label="Yüklənir…" />;
+  if (post.isLoading) return <Loading label={tr('common:states.loading')} />;
   if (!post.data) {
     return (
       <SafeAreaView style={styles.safe} edges={['top']}>
         <TopBar onBack={navigation.goBack} />
-        <EmptyState title="Paylaşım tapılmadı" message="Silinmiş və ya yalnız izləyicilərə açıq ola bilər." />
+        <EmptyState title={tr('postDetail.notFoundTitle')} message={tr('postDetail.notFoundMessage')} />
       </SafeAreaView>
     );
   }
@@ -74,21 +76,25 @@ export function PostDetailScreen({ route, navigation }: AppScreenProps<'PostDeta
           scrollToNewComment.current = !replyTo;
         },
         onError: (e) => {
-          if (isGuestBlocked(e)) promptGuestSignup('Şərh yazmaq üçün hesab yaratmalısınız');
+          if (isGuestBlocked(e)) promptGuestSignup(tr('postDetail.commentGuest'));
         },
       },
     );
   };
 
   const confirmRemove = (c: PostComment) =>
-    Alert.alert('Şərhi sil', c.replies.length ? 'Cavabları da silinəcək.' : 'Bu şərh silinəcək.', [
-      { text: 'İmtina', style: 'cancel' },
-      {
-        text: 'Sil',
-        style: 'destructive',
-        onPress: () => remove.mutate(c.publicId, { onError: (e) => alertError(e, 'Şərh silinmədi') }),
-      },
-    ]);
+    Alert.alert(
+      tr('postDetail.deleteTitle'),
+      c.replies.length ? tr('postDetail.deleteWithReplies') : tr('postDetail.deleteMessage'),
+      [
+        { text: tr('common:actions.cancel'), style: 'cancel' },
+        {
+          text: tr('common:actions.delete'),
+          style: 'destructive',
+          onPress: () => remove.mutate(c.publicId, { onError: (e) => alertError(e, tr('postDetail.deleteFailed')) }),
+        },
+      ],
+    );
 
   const renderComment = (c: PostComment, isReply = false) => (
     <View key={c.publicId} style={[styles.comment, isReply && styles.reply]}>
@@ -108,21 +114,21 @@ export function PostDetailScreen({ route, navigation }: AppScreenProps<'PostDeta
         </Text>
         <View style={styles.commentActions}>
           <Text variant="caption" color="green900" style={styles.bold} onPress={() => reply(c)}>
-            Cavab yaz
+            {tr('postDetail.reply')}
           </Text>
-          {c.likeCount > 0 ? <Text variant="caption">{c.likeCount} bəyənmə</Text> : null}
+          {c.likeCount > 0 ? <Text variant="caption">{tpr('postDetail.likes', c.likeCount)}</Text> : null}
           {c.canDelete ? (
             <Text variant="caption" color="danger" onPress={() => confirmRemove(c)}>
-              Sil
+              {tr('common:actions.delete')}
             </Text>
           ) : null}
         </View>
       </View>
       <Pressable
         hitSlop={10}
-        accessibilityLabel={c.liked ? 'Şərh bəyənməsini geri al' : 'Şərhi bəyən'}
+        accessibilityLabel={c.liked ? tr('postDetail.unlikeComment') : tr('postDetail.likeComment')}
         onPress={() =>
-          likeComment.mutate({ publicId: c.publicId, like: !c.liked }, { onError: (e) => alertError(e, 'Bəyənmək alınmadı') })
+          likeComment.mutate({ publicId: c.publicId, like: !c.liked }, { onError: (e) => alertError(e, tr('common:feedback.likeFailed')) })
         }
       >
         <Icon name="heart" size={16} color={c.liked ? t.colors.danger : t.colors.muted} filled={c.liked} />
@@ -132,7 +138,7 @@ export function PostDetailScreen({ route, navigation }: AppScreenProps<'PostDeta
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
-      <TopBar title="Paylaşım" onBack={navigation.goBack} />
+      <TopBar title={tr('postDetail.title')} onBack={navigation.goBack} />
 
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView
@@ -148,10 +154,10 @@ export function PostDetailScreen({ route, navigation }: AppScreenProps<'PostDeta
           {!p.viewer.isMine ? (
             <View style={styles.followRow}>
               <Text variant="small" color="muted" style={styles.flex}>
-                {p.author.fullName} · Level {p.author.level}
+                {tr('postDetail.authorLevel', { name: p.author.fullName, level: p.author.level })}
               </Text>
               <Button
-                label={p.viewer.followsAuthor ? 'İzləyirsən' : 'İzlə'}
+                label={p.viewer.followsAuthor ? tr('shared.youFollow') : tr('shared.follow')}
                 size="xs"
                 variant={p.viewer.followsAuthor ? 'outline' : 'primary'}
                 loading={follow.isPending}
@@ -188,7 +194,7 @@ export function PostDetailScreen({ route, navigation }: AppScreenProps<'PostDeta
                 </Text>
               </View>
               <Text variant="small" color="green900" style={styles.bold}>
-                Bax
+                {tr('postDetail.view')}
               </Text>
             </Card>
           ) : null}
@@ -200,22 +206,22 @@ export function PostDetailScreen({ route, navigation }: AppScreenProps<'PostDeta
               </View>
               <View style={styles.flex}>
                 <Text variant="h3">{linkedRoute.title}</Text>
-                <Text variant="caption">{linkedRoute.days} günlük marşrut</Text>
+                <Text variant="caption">{tpr('postDetail.routeDays', linkedRoute.days)}</Text>
               </View>
               <Text variant="small" color="green900" style={styles.bold}>
-                Bax
+                {tr('postDetail.view')}
               </Text>
             </Card>
           ) : null}
 
           <Text variant="h2" style={styles.commentsTitle}>
-            Şərhlər ({p.counts.comments})
+            {tr('postDetail.comments', { n: p.counts.comments })}
           </Text>
           {comments.isLoading ? (
             <Loading />
           ) : list.length === 0 ? (
             <Text variant="small" color="muted">
-              İlk şərhi sən yaz.
+              {tr('postDetail.firstComment')}
             </Text>
           ) : (
             list.map((c) => (
@@ -227,7 +233,7 @@ export function PostDetailScreen({ route, navigation }: AppScreenProps<'PostDeta
           )}
           {comments.hasNextPage ? (
             <Button
-              label="Daha çox şərh"
+              label={tr('postDetail.moreComments')}
               variant="ghost"
               size="sm"
               loading={comments.isFetchingNextPage}
@@ -241,7 +247,7 @@ export function PostDetailScreen({ route, navigation }: AppScreenProps<'PostDeta
             <View style={styles.replying}>
               <Icon name="reply" size={14} color={t.colors.muted} />
               <Text variant="caption" style={styles.flex}>
-                {replyTo.name} istifadəçisinə cavab
+                {tr('postDetail.replyingTo', { name: replyTo.name })}
               </Text>
               <Pressable hitSlop={10} onPress={() => setReplyTo(null)}>
                 <Icon name="x" size={14} color={t.colors.muted} />
@@ -257,7 +263,7 @@ export function PostDetailScreen({ route, navigation }: AppScreenProps<'PostDeta
             <TextInput
               ref={input}
               style={styles.input}
-              placeholder="Şərh yaz…"
+              placeholder={tr('postDetail.placeholder')}
               placeholderTextColor={t.colors.muted}
               value={text}
               onChangeText={setText}
@@ -268,7 +274,7 @@ export function PostDetailScreen({ route, navigation }: AppScreenProps<'PostDeta
               onPress={submit}
               disabled={!text.trim() || add.isPending}
               style={[styles.send, (!text.trim() || add.isPending) && styles.sendOff]}
-              accessibilityLabel="Göndər"
+              accessibilityLabel={tr('shared.send')}
             >
               <Icon name="send" size={18} color="#fff" />
             </Pressable>

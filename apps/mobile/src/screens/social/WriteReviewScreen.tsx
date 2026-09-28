@@ -8,9 +8,9 @@ import { useMyReview, useWriteReview, type WrittenReview } from '@/api/hooks/soc
 import { PICKER_OPTIONS, uploadImage } from '@/api/upload';
 import { isGuestBlocked, promptGuestSignup } from '@/lib/errors';
 import { t } from '@/theme';
+import { useT } from '@/i18n';
 import type { AppScreenProps } from '@/navigation/types';
 
-const RATING_LABEL = ['', 'Pis', 'Orta', 'Yaxşı', 'Çox yaxşı', 'Möhtəşəm'];
 const MAX_BODY = 500;
 const MAX_PHOTOS = 6;
 
@@ -31,13 +31,14 @@ const TARGET_ICON: Record<AppScreenProps<'WriteReview'>['route']['params']['targ
  */
 export function WriteReviewScreen(props: AppScreenProps<'WriteReview'>) {
   const { targetType, target } = props.route.params;
+  const { t: tr } = useT('social');
   const mine = useMyReview(targetType, target);
 
   if (mine.isLoading) {
     return (
       <Screen padded={false} scroll={false}>
-        <TopBar title="Rəy yaz" onBack={props.navigation.goBack} />
-        <Loading label="Yüklənir…" />
+        <TopBar title={tr('review.title')} onBack={props.navigation.goBack} />
+        <Loading label={tr('common:states.loading')} />
       </Screen>
     );
   }
@@ -46,6 +47,7 @@ export function WriteReviewScreen(props: AppScreenProps<'WriteReview'>) {
 
 function ReviewForm({ route, navigation, initial }: AppScreenProps<'WriteReview'> & { initial: WrittenReview | null }) {
   const { targetType, target, name, subtitle } = route.params;
+  const { t: tr, tp: tpr } = useT('social');
   const write = useWriteReview();
 
   const [rating, setRating] = useState(initial?.rating ?? 0);
@@ -88,15 +90,15 @@ function ReviewForm({ route, navigation, initial }: AppScreenProps<'WriteReview'
       });
 
       const xp = res.rewards?.xpGained ?? 0;
-      const levelUp = res.rewards?.leveledUp ? ` Level ${res.rewards.levelAfter}-ə yüksəldin!` : '';
+      const levelUp = res.rewards?.leveledUp ? ` ${tr('shared.levelUp', { level: res.rewards.levelAfter })}` : '';
       Alert.alert(
-        existing ? 'Rəy yeniləndi' : 'Təşəkkürlər!',
+        existing ? tr('review.updatedTitle') : tr('review.thanksTitle'),
         xp > 0
-          ? `Rəyin üçün +${xp} XP qazandın.${levelUp}`
+          ? `${tr('review.xpGained', { xp })}${levelUp}`
           : existing
-            ? 'Dəyişikliklər yadda saxlanıldı.'
-            : `Rəyin paylaşıldı.${levelUp}`,
-        [{ text: 'Bağla', onPress: () => navigation.goBack() }],
+            ? tr('review.changesSaved')
+            : `${tr('review.shared')}${levelUp}`,
+        [{ text: tr('common:actions.close'), onPress: () => navigation.goBack() }],
       );
     } catch (e) {
       if (isGuestBlocked(e)) {
@@ -107,9 +109,9 @@ function ReviewForm({ route, navigation, initial }: AppScreenProps<'WriteReview'
         e instanceof ApiError && e.status === 409 ? (e.details as { publicId?: string } | undefined)?.publicId : undefined;
       if (conflictId) {
         setExisting(conflictId);
-        setError('Bura artıq rəy yazmısan — göndərsən, köhnə rəyin yenilənəcək.');
+        setError(tr('review.conflict'));
       } else {
-        setError(e instanceof ApiError ? e.message : 'Rəy göndərilmədi — yenidən cəhd edin');
+        setError(e instanceof ApiError ? e.message : tr('review.failed'));
       }
     } finally {
       setBusy(false);
@@ -122,7 +124,7 @@ function ReviewForm({ route, navigation, initial }: AppScreenProps<'WriteReview'
         padded={false}
         footer={
           <Button
-            label={existing ? 'Rəyi yenilə' : 'Rəyi göndər'}
+            label={existing ? tr('review.update') : tr('review.submit')}
             disabled={rating === 0}
             loading={busy}
             onPress={() => void submit()}
@@ -130,7 +132,7 @@ function ReviewForm({ route, navigation, initial }: AppScreenProps<'WriteReview'
           />
         }
       >
-        <TopBar title={initial ? 'Rəyi redaktə et' : 'Rəy yaz'} onBack={navigation.goBack} />
+        <TopBar title={initial ? tr('review.editTitle') : tr('review.title')} onBack={navigation.goBack} />
 
         <View style={styles.body}>
           <Card padded style={styles.target}>
@@ -139,18 +141,18 @@ function ReviewForm({ route, navigation, initial }: AppScreenProps<'WriteReview'
             </View>
             <View style={styles.flex}>
               <Text variant="h3">{name}</Text>
-              {subtitle ? <Text variant="caption">{subtitle}, Azərbaycan</Text> : null}
+              {subtitle ? <Text variant="caption">{tr('review.subtitleCountry', { subtitle })}</Text> : null}
             </View>
           </Card>
 
           {initial ? (
             <Text variant="small" color="brown700">
-              Bura artıq rəy yazmısan — dəyişiklikləri edib yenilə.
+              {tr('review.alreadyWritten')}
             </Text>
           ) : null}
 
           <View style={styles.center}>
-            <Text variant="h2">Səyahətin necə keçdi?</Text>
+            <Text variant="h2">{tr('review.howWasIt')}</Text>
             <View style={styles.stars}>
               {[1, 2, 3, 4, 5].map((n) => (
                 <Pressable
@@ -158,7 +160,7 @@ function ReviewForm({ route, navigation, initial }: AppScreenProps<'WriteReview'
                   onPress={() => setRating(n)}
                   hitSlop={6}
                   accessibilityRole="button"
-                  accessibilityLabel={`${n} ulduz`}
+                  accessibilityLabel={tpr('review.stars', n)}
                   accessibilityState={{ selected: n <= rating }}
                 >
                   <Icon name="star" size={38} color={n <= rating ? t.colors.star : t.colors.line} filled />
@@ -166,20 +168,26 @@ function ReviewForm({ route, navigation, initial }: AppScreenProps<'WriteReview'
               ))}
             </View>
             <Text variant="small" color="muted">
-              {RATING_LABEL[rating] || 'Ulduz seç'}
+              {rating >= 1 && rating <= 5 ? tr(`review.rating.${rating}`) : tr('review.pickStars')}
             </Text>
           </View>
 
           <View style={styles.tags}>
+            {/* Etiket kodla tərcümə olunur; tərcüməsi olmayan yeni kod paylaşılan azərbaycanca adla görünür */}
             {Object.entries(REVIEW_TAGS).map(([slug, label]) => (
-              <Chip key={slug} label={label as string} active={tags.includes(slug)} onPress={() => toggleTag(slug)} />
+              <Chip
+                key={slug}
+                label={tr(`review.tags.${slug}`, { defaultValue: label })}
+                active={tags.includes(slug)}
+                onPress={() => toggleTag(slug)}
+              />
             ))}
           </View>
 
           <View>
             <TextInput
               style={styles.input}
-              placeholder="Təəssüratlarını yaz — başqa gezginlərə kömək edəcək"
+              placeholder={tr('review.placeholder')}
               placeholderTextColor={t.colors.muted}
               value={body}
               onChangeText={setBody}
@@ -200,7 +208,7 @@ function ReviewForm({ route, navigation, initial }: AppScreenProps<'WriteReview'
                     <Photo key={`${p.url}-${i}`} uri={p.url} style={styles.photo} radius={t.radius.md} />
                   ))}
                 </ScrollView>
-                <Text variant="caption">Fotolar redaktədə dəyişdirilmir.</Text>
+                <Text variant="caption">{tr('review.photosLocked')}</Text>
               </View>
             ) : null
           ) : (
@@ -212,7 +220,7 @@ function ReviewForm({ route, navigation, initial }: AppScreenProps<'WriteReview'
                     style={styles.remove}
                     hitSlop={8}
                     accessibilityRole="button"
-                    accessibilityLabel="Fotonu sil"
+                    accessibilityLabel={tr('shared.removePhoto')}
                     onPress={() => removePhoto(i)}
                   >
                     <Icon name="x" size={12} color="#fff" strokeWidth={3} />
@@ -224,11 +232,11 @@ function ReviewForm({ route, navigation, initial }: AppScreenProps<'WriteReview'
                   style={[styles.photo, styles.addPhoto]}
                   onPress={() => void pickPhotos()}
                   accessibilityRole="button"
-                  accessibilityLabel="Foto əlavə et"
+                  accessibilityLabel={tr('review.addPhoto')}
                 >
                   <Icon name="camera" size={22} color={t.colors.green900} />
                   <Text variant="caption" color="green900">
-                    Foto əlavə et
+                    {tr('review.addPhoto')}
                   </Text>
                 </Pressable>
               ) : null}
@@ -238,7 +246,7 @@ function ReviewForm({ route, navigation, initial }: AppScreenProps<'WriteReview'
           <Card padded style={styles.xp}>
             <Icon name="sparkle" size={18} color={t.colors.brown700} />
             <Text variant="small" color="brown700" style={styles.flex}>
-              {existing ? 'Redaktə XP vermir — XP ilk rəy üçündür' : `Rəyin üçün +${XP_RULES.review_written.xp} XP`}
+              {existing ? tr('review.editNoXp') : tr('review.xpHint', { xp: XP_RULES.review_written.xp })}
             </Text>
           </Card>
 

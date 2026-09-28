@@ -8,6 +8,7 @@ import { socialKeys, useDeleteStory, useUserStories, useViewStory } from '@/api/
 import { useUser } from '@/store/auth';
 import { alertError } from '@/lib/errors';
 import { timeAgo } from '@/lib/time';
+import { useT } from '@/i18n';
 import type { AppScreenProps } from '@/navigation/types';
 
 /** Hər hekayə bu qədər göstərilir, sonra növbətiyə keçir. */
@@ -16,6 +17,7 @@ const STORY_MS = 5000;
 /** Ekran 40 — hekayə baxışı: yuxarıda tərəqqi zolaqları, sağa/sola toxunuş. */
 export function StoryViewerScreen({ route, navigation }: AppScreenProps<'StoryViewer'>) {
   const { username } = route.params;
+  const { t: tr, tp: tpr } = useT('social');
   const qc = useQueryClient();
   const stories = useUserStories(username);
   const { mutate: markViewed } = useViewStory();
@@ -67,10 +69,10 @@ export function StoryViewerScreen({ route, navigation }: AppScreenProps<'StoryVi
   const confirmDelete = () => {
     if (!current) return;
     setPaused(true);
-    Alert.alert('Hekayəni sil', 'Bu hekayə həmişəlik silinəcək.', [
-      { text: 'İmtina', style: 'cancel', onPress: () => setPaused(false) },
+    Alert.alert(tr('story.delete'), tr('story.deleteMessage'), [
+      { text: tr('common:actions.cancel'), style: 'cancel', onPress: () => setPaused(false) },
       {
-        text: 'Sil',
+        text: tr('common:actions.delete'),
         style: 'destructive',
         onPress: () =>
           removeStory.mutate(current.publicId, {
@@ -84,23 +86,23 @@ export function StoryViewerScreen({ route, navigation }: AppScreenProps<'StoryVi
             },
             onError: (e) => {
               setPaused(false);
-              alertError(e, 'Hekayə silinmədi');
+              alertError(e, tr('story.deleteFailed'));
             },
           }),
       },
     ]);
   };
 
-  if (stories.isLoading) return <Loading label="Yüklənir…" />;
+  if (stories.isLoading) return <Loading label={tr('common:states.loading')} />;
 
   if (!current || !stories.data) {
     return (
       <SafeAreaView style={styles.safe}>
         <View style={styles.empty}>
           <Text variant="h3" color="paper">
-            Aktiv hekayə yoxdur
+            {tr('story.empty')}
           </Text>
-          <Button label="Bağla" variant="light" size="sm" onPress={close} />
+          <Button label={tr('common:actions.close')} variant="light" size="sm" onPress={close} />
         </View>
       </SafeAreaView>
     );
@@ -117,8 +119,8 @@ export function StoryViewerScreen({ route, navigation }: AppScreenProps<'StoryVi
 
       {/* Sol üçdə bir — geri, qalan — irəli */}
       <View style={styles.taps}>
-        <Pressable style={styles.tapLeft} onPress={prev} accessibilityLabel="Əvvəlki" />
-        <Pressable style={styles.tapRight} onPress={next} accessibilityLabel="Növbəti" />
+        <Pressable style={styles.tapLeft} onPress={prev} accessibilityLabel={tr('story.prev')} />
+        <Pressable style={styles.tapRight} onPress={next} accessibilityLabel={tr('story.next')} />
       </View>
 
       <SafeAreaView style={styles.overlay} edges={['top', 'bottom']} pointerEvents="box-none">
@@ -155,7 +157,7 @@ export function StoryViewerScreen({ route, navigation }: AppScreenProps<'StoryVi
               {timeAgo(current.createdAt)}
             </Text>
           </Pressable>
-          <Pressable onPress={close} hitSlop={12} accessibilityLabel="Bağla">
+          <Pressable onPress={close} hitSlop={12} accessibilityLabel={tr('common:actions.close')}>
             <Icon name="x" size={26} color="#fff" />
           </Pressable>
         </View>
@@ -186,14 +188,14 @@ export function StoryViewerScreen({ route, navigation }: AppScreenProps<'StoryVi
                 <>
                   <Icon name="eye" size={16} color="#fff" />
                   <Text variant="small" color="paper" style={styles.flexText}>
-                    {current.viewCount} baxış
+                    {tpr('story.views', current.viewCount)}
                   </Text>
                 </>
               ) : (
                 <View style={styles.flexText} />
               )}
               {isMine ? (
-                <Pressable onPress={confirmDelete} hitSlop={12} accessibilityRole="button" accessibilityLabel="Hekayəni sil">
+                <Pressable onPress={confirmDelete} hitSlop={12} accessibilityRole="button" accessibilityLabel={tr('story.delete')}>
                   <Icon name="trash" size={20} color="#fff" />
                 </Pressable>
               ) : null}

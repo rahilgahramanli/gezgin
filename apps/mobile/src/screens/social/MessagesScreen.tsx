@@ -7,28 +7,26 @@ import { useUser } from '@/store/auth';
 import { useConversations, type ConversationFilter, type ConversationItem } from '@/api/hooks/social';
 import { chatTime } from '@/lib/time';
 import { t } from '@/theme';
+import { useT } from '@/i18n';
 import type { AppScreenProps } from '@/navigation/types';
 
-const FILTERS: Array<{ key: ConversationFilter; label: string }> = [
-  { key: 'all', label: 'Hamısı' },
-  { key: 'experts', label: 'Local Expert' },
-  { key: 'business', label: 'Biznes' },
-  { key: 'travelers', label: 'Gezginlər' },
-];
+/** Etiketlər render zamanı `social:messages.filters.<key>`-dən gəlir. */
+const FILTERS: ConversationFilter[] = ['all', 'experts', 'business', 'travelers'];
 
 /** Ekran 08 — söhbətlər, son mesaja görə. */
 export function MessagesScreen({ navigation }: AppScreenProps<'Messages'>) {
+  const { t: tr } = useT('social');
   const isGuest = useUser()?.isGuest ?? false;
   const [filter, setFilter] = useState<ConversationFilter>('all');
   const list = useConversations(filter);
 
   return (
     <Screen padded={false} scroll={false}>
-      <TopBar title="Mesajlar" onBack={navigation.goBack} />
+      <TopBar title={tr('messages.title')} onBack={navigation.goBack} />
 
       <View style={styles.chips}>
-        {FILTERS.map((f) => (
-          <Chip key={f.key} label={f.label} active={filter === f.key} onPress={() => setFilter(f.key)} />
+        {FILTERS.map((key) => (
+          <Chip key={key} label={tr(`messages.filters.${key}`)} active={filter === key} onPress={() => setFilter(key)} />
         ))}
       </View>
 
@@ -46,14 +44,14 @@ export function MessagesScreen({ navigation }: AppScreenProps<'Messages'>) {
             isGuest ? (
               <GuestEmpty
                 icon="chat"
-                title="Mesajlaşma hesab tələb edir"
-                message="Gezginlərə və Local Expert-lərə yazmaq üçün hesab yarat."
+                title={tr('messages.guestTitle')}
+                message={tr('messages.guestMessage')}
               />
             ) : (
             <EmptyState
               icon="chat"
-              title="Yazışma yoxdur"
-              message='Gezgin və ya Local Expert profilində "Mesaj" düyməsinə toxun.'
+              title={tr('messages.emptyTitle')}
+              message={tr('messages.emptyMessage')}
             />
             )
           }

@@ -1,1 +1,259 @@
-{}
+{
+  "shared": {
+    "level": "Level {{level}}",
+    "levelUp": "Level {{level}}-ə yüksəldin!",
+    "follow": "İzlə",
+    "youFollow": "İzləyirsən",
+    "send": "Göndər",
+    "sendFailed": "Göndərilmədi",
+    "tryAgain": "Yenidən cəhd edin",
+    "thanks": "Təşəkkürlər",
+    "reportSent": "Şikayətiniz moderatorlara göndərildi.",
+    "whyReport": "Niyə şikayət edirsən?",
+    "report": "Şikayət et",
+    "cancel": "Ləğv et",
+    "removePhoto": "Fotonu sil",
+    "all": "Hamısı",
+    "story": "Hekayə",
+    "route": "Marşrut",
+    "experience": "Təcrübə",
+    "stops_other": "{{count}} dayanacaq"
+  },
+  "createHub": {
+    "title": "Nə yaradaq?",
+    "subtitle": "Səyahətini paylaş, planla, kəşf et.",
+    "post": {
+      "title": "Paylaşım et",
+      "hint": "Foto və hekayəni bölüş · +300 XP"
+    },
+    "story": {
+      "hint": "24 saat görünən an"
+    },
+    "trip": {
+      "title": "Yeni səyahət",
+      "hint": "Tarix seç, məkanları plana yığ"
+    },
+    "route": {
+      "title": "Marşrut qur",
+      "hint": "Gün-gün dayanacaqlar · +350 XP"
+    },
+    "checkin": {
+      "title": "Check-in et",
+      "hint": "Olduğun məkanı qeyd et, XP qazan"
+    }
+  },
+  "discover": {
+    "title": "Lent",
+    "tabs": {
+      "for_you": "Sənin üçün",
+      "following": "İzlədiklərin",
+      "nearby": "Yaxınlıqda"
+    },
+    "notifications": "Bildirişlər",
+    "messages": "Mesajlar",
+    "unreadA11y": "{{label}}, oxunmamış var",
+    "you": "Sən",
+    "locating": "Mövqe müəyyən edilir…",
+    "whereTitle": "Hardasan?",
+    "whereMessage": "Yaxınlıqdakı paylaşımları göstərmək üçün mövqe icazəsi lazımdır.",
+    "loadFailed": "Lent yüklənmədi",
+    "followingEmptyTitle": "Hələ kimsəni izləmirsən",
+    "followingEmptyMessage": "İzlədiyin gezginlərin paylaşımları burada toplanacaq.",
+    "findTravellers": "Gezginləri kəşf et",
+    "nearbyEmptyTitle": "Bu ətrafda sakitlikdir",
+    "nearbyEmptyMessage": "50 km radiusda paylaşım yoxdur — başqa bölgəyə bax.",
+    "emptyTitle": "Lent hələ boşdur",
+    "emptyMessage": "İlk paylaşımı sən et.",
+    "popularExperiences": "Populyar təcrübələr"
+  },
+  "postDetail": {
+    "title": "Paylaşım",
+    "notFoundTitle": "Paylaşım tapılmadı",
+    "notFoundMessage": "Silinmiş və ya yalnız izləyicilərə açıq ola bilər.",
+    "commentGuest": "Şərh yazmaq üçün hesab yaratmalısınız",
+    "deleteTitle": "Şərhi sil",
+    "deleteWithReplies": "Cavabları da silinəcək.",
+    "deleteMessage": "Bu şərh silinəcək.",
+    "deleteFailed": "Şərh silinmədi",
+    "reply": "Cavab yaz",
+    "likes_other": "{{count}} bəyənmə",
+    "likeComment": "Şərhi bəyən",
+    "unlikeComment": "Şərh bəyənməsini geri al",
+    "authorLevel": "{{name}} · Level {{level}}",
+    "view": "Bax",
+    "routeDays_other": "{{count}} günlük marşrut",
+    "comments": "Şərhlər ({{n}})",
+    "firstComment": "İlk şərhi sən yaz.",
+    "moreComments": "Daha çox şərh",
+    "replyingTo": "{{name}} istifadəçisinə cavab",
+    "placeholder": "Şərh yaz…"
+  },
+  "shareSheet": {
+    "messageBody": "{{name}} paylaşımı: {{url}}",
+    "sentTitle": "Göndərildi",
+    "sentMessage": "{{name}} ilə paylaşıldı",
+    "externalMessage": "{{name}} GEZGIN-də paylaşdı: {{url}}",
+    "reportDuplicate": "Bu paylaşımı artıq şikayət etmisiniz — baxılır.",
+    "deletePost": "Paylaşımı sil",
+    "deleteMessage": "Bu paylaşım həmişəlik silinəcək.",
+    "quickSend": "Sürətli göndər",
+    "sending": "Göndərilir…",
+    "otherApps": "Digər tətbiqlər və linki kopyala"
+  },
+  "story": {
+    "delete": "Hekayəni sil",
+    "deleteMessage": "Bu hekayə həmişəlik silinəcək.",
+    "deleteFailed": "Hekayə silinmədi",
+    "empty": "Aktiv hekayə yoxdur",
+    "prev": "Əvvəlki",
+    "next": "Növbəti",
+    "views_other": "{{count}} baxış"
+  },
+  "createPost": {
+    "visibility": {
+      "public": "Hamı",
+      "followers": "İzləyicilər",
+      "private": "Yalnız mən"
+    },
+    "galleryFailed": "Qalereya açılmadı",
+    "storySharedTitle": "Hekayə paylaşıldı",
+    "storySharedMessage": "24 saat ərzində izləyicilərin görəcək.",
+    "thanks": "Paylaşım üçün təşəkkürlər",
+    "guest": "Paylaşım etmək üçün hesab yaratmalısınız",
+    "failed": "Paylaşım alınmadı — yenidən cəhd edin",
+    "storyVisible": "24 saat görünəcək",
+    "storyPlaceholder": "Başlıq əlavə et…",
+    "postPlaceholder": "Nə kəşf etdin? #heşteq əlavə et",
+    "morePhotos": "Daha çox foto",
+    "photo": "Foto",
+    "location": "Yerləşmə",
+    "linkRoute": "Marşruta bağla",
+    "xpWithPhotos": "Bu paylaşım üçün +{{xp}} XP qazanacaqsan",
+    "xpAddPhoto": "Foto əlavə et — +{{xp}} XP qazan",
+    "searchPlace": "Məkan axtar",
+    "searchRoute": "Marşrut axtar",
+    "noResults": "Nəticə yoxdur"
+  },
+  "review": {
+    "title": "Rəy yaz",
+    "editTitle": "Rəyi redaktə et",
+    "rating": {
+      "1": "Pis",
+      "2": "Orta",
+      "3": "Yaxşı",
+      "4": "Çox yaxşı",
+      "5": "Möhtəşəm"
+    },
+    "pickStars": "Ulduz seç",
+    "stars_other": "{{count}} ulduz",
+    "updatedTitle": "Rəy yeniləndi",
+    "thanksTitle": "Təşəkkürlər!",
+    "xpGained": "Rəyin üçün +{{xp}} XP qazandın.",
+    "changesSaved": "Dəyişikliklər yadda saxlanıldı.",
+    "shared": "Rəyin paylaşıldı.",
+    "conflict": "Bura artıq rəy yazmısan — göndərsən, köhnə rəyin yenilənəcək.",
+    "failed": "Rəy göndərilmədi — yenidən cəhd edin",
+    "update": "Rəyi yenilə",
+    "submit": "Rəyi göndər",
+    "subtitleCountry": "{{subtitle}}, Azərbaycan",
+    "alreadyWritten": "Bura artıq rəy yazmısan — dəyişiklikləri edib yenilə.",
+    "howWasIt": "Səyahətin necə keçdi?",
+    "tags": {
+      "tebiet": "Təbiət 🌿",
+      "samimi-insanlar": "Səmimi insanlar",
+      "yol-cetindir": "Yol çətindir",
+      "yerli-metbex": "Yerli mətbəx",
+      "usaqla-uygun": "Uşaqla uyğun",
+      "fotogenik": "Fotogenik"
+    },
+    "placeholder": "Təəssüratlarını yaz — başqa gezginlərə kömək edəcək",
+    "photosLocked": "Fotolar redaktədə dəyişdirilmir.",
+    "addPhoto": "Foto əlavə et",
+    "editNoXp": "Redaktə XP vermir — XP ilk rəy üçündür",
+    "xpHint": "Rəyin üçün +{{xp}} XP"
+  },
+  "userProfile": {
+    "loading": "Profil yüklənir…",
+    "chatFailed": "Söhbət açılmadı",
+    "reportDuplicate": "Bu istifadəçini artıq şikayət etmisiniz — baxılır.",
+    "reportFailed": "Şikayət göndərilmədi",
+    "blockTitle": "{{name}} bloklansın?",
+    "blockMessage": "O səni izləyə, sənə yaza və paylaşımlarını görə bilməyəcək. Bloku Tənzimləmələrdən götürə bilərsən.",
+    "block": "Blokla",
+    "blockedTitle": "Bloklandı",
+    "blockedMessage": "{{name}} bloklandı.",
+    "blockFailed": "Bloklanmadı",
+    "levelTier": "Level {{level}} · {{tier}}",
+    "tiers": {
+      "baslangic": "Başlanğıc",
+      "kesf_eden": "Kəşf edən",
+      "seyyah": "Səyyah",
+      "kesfci": "Kəşfçi",
+      "gezgin": "Gezgin"
+    },
+    "followsYou": "Səni izləyir",
+    "followers": "İzləyici",
+    "following": "İzləyir",
+    "message": "Mesaj",
+    "experiences_other": "{{count}} təcrübə",
+    "tabs": {
+      "posts": "Paylaşımlar · {{n}}",
+      "routes": "Marşrutlar · {{n}}",
+      "badges": "Nailiyyətlər · {{n}}"
+    },
+    "locked": "Bu hesab qapalıdır — paylaşımlarını görmək üçün izlə.",
+    "noPosts": "Hələ paylaşım yoxdur",
+    "noRoutesMine": "Hələ marşrutun yoxdur",
+    "buildRoute": "Marşrut qur",
+    "noPublicRoutes": "İctimai marşrut yoxdur",
+    "privateRoute": "Şəxsi",
+    "earned": "Qazanılıb"
+  },
+  "followers": {
+    "tabFollowers": "İzləyicilər",
+    "tabFollowing": "İzləyir",
+    "followingButton": "İzləyir",
+    "hiddenTitle": "Siyahı qapalıdır",
+    "hiddenMessage": "Bu hesab qapalıdır — siyahını görmək üçün izlə.",
+    "noFollowers": "Hələ izləyici yoxdur",
+    "noFollowing": "Hələ heç kimi izləmir",
+    "suggested": "Tövsiyə olunan gezginlər"
+  },
+  "messages": {
+    "title": "Mesajlar",
+    "filters": {
+      "all": "Hamısı",
+      "experts": "Local Expert",
+      "business": "Biznes",
+      "travelers": "Gezginlər"
+    },
+    "guestTitle": "Mesajlaşma hesab tələb edir",
+    "guestMessage": "Gezginlərə və Local Expert-lərə yazmaq üçün hesab yarat.",
+    "emptyTitle": "Yazışma yoxdur",
+    "emptyMessage": "Gezgin və ya Local Expert profilində \"Mesaj\" düyməsinə toxun."
+  },
+  "chat": {
+    "sendFailed": "Mesaj göndərilmədi",
+    "typing": "yazır…",
+    "online": "onlayn",
+    "lastActive": "son aktivlik {{time}}",
+    "support": "GEZGIN Dəstək",
+    "empty": "Söhbətə salamla başla 👋",
+    "blocked": "Bu istifadəçi ilə yazışma mümkün deyil.",
+    "placeholder": "Mesaj yaz…",
+    "perPerson": "{{price}} AZN / nəfər",
+    "book": "Bron et",
+    "read": "oxundu"
+  },
+  "notifications": {
+    "title": "Bildirişlər",
+    "readAll": "Hamısını oxu",
+    "tabs": {
+      "all": "Hamısı",
+      "social": "Sosial",
+      "system": "Sistem"
+    },
+    "emptyTitle": "Hələ sakitlikdir",
+    "emptyMessage": "Bəyənmə, şərh, izləmə və yeni nailiyyətlər burada görünəcək."
+  }
+}
