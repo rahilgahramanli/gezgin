@@ -54,6 +54,7 @@ fon prosesləri) API səviyyəsində yoxlanılır.
 | AUTH-19 | API | Refresh token-i iki dəfə işlət | İkincidə `TOKEN_REUSED`, bütün sessiyalar bağlanır | ✅ |
 | AUTH-20 | UI | Tənzimləmələr → "Hesabı sil" → təsdiq | Splash; həmin hesabla giriş olmur; eyni e-maillə yenidən qeydiyyat mümkündür; paylaşımları lentdən itir | ✅ |
 | AUTH-21 | API | Girişə dəqiqədə 11 cəhd | 429, tətbiqdə oxunaqlı xəta | ✅ nginx arxasında da istifadəçi başına (trust proxy) |
+| AUTH-22 | UI | Hesabdan çıx → başqa hesabla daxil ol | Profil, rezervasiyalar, bildirişlər yeni hesabındır — əvvəlkinin məlumatı bir an da görünmür | 🔧 T3: çıxışda sorğu keşi təmizlənmirdi (30 san əvvəlki hesabın məlumatı qala bilərdi) → giriş/çıxışda təmizlənir |
 
 ## 2. Onboarding (ONB)
 
@@ -235,6 +236,7 @@ fon prosesləri) API səviyyəsində yoxlanılır.
 | BOOK-18 | API | Slotsuz (`startAt`) təcrübə bronunda qrup həddi | maxGroup-dan çox → 400 | 🔧 T1: slotsuz bronda tutum yoxlanılmırdı → maxGroup |
 | BOOK-19 | API+DB | Bitmiş təsdiqlənmiş təcrübə | "Tamamlandı", +800 XP, statistikada "Təcrübələr" +1 | 🔧 T1: bron heç vaxt "Tamamlandı" olmurdu, 800 XP verilmirdi → həyat dövrü xidməti |
 | BOOK-20 | UI | Kartlarım: sil, defolt et | Defolt silinəndə növbəti kart defolt olur | 🔧 T1: kart idarəetməsi yox idi → "Ödəniş üsullarım" |
+| BOOK-21 | UI+API | Son yerlərdə: ödəniş rədd edilir → nəfər sayını dəyiş → yenidən ödə | Köhnə ödənilməmiş bron ləğv olunub yer boşalandan SONRA yenisi yaradılır | 🔧 T3: ləğv gözlənilmirdi — "yalnız 1 yer qalıb" xətası |
 
 ## 14. Profil, tənzimləmələr, oyunlaşdırma (PROF)
 
@@ -262,6 +264,10 @@ fon prosesləri) API səviyyəsində yoxlanılır.
 | MOD-02 | API+UI | Admin kontenti silir | Paylaşım mobil lentdən itir | ✅ |
 | MOD-03 | API+UI | Admin istifadəçini dayandırır | Mobil sessiya növbəti sorğuda bağlanır; girişdə "Hesab dayandırılıb"; bərpadan sonra giriş olur | 🔧 T1: şikayətdən dayandırmada tokenlər ləğv olunmurdu; tətbiq səbəb göstərmirdi → "Hesab aktiv deyil" |
 | MOD-04 | API | Adi istifadəçi admin endpoint-inə | 403 | ✅ |
+| MOD-05 | UI (admin) | Paneldə şikayət qərarı: rədd et / kontenti sil / + hesabı dayandır | Qərar tətbiq olunur, növbədən çıxır, audit izinə düşür; API xətası formada göstərilir | 🔧 T3: panel qərarı heç vaxt göndərmirdi (gizli `id` sahəsi `form.id`-ni kölgələyirdi) — hər qərar "Application error" |
+| MOD-06 | UI+API (admin) | Profil (istifadəçi) şikayəti | Yalnız "Rədd et" və "Hesabı dayandır"; `delete_content` → 400 | 🔧 T3: "Kontenti sil" heç nə silmədən şikayəti "həll olundu" edir, sayğacı artırırdı |
+| MOD-07 | API (admin) | Kontent/hesab başqa yolla silinib, şikayət açıq qalıb | Növbədə görünmür, avtomatik bağlanır (`[sistem]` qeydi) | 🔧 T3: panel 15 açıq şikayət göstərirdi, 12-si silinmiş kontentə idi |
+| MOD-08 | UI (admin) | Tarixlər, səbəb adları | Bakı vaxtı; `inappropriate`/`copyright` azərbaycanca | 🔧 T3: server saat qurşağı, xam kodlar |
 
 ## 16. Ümumi keyfiyyət (X)
 

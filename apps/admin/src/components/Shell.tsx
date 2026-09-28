@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { cookies } from 'next/headers';
-import { TOKEN_COOKIE } from '@/lib/api';
+import { SESSION_COOKIE, revoke } from '@/lib/api';
+import { dropSession } from '@/lib/session';
 import { redirect } from 'next/navigation';
 
 const NAV = [
@@ -25,7 +26,9 @@ export function Shell({
   async function logout() {
     'use server';
     const jar = await cookies();
-    jar.delete(TOKEN_COOKIE);
+    const session = dropSession(jar.get(SESSION_COOKIE)?.value);
+    if (session) await revoke(session.refreshToken);
+    jar.delete(SESSION_COOKIE);
     redirect('/login');
   }
 

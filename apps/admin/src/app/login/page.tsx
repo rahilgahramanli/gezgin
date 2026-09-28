@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
-import { ApiError, TOKEN_COOKIE, login } from '@/lib/api';
+import { ApiError, SESSION_COOKIE, login, revoke } from '@/lib/api';
+import { SESSION_TTL_MS, createSession } from '@/lib/session';
 
 /**
  * Admin girişi. Mobil tətbiqlə eyni `/auth/login` endpointi işlədilir, amma
@@ -24,15 +25,21 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
     }
 
     if (session.user.role !== 'admin') {
+      await revoke(session.refreshToken); // admin olmayanın açılmış sessiyası qalmasın
       redirect(`/login?error=${encodeURIComponent('Bu hesabın panelə girişi yoxdur')}`);
     }
 
+    const sid = createSession({
+      accessToken: session.accessToken,
+      refreshToken: session.refreshToken,
+      username: session.user.username,
+    });
     const jar = await cookies();
-    jar.set(TOKEN_COOKIE, session.accessToken, {
+    jar.set(SESSION_COOKIE, sid, {
       httpOnly: true,
       sameSite: 'lax',
       path: '/',
-      maxAge: 60 * 60 * 8,
+      maxAge: SESSION_TTL_MS / 1000,
       secure: process.env.NODE_ENV === 'production',
     });
     redirect('/');
