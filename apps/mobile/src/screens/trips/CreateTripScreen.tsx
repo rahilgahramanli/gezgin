@@ -5,12 +5,15 @@ import { useCreateTrip } from '@/api/hooks/tripDetail';
 import { useRoutes } from '@/api/hooks/content';
 import { ApiError } from '@/api/client';
 import { addLocalDays, localIsoDate } from '@/lib/date';
+import { monthShort } from '@/lib/time';
+import { useT } from '@/i18n';
 import { t } from '@/theme';
 import type { AppScreenProps } from '@/navigation/types';
 
 
 /** Ekran 24 — yeni səyahət: sıfırdan və ya hazır marşrutdan. */
 export function CreateTripScreen({ route, navigation }: AppScreenProps<'CreateTrip'>) {
+  const { t: tr, tp: tpr } = useT('trips');
   const [title, setTitle] = useState(route.params?.title ?? '');
   const [travelers, setTravelers] = useState(2);
   const [fromRoute, setFromRoute] = useState<string | undefined>(route.params?.fromRoute);
@@ -40,7 +43,7 @@ export function CreateTripScreen({ route, navigation }: AppScreenProps<'CreateTr
       padded={false}
       footer={
         <Button
-          label="Səyahəti yarat"
+          label={tr('create.submit')}
           onPress={submit}
           loading={create.isPending}
           disabled={title.trim().length < 2}
@@ -48,13 +51,13 @@ export function CreateTripScreen({ route, navigation }: AppScreenProps<'CreateTr
         />
       }
     >
-      <TopBar title="Yeni səyahət" onBack={navigation.goBack} />
+      <TopBar title={tr('create.title')} onBack={navigation.goBack} />
 
       <View style={styles.body}>
         <Input
-          label="Səyahətin adı"
+          label={tr('create.nameLabel')}
           icon="edit"
-          placeholder="Quba yay səyahəti"
+          placeholder={tr('create.namePlaceholder')}
           value={title}
           onChangeText={setTitle}
           error={error}
@@ -62,7 +65,7 @@ export function CreateTripScreen({ route, navigation }: AppScreenProps<'CreateTr
 
         <View>
           <Text variant="small" color="ink2" style={styles.label}>
-            Başlanğıc tarixi
+            {tr('create.startDate')}
           </Text>
           <View style={styles.dateRow}>
             {[0, 7, 14, 30].map((days) => {
@@ -78,7 +81,7 @@ export function CreateTripScreen({ route, navigation }: AppScreenProps<'CreateTr
                     {d.getDate()}
                   </Text>
                   <Text variant="caption" color={active ? 'paper' : 'muted'}>
-                    {d.toLocaleDateString('az-AZ', { month: 'short' })}
+                    {monthShort(d.getMonth())}
                   </Text>
                 </Pressable>
               );
@@ -88,8 +91,8 @@ export function CreateTripScreen({ route, navigation }: AppScreenProps<'CreateTr
 
         <View style={styles.travelers}>
           <View style={styles.flex}>
-            <Text variant="body">Nəfər sayı</Text>
-            <Text variant="caption">Neçə nəfər gedirsiniz?</Text>
+            <Text variant="body">{tr('create.travelers')}</Text>
+            <Text variant="caption">{tr('create.travelersHint')}</Text>
           </View>
           <View style={styles.stepper}>
             <Pressable
@@ -115,7 +118,7 @@ export function CreateTripScreen({ route, navigation }: AppScreenProps<'CreateTr
 
         <View>
           <Text variant="h2" style={styles.sectionTitle}>
-            Necə başlayaq?
+            {tr('create.howToStart')}
           </Text>
 
           <Pressable onPress={() => setFromRoute(undefined)}>
@@ -124,8 +127,8 @@ export function CreateTripScreen({ route, navigation }: AppScreenProps<'CreateTr
                 {!fromRoute ? <View style={styles.radioDot} /> : null}
               </View>
               <View style={styles.flex}>
-                <Text variant="h3">Sıfırdan qur</Text>
-                <Text variant="caption">Məkanları özün seçəcəksən</Text>
+                <Text variant="h3">{tr('create.fromScratch')}</Text>
+                <Text variant="caption">{tr('create.fromScratchHint')}</Text>
               </View>
             </Card>
           </Pressable>
@@ -147,7 +150,7 @@ export function CreateTripScreen({ route, navigation }: AppScreenProps<'CreateTr
                         {r.title}
                       </Text>
                       <Text variant="caption">
-                        {r.days} gün · {r.stopCount} dayanacaq · {r.region.name}
+                        {tpr('shared.days', r.days)} · {tpr('create.stops', r.stopCount)} · {r.region.name}
                       </Text>
                     </View>
                   </Card>

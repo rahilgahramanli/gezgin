@@ -3,6 +3,7 @@ import {
   Button, Card, EmptyState, GuestEmpty, Icon, Loading, Photo, Pill, Progress, Screen, Text,
 } from '@/components';
 import { useUser } from '@/store/auth';
+import { useT } from '@/i18n';
 import { errorText } from '@/lib/errors';
 import { useTrips } from '@/api/hooks/trips';
 import { TRIP_STATUS_LABEL, label } from '@/lib/labels';
@@ -11,10 +12,11 @@ import type { TabScreenProps } from '@/navigation/types';
 
 /** Ekran 23 — Planım. */
 export function TripsScreen({ navigation }: TabScreenProps<'Trips'>) {
+  const { t: tr, tp: tpr } = useT('trips');
   const isGuest = useUser()?.isGuest ?? false;
   const trips = useTrips();
 
-  if (trips.isLoading) return <Loading label="Səyahətlər yüklənir…" />;
+  if (trips.isLoading) return <Loading label={tr('shared.loadingTrips')} />;
 
   const list = trips.data?.data ?? [];
 
@@ -23,11 +25,11 @@ export function TripsScreen({ navigation }: TabScreenProps<'Trips'>) {
       <View style={styles.head}>
         <View style={styles.headRow}>
           <View style={styles.flex}>
-            <Text variant="titleXl">Planım</Text>
-            <Text variant="meta">Səyahətlərin və gün-gün planların</Text>
+            <Text variant="titleXl">{tr('list.title')}</Text>
+            <Text variant="meta">{tr('list.subtitle')}</Text>
           </View>
           <Button
-            label="Yeni"
+            label={tr('list.new')}
             variant="soft"
             size="sm"
             left={<Icon name="plus" size={16} color={t.colors.green900} />}
@@ -39,21 +41,21 @@ export function TripsScreen({ navigation }: TabScreenProps<'Trips'>) {
       {isGuest ? (
         <GuestEmpty
           icon="route"
-          title="Səyahətini planla"
-          message="Gün-gün plan qurmaq, marşrut izləmək və check-in etmək üçün hesab yarat."
+          title={tr('list.guestTitle')}
+          message={tr('list.guestMessage')}
         />
       ) : trips.isError && list.length === 0 ? (
         <EmptyState
           icon="wifiOff"
-          title="Səyahətlər yüklənmədi"
-          message={errorText(trips.error, 'Bir az sonra yenidən cəhd et.')}
-          action={<Button label="Yenidən cəhd et" variant="soft" onPress={() => void trips.refetch()} />}
+          title={tr('list.errorTitle')}
+          message={errorText(trips.error, tr('common:states.tryLater'))}
+          action={<Button label={tr('common:actions.retry')} variant="soft" onPress={() => void trips.refetch()} />}
         />
       ) : list.length === 0 ? (
         <EmptyState
-          title="Hələ səyahətin yoxdur"
-          message="Marşrut seç və ya sıfırdan plan qur — hər addım XP qazandırır."
-          action={<Button label="Səyahət yarat" onPress={() => navigation.navigate('CreateTrip')} />}
+          title={tr('list.emptyTitle')}
+          message={tr('list.emptyMessage')}
+          action={<Button label={tr('shared.createTrip')} onPress={() => navigation.navigate('CreateTrip')} />}
         />
       ) : (
         <View style={styles.list}>
@@ -77,9 +79,9 @@ export function TripsScreen({ navigation }: TabScreenProps<'Trips'>) {
                     />
                   </View>
                   <Text variant="meta" numberOfLines={1}>
-                    {trip.startDate ? trip.startDate.slice(0, 10) : 'Tarix seçilməyib'}
+                    {trip.startDate ? trip.startDate.slice(0, 10) : tr('list.noDate')}
                     {' · '}
-                    {trip.dayCount} gün · {trip.travelers} nəfər
+                    {tpr('shared.days', trip.dayCount)} · {tpr('shared.people', trip.travelers)}
                   </Text>
                 </View>
               </View>
@@ -88,7 +90,7 @@ export function TripsScreen({ navigation }: TabScreenProps<'Trips'>) {
                 <Progress percent={trip.progressPercent} />
                 <View style={styles.progressMeta}>
                   <Text variant="small" color="muted">
-                    {trip.doneCount} / {trip.itemCount} tamamlandı
+                    {tr('shared.progressDone', { done: trip.doneCount, total: trip.itemCount })}
                   </Text>
                   <Text variant="small" color="green900" style={styles.percent}>
                     {trip.progressPercent}%

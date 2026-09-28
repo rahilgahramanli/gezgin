@@ -1,21 +1,23 @@
 import { StyleSheet, View } from 'react-native';
 import { Card, EmptyState, Icon, Loading, Progress, Screen, Text, TopBar } from '@/components';
 import { useBadges } from '@/api/hooks/gamification';
+import { useT } from '@/i18n';
 import { t } from '@/theme';
 import type { AppScreenProps } from '@/navigation/types';
 
 /** Ekran 30 — nailiyyətlər və tərəqqi. */
 export function BadgesScreen({ navigation }: AppScreenProps<'Badges'>) {
+  const { t: tr } = useT('gamification');
   const badges = useBadges();
 
-  if (badges.isLoading) return <Loading label="Nailiyyətlər yüklənir…" />;
+  if (badges.isLoading) return <Loading label={tr('badges.loading')} />;
   if (!badges.data) {
     return (
       <Screen padded={false}>
-        <TopBar title="Nailiyyətlər" onBack={navigation.goBack} />
+        <TopBar title={tr('badges.title')} onBack={navigation.goBack} />
         <EmptyState
-          title="Məlumat yüklənmədi"
-          message={badges.error instanceof Error ? badges.error.message : 'Yenidən cəhd edin.'}
+          title={tr('shared.loadFailed')}
+          message={badges.error instanceof Error ? badges.error.message : tr('shared.tryAgain')}
         />
       </Screen>
     );
@@ -24,13 +26,13 @@ export function BadgesScreen({ navigation }: AppScreenProps<'Badges'>) {
 
   return (
     <Screen padded={false}>
-      <TopBar title="Nailiyyətlər" onBack={navigation.goBack} />
+      <TopBar title={tr('badges.title')} onBack={navigation.goBack} />
 
       <View style={styles.summary}>
         <Text variant="titleLg" color="green900">
           {b.earnedCount} / {b.totalCount}
         </Text>
-        <Text variant="meta">badge qazanılıb</Text>
+        <Text variant="meta">{tr('badges.earned')}</Text>
       </View>
 
       <View style={styles.body}>

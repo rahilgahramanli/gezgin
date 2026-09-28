@@ -1,21 +1,24 @@
 import { StyleSheet, View } from 'react-native';
 import { Card, EmptyState, Icon, Loading, Progress, Screen, Text, TopBar } from '@/components';
 import { useScore } from '@/api/hooks/gamification';
+import { formatNumber } from '@/lib/time';
+import { useT } from '@/i18n';
 import { t } from '@/theme';
 import type { AppScreenProps } from '@/navigation/types';
 
 /** Ekran 29 — Gezgin Score və xal qazanma yolları. */
 export function ScoreScreen({ navigation }: AppScreenProps<'Score'>) {
+  const { t: tr, tp: tpr } = useT('gamification');
   const score = useScore();
 
-  if (score.isLoading) return <Loading label="Score yüklənir…" />;
+  if (score.isLoading) return <Loading label={tr('score.loading')} />;
   if (!score.data) {
     return (
       <Screen padded={false}>
-        <TopBar title="Gezgin Score" onBack={navigation.goBack} />
+        <TopBar title={tr('shared.gezginScore')} onBack={navigation.goBack} />
         <EmptyState
-          title="Məlumat yüklənmədi"
-          message={score.error instanceof Error ? score.error.message : 'Yenidən cəhd edin.'}
+          title={tr('shared.loadFailed')}
+          message={score.error instanceof Error ? score.error.message : tr('shared.tryAgain')}
         />
       </Screen>
     );
@@ -24,19 +27,18 @@ export function ScoreScreen({ navigation }: AppScreenProps<'Score'>) {
 
   return (
     <Screen padded={false}>
-      <TopBar title="Gezgin Score" onBack={navigation.goBack} />
+      <TopBar title={tr('shared.gezginScore')} onBack={navigation.goBack} />
 
       <View style={styles.hero}>
         <Text variant="titleXl" color="green900" style={styles.score}>
-          {s.gezginScore.toLocaleString('az-AZ')}
+          {formatNumber(s.gezginScore)}
         </Text>
-        <Text variant="meta">Gezgin Score</Text>
+        <Text variant="meta">{tr('shared.gezginScore')}</Text>
         {s.trendPercent != null ? (
           <View style={styles.trend}>
             <Icon name="arrowRight" size={14} color={t.colors.teal400} />
             <Text variant="small" color="teal400" style={styles.bold}>
-              son 30 gündə {s.trendPercent > 0 ? '+' : ''}
-              {s.trendPercent}%
+              {tr('score.trend', { trend: `${s.trendPercent > 0 ? '+' : ''}${s.trendPercent}` })}
             </Text>
           </View>
         ) : null}
@@ -46,30 +48,30 @@ export function ScoreScreen({ navigation }: AppScreenProps<'Score'>) {
         <Card padded style={styles.levelCard}>
           <View style={styles.levelHead}>
             <View>
-              <Text variant="h2">Level {s.level}</Text>
+              <Text variant="h2">{tr('shared.level', { level: s.level })}</Text>
               <Text variant="meta">{s.tier}</Text>
             </View>
             <View style={styles.levelRight}>
               <Text variant="h2" color="green900">
                 {s.xpToNext}
               </Text>
-              <Text variant="caption">növbəti levelə XP</Text>
+              <Text variant="caption">{tr('score.toNextLevel')}</Text>
             </View>
           </View>
           <Progress percent={s.percent} />
           <View style={styles.xpRow}>
             <Text variant="small" color="muted">
-              {s.xpInLevel} / {s.xpForLevel} XP
+              {tr('score.xpProgress', { current: s.xpInLevel, total: s.xpForLevel })}
             </Text>
             <Text variant="small" color="muted">
-              son 30 gün: {s.last30Days.xp} XP
+              {tr('score.last30', { xp: s.last30Days.xp })}
             </Text>
           </View>
         </Card>
 
         <View>
           <Text variant="h2" style={styles.sectionTitle}>
-            Xal qazanma yolları
+            {tr('score.earnTitle')}
           </Text>
           <View style={styles.rules}>
             {s.earnRules.map((rule) => (
@@ -80,7 +82,7 @@ export function ScoreScreen({ navigation }: AppScreenProps<'Score'>) {
                 <View style={styles.flex}>
                   <Text variant="body">{rule.name}</Text>
                   {rule.dailyCap ? (
-                    <Text variant="caption">gündə maksimum {rule.dailyCap} dəfə</Text>
+                    <Text variant="caption">{tpr('score.dailyCap', rule.dailyCap)}</Text>
                   ) : null}
                 </View>
                 <Text variant="h3" color="green900">

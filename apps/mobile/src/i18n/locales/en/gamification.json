@@ -1,1 +1,73 @@
-{}
+{
+  "shared": {
+    "checkin": "Check-in",
+    "locating": "Getting your location…",
+    "noLocationTitle": "Couldn't get your location",
+    "openSettings": "Open Settings",
+    "gezginScore": "Gezgin Score",
+    "level": "Level {{level}}",
+    "loadFailed": "Couldn't load data",
+    "tryAgain": "Please try again."
+  },
+  "checkin": {
+    "noLocationMessage": "{{reason}} A check-in only counts once we confirm you're at the place.",
+    "goBack": "Go back",
+    "guestMessage": "Sign up to check in and earn XP.",
+    "guestFallback": "You need an account to check in.",
+    "sending": "Checking in…",
+    "alreadyTitle": "You've already checked in",
+    "alreadyMessage": "{{message}}. You can come back tomorrow.",
+    "failedTitle": "Check-in failed",
+    "failedFallback": "Check-in failed — please try again in a moment.",
+    "firstVisit": "{{region}} · your first visit!",
+    "visitedBefore": "You've been here before",
+    "xpGain": "+{{xp}} XP",
+    "dailyCapped": "daily limit reached",
+    "xpLabel": "experience points",
+    "levelTier": "Level {{level}} · {{tier}}",
+    "toNext": "{{xp}} XP to next",
+    "levelUp": "Level {{from}} → {{to}}! Congrats 🎉",
+    "newBadge": "New badge",
+    "tripProgress": "Trip plan: {{done}} / {{total}} done"
+  },
+  "picker": {
+    "title": "Check in",
+    "noLocationMessage": "{{reason}} We need your location to show places nearby.",
+    "searchInstead": "Find with search",
+    "refresh": "Refresh location",
+    "intro": "Places closest to you. Check-ins only count when you're at the place, and a first visit earns XP.",
+    "emptyTitle": "No places nearby",
+    "emptyMessage": "Try again somewhere else or find the place with search.",
+    "checkinA11y": "Check in: {{name}}",
+    "meters": "{{value}} m",
+    "km": "{{value}} km"
+  },
+  "score": {
+    "loading": "Loading score…",
+    "trend": "{{trend}}% in the last 30 days",
+    "toNextLevel": "XP to next level",
+    "xpProgress": "{{current}} / {{total}} XP",
+    "last30": "last 30 days: {{xp}} XP",
+    "earnTitle": "Ways to earn points",
+    "dailyCap_one": "max {{count}} time a day",
+    "dailyCap_other": "max {{count}} times a day"
+  },
+  "badges": {
+    "loading": "Loading badges…",
+    "title": "Badges",
+    "earned": "badges earned"
+  },
+  "leaderboard": {
+    "title": "Leaderboard",
+    "periods": {
+      "weekly": "Weekly",
+      "monthly": "Monthly",
+      "all_time": "All time"
+    },
+    "points_one": "point",
+    "points_other": "points",
+    "xp": "XP",
+    "expert": "Expert",
+    "you": "You"
+  }
+}

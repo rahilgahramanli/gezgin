@@ -10,6 +10,7 @@ import {
 } from '@/api/hooks/routeBuilder';
 import { ApiError } from '@/api/client';
 import { DIFFICULTY_LABEL, label } from '@/lib/labels';
+import { useT } from '@/i18n';
 import { t } from '@/theme';
 import type { AppScreenProps } from '@/navigation/types';
 
@@ -35,6 +36,7 @@ type Nav = AppScreenProps<'RouteBuilder'>['navigation'];
 
 /** 1-ci mərhələ — boş marşrutun əsas məlumatları. */
 function RouteCreator({ navigation }: { navigation: Nav }) {
+  const { t: tr } = useT('trips');
   const [title, setTitle] = useState('');
   const [region, setRegion] = useState<string | undefined>();
   const [days, setDays] = useState(2);
@@ -54,12 +56,12 @@ function RouteCreator({ navigation }: { navigation: Nav }) {
           const xp = r.rewards?.xpGained ?? 0;
           // Düymə "+350 XP" vəd edir — nəticəni göstəririk (gündəlik limit dolubsa bunu da deyirik)
           Alert.alert(
-            xp > 0 ? `+${xp} XP` : 'Marşrut yaradıldı',
+            xp > 0 ? tr('shared.xpGain', { xp }) : tr('builder.created'),
             xp > 0
               ? r.rewards?.leveledUp
-                ? `Level ${r.rewards.levelAfter}-ə yüksəldin! İndi dayanacaqları əlavə et.`
-                : 'İndi dayanacaqları əlavə et.'
-              : 'Bu gün marşrut üçün XP limiti dolub. İndi dayanacaqları əlavə et.',
+                ? tr('builder.levelUpAddStops', { level: r.rewards.levelAfter })
+                : tr('builder.addStopsNow')
+              : tr('builder.xpCapped'),
           );
           navigation.replace('RouteBuilder', { slug: r.slug });
         },
@@ -72,7 +74,7 @@ function RouteCreator({ navigation }: { navigation: Nav }) {
       padded={false}
       footer={
         <Button
-          label="Marşrutu yarat · +350 XP"
+          label={tr('builder.createButton', { xp: 350 })}
           onPress={submit}
           loading={create.isPending}
           disabled={title.trim().length < 3 || !region}
@@ -80,13 +82,13 @@ function RouteCreator({ navigation }: { navigation: Nav }) {
         />
       }
     >
-      <TopBar title="Marşrut qur" onBack={navigation.goBack} />
+      <TopBar title={tr('builder.title')} onBack={navigation.goBack} />
 
       <View style={styles.body}>
         <Input
-          label="Marşrutun adı"
+          label={tr('builder.nameLabel')}
           icon="route"
-          placeholder="Quba həftəsonu marşrutu"
+          placeholder={tr('builder.namePlaceholder')}
           value={title}
           onChangeText={setTitle}
           error={error}
@@ -94,7 +96,7 @@ function RouteCreator({ navigation }: { navigation: Nav }) {
 
         <View>
           <Text variant="small" color="ink2" style={styles.label}>
-            Region
+            {tr('builder.region')}
           </Text>
           {regions.isLoading ? (
             <Loading />
@@ -120,8 +122,8 @@ function RouteCreator({ navigation }: { navigation: Nav }) {
 
         <View style={styles.rowBetween}>
           <View style={styles.flex}>
-            <Text variant="body">Neçə gün?</Text>
-            <Text variant="caption">Sonradan dəyişə bilərsən</Text>
+            <Text variant="body">{tr('builder.daysQuestion')}</Text>
+            <Text variant="caption">{tr('builder.daysHint')}</Text>
           </View>
           <View style={styles.stepperControls}>
             <Pressable
@@ -142,7 +144,7 @@ function RouteCreator({ navigation }: { navigation: Nav }) {
 
         <View>
           <Text variant="small" color="ink2" style={styles.label}>
-            Çətinlik
+            {tr('builder.difficulty')}
           </Text>
           <View style={styles.segment}>
             {DIFFICULTIES.map((d) => {
@@ -168,6 +170,7 @@ function RouteCreator({ navigation }: { navigation: Nav }) {
 
 /** 2-ci mərhələ — gün-gün dayanacaqlar. */
 function RouteEditor({ slug, navigation }: { slug: string; navigation: Nav }) {
+  const { t: tr, tp: tpr } = useT('trips');
   const [day, setDay] = useState(1);
 
   const detail = useRouteDetail(slug);
@@ -191,9 +194,9 @@ function RouteEditor({ slug, navigation }: { slug: string; navigation: Nav }) {
   };
 
   const confirmRemove = (stopId: number, name: string) =>
-    Alert.alert('Dayanacağı sil', `“${name}” marşrutdan çıxarılsın?`, [
-      { text: 'İmtina', style: 'cancel' },
-      { text: 'Sil', style: 'destructive', onPress: () => removeStop.mutate(stopId) },
+    Alert.alert(tr('builder.removeTitle'), tr('builder.removeMessage', { name }), [
+      { text: tr('common:actions.cancel'), style: 'cancel' },
+      { text: tr('common:actions.delete'), style: 'destructive', onPress: () => removeStop.mutate(stopId) },
     ]);
 
   if (!r) {
@@ -203,8 +206,8 @@ function RouteEditor({ slug, navigation }: { slug: string; navigation: Nav }) {
     }
     return (
       <Screen padded={false} scroll={false}>
-        <TopBar title="Marşrut qur" onBack={navigation.goBack} />
-        <Loading label="Yüklənir…" />
+        <TopBar title={tr('builder.title')} onBack={navigation.goBack} />
+        <Loading label={tr('common:states.loading')} />
       </Screen>
     );
   }
@@ -228,24 +231,27 @@ function RouteEditor({ slug, navigation }: { slug: string; navigation: Nav }) {
       padded={false}
       footer={
         <Button
-          label="Saxla və bax"
+          label={tr('builder.save')}
           onPress={finish}
           loading={update.isPending || reorder.isPending || removeStop.isPending}
           style={styles.ctaButton}
         />
       }
     >
-      <TopBar title="Marşrut qur" onBack={navigation.goBack} />
+      <TopBar title={tr('builder.title')} onBack={navigation.goBack} />
 
       <View style={styles.body}>
         <Text variant="titleLg">{r.title}</Text>
 
         <Card padded style={styles.stats}>
-          <Stat value={r.distanceKm === null ? '—' : `${Math.round(r.distanceKm)} km`} name="Məsafə" />
+          <Stat
+            value={r.distanceKm === null ? '—' : tr('builder.km', { km: Math.round(r.distanceKm) })}
+            name={tr('builder.distance')}
+          />
           <View style={styles.statDivider} />
-          <Stat value={`${r.days} gün`} name="Müddət" />
+          <Stat value={tpr('shared.days', r.days)} name={tr('builder.duration')} />
           <View style={styles.statDivider} />
-          <Stat value={String(r.stopCount)} name="Məkan" />
+          <Stat value={String(r.stopCount)} name={tr('builder.places')} />
         </Card>
 
         {/* Gün seçici + yeni gün */}
@@ -259,7 +265,7 @@ function RouteEditor({ slug, navigation }: { slug: string; navigation: Nav }) {
                 style={[styles.dayTab, active && styles.dayTabActive]}
               >
                 <Text variant="small" color={active ? 'paper' : 'ink'}>
-                  {d.day}-ci gün
+                  {tr('shared.dayN', { day: d.day })}
                 </Text>
               </Pressable>
             );
@@ -270,7 +276,7 @@ function RouteEditor({ slug, navigation }: { slug: string; navigation: Nav }) {
           >
             <Icon name="plus" size={13} color={t.colors.green900} strokeWidth={2.6} />
             <Text variant="small" color="green900">
-              Gün
+              {tr('builder.addDay')}
             </Text>
           </Pressable>
         </ScrollView>
@@ -280,7 +286,7 @@ function RouteEditor({ slug, navigation }: { slug: string; navigation: Nav }) {
             <Card padded style={styles.notice}>
               <Icon name="pin" size={20} color={t.colors.muted} />
               <Text variant="small" color="ink2" style={styles.flex}>
-                {day}-ci gün hələ boşdur — aşağıdan məkan əlavə et.
+                {tr('builder.emptyDay', { day })}
               </Text>
             </Card>
           ) : (
@@ -298,9 +304,12 @@ function RouteEditor({ slug, navigation }: { slug: string; navigation: Nav }) {
                       {s.place.name}
                     </Text>
                     <Text variant="caption" numberOfLines={1}>
-                      {[s.arriveTime, s.durationMin ? `${Math.round(s.durationMin / 60 * 10) / 10} saat` : null]
+                      {[
+                        s.arriveTime,
+                        s.durationMin ? tr('builder.hours', { hours: Math.round(s.durationMin / 60 * 10) / 10 }) : null,
+                      ]
                         .filter(Boolean)
-                        .join(' · ') || 'Vaxt təyin edilməyib'}
+                        .join(' · ') || tr('builder.noTime')}
                     </Text>
                   </View>
                   <View style={styles.stopActions}>
@@ -309,7 +318,7 @@ function RouteEditor({ slug, navigation }: { slug: string; navigation: Nav }) {
                       disabled={i === 0}
                       style={styles.iconBtn}
                       accessibilityRole="button"
-                      accessibilityLabel={`Yuxarı: ${s.place.name}`}
+                      accessibilityLabel={tr('builder.moveUp', { name: s.place.name })}
                     >
                       <Icon
                         name="chevronDown"
@@ -323,7 +332,7 @@ function RouteEditor({ slug, navigation }: { slug: string; navigation: Nav }) {
                       disabled={i === stops.length - 1}
                       style={styles.iconBtn}
                       accessibilityRole="button"
-                      accessibilityLabel={`Aşağı: ${s.place.name}`}
+                      accessibilityLabel={tr('builder.moveDown', { name: s.place.name })}
                     >
                       <Icon
                         name="chevronDown"
@@ -335,7 +344,7 @@ function RouteEditor({ slug, navigation }: { slug: string; navigation: Nav }) {
                       onPress={() => confirmRemove(s.stopId, s.place.name)}
                       style={styles.iconBtn}
                       accessibilityRole="button"
-                      accessibilityLabel={`Dayanacağı sil: ${s.place.name}`}
+                      accessibilityLabel={tr('builder.removeA11y', { name: s.place.name })}
                     >
                       <Icon name="trash" size={16} color={t.colors.danger} />
                     </Pressable>
@@ -344,7 +353,7 @@ function RouteEditor({ slug, navigation }: { slug: string; navigation: Nav }) {
                 {i < stops.length - 1 ? (
                   <View style={styles.leg}>
                     <Icon name="navigation" size={11} color={t.colors.muted} />
-                    <Text variant="caption">növbəti dayanacaq</Text>
+                    <Text variant="caption">{tr('builder.nextStop')}</Text>
                   </View>
                 ) : null}
               </View>
@@ -356,9 +365,9 @@ function RouteEditor({ slug, navigation }: { slug: string; navigation: Nav }) {
               <Icon name="plus" size={18} color={t.colors.green900} strokeWidth={2.6} />
               <View style={styles.flex}>
                 <Text variant="h3" color="green900">
-                  Məkan əlavə et
+                  {tr('builder.addPlace')}
                 </Text>
-                <Text variant="caption">Axtar və {day}-ci günə əlavə et</Text>
+                <Text variant="caption">{tr('builder.addPlaceHint', { day })}</Text>
               </View>
             </Card>
           </Pressable>
@@ -367,8 +376,8 @@ function RouteEditor({ slug, navigation }: { slug: string; navigation: Nav }) {
         <Pressable onPress={() => update.mutate({ isPublic: !isPublic })}>
           <Card padded style={styles.toggleRow}>
             <View style={styles.flex}>
-              <Text variant="h3">İctimai paylaş</Text>
-              <Text variant="caption">Başqaları görə bilsin</Text>
+              <Text variant="h3">{tr('builder.public')}</Text>
+              <Text variant="caption">{tr('builder.publicHint')}</Text>
             </View>
             <View style={[styles.switch, isPublic && styles.switchOn]}>
               <View style={[styles.knob, isPublic && styles.knobOn]} />
