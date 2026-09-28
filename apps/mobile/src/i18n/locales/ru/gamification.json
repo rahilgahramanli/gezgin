@@ -1,1 +1,75 @@
-{}
+{
+  "shared": {
+    "checkin": "Чек-ин",
+    "locating": "Определяем местоположение…",
+    "noLocationTitle": "Не удалось определить местоположение",
+    "openSettings": "Открыть настройки",
+    "gezginScore": "Gezgin Score",
+    "level": "Уровень {{level}}",
+    "loadFailed": "Не удалось загрузить данные",
+    "tryAgain": "Попробуйте ещё раз."
+  },
+  "checkin": {
+    "noLocationMessage": "{{reason}} Чек-ин засчитывается, только когда подтверждено, что вы на месте.",
+    "goBack": "Вернуться",
+    "guestMessage": "Зарегистрируйтесь, чтобы делать чек-ины и получать XP.",
+    "guestFallback": "Для чек-ина нужен аккаунт.",
+    "sending": "Выполняем чек-ин…",
+    "alreadyTitle": "Вы уже сделали чек-ин",
+    "alreadyMessage": "{{message}}. Возвращайтесь завтра.",
+    "failedTitle": "Чек-ин не удался",
+    "failedFallback": "Чек-ин не удался — повторите попытку чуть позже.",
+    "firstVisit": "{{region}} · ваш первый визит!",
+    "visitedBefore": "Вы уже бывали здесь",
+    "xpGain": "+{{xp}} XP",
+    "dailyCapped": "дневной лимит исчерпан",
+    "xpLabel": "очки опыта",
+    "levelTier": "Уровень {{level}} · {{tier}}",
+    "toNext": "до следующего {{xp}} XP",
+    "levelUp": "Уровень {{from}} → {{to}}! Поздравляем 🎉",
+    "newBadge": "Новое достижение",
+    "tripProgress": "План поездки: {{done}} / {{total}} выполнено"
+  },
+  "picker": {
+    "title": "Сделать чек-ин",
+    "noLocationMessage": "{{reason}} Чтобы показать места поблизости, нужно ваше местоположение.",
+    "searchInstead": "Найти через поиск",
+    "refresh": "Обновить местоположение",
+    "intro": "Ближайшие места. Чек-ин засчитывается, только если вы рядом с местом, а за первый визит начисляется XP.",
+    "emptyTitle": "Поблизости мест не найдено",
+    "emptyMessage": "Попробуйте в другом месте или найдите место через поиск.",
+    "checkinA11y": "Чек-ин: {{name}}",
+    "meters": "{{value}} м",
+    "km": "{{value}} км"
+  },
+  "score": {
+    "loading": "Загрузка Score…",
+    "trend": "{{trend}}% за последние 30 дней",
+    "toNextLevel": "XP до следующего уровня",
+    "xpProgress": "{{current}} / {{total}} XP",
+    "last30": "за 30 дней: {{xp}} XP",
+    "earnTitle": "Как заработать очки",
+    "dailyCap_one": "максимум {{count}} раз в день",
+    "dailyCap_few": "максимум {{count}} раза в день",
+    "dailyCap_many": "максимум {{count}} раз в день"
+  },
+  "badges": {
+    "loading": "Загрузка достижений…",
+    "title": "Достижения",
+    "earned": "достижений получено"
+  },
+  "leaderboard": {
+    "title": "Рейтинг",
+    "periods": {
+      "weekly": "За неделю",
+      "monthly": "За месяц",
+      "all_time": "За всё время"
+    },
+    "points_one": "очко",
+    "points_few": "очка",
+    "points_many": "очков",
+    "xp": "XP",
+    "expert": "Expert",
+    "you": "Вы"
+  }
+}

@@ -7,6 +7,7 @@ import {
   useCompleteTrip, useDeleteTrip, useStartTrip, useToggleTripItem, useTripDetail, type TripItem,
 } from '@/api/hooks/tripDetail';
 import { alertError } from '@/lib/errors';
+import { useT } from '@/i18n';
 import { TRIP_STATUS_LABEL, label } from '@/lib/labels';
 import { t } from '@/theme';
 import type { AppScreenProps } from '@/navigation/types';
@@ -14,62 +15,63 @@ import type { AppScreenProps } from '@/navigation/types';
 /** Ekran 23 detalı — gün-gün plan, tamamlandı işarəsi, check-in keçidi, tamamla/sil. */
 export function TripDetailScreen({ route, navigation }: AppScreenProps<'TripDetail'>) {
   const { publicId } = route.params;
-  const trip = useTripDetail(publicId);
+  const { t: tr, tp: tpr } = useT('trips');
+  const detail = useTripDetail(publicId);
   const toggle = useToggleTripItem(publicId);
   const start = useStartTrip(publicId);
   const complete = useCompleteTrip(publicId);
   const remove = useDeleteTrip(publicId);
 
-  if (!trip.data) {
-    if (trip.error && !trip.isFetching) {
-      return <ErrorState error={trip.error} onRetry={() => void trip.refetch()} onBack={navigation.goBack} />;
+  if (!detail.data) {
+    if (detail.error && !detail.isFetching) {
+      return <ErrorState error={detail.error} onRetry={() => void detail.refetch()} onBack={navigation.goBack} />;
     }
     return (
       <Screen padded={false} scroll={false}>
-        <TopBar title="Səyahət" onBack={navigation.goBack} />
-        <Loading label="Səyahət yüklənir…" />
+        <TopBar title={tr('detail.title')} onBack={navigation.goBack} />
+        <Loading label={tr('detail.loading')} />
       </Screen>
     );
   }
-  const tr = trip.data;
-  const canComplete = tr.status === 'planned' || tr.status === 'active';
+  const trip = detail.data;
+  const canComplete = trip.status === 'planned' || trip.status === 'active';
 
   const confirmDelete = () =>
-    Alert.alert('Səyahət silinsin?', `“${tr.title}” planı və qeydləri silinəcək.`, [
-      { text: 'İmtina', style: 'cancel' },
+    Alert.alert(tr('detail.deleteTitle'), tr('detail.deleteMessage', { title: trip.title }), [
+      { text: tr('common:actions.cancel'), style: 'cancel' },
       {
-        text: 'Sil',
+        text: tr('common:actions.delete'),
         style: 'destructive',
         onPress: () =>
           remove.mutate(undefined, {
             onSuccess: () => navigation.goBack(),
-            onError: (error) => alertError(error, 'Səyahət silinmədi'),
+            onError: (error) => alertError(error, tr('detail.deleteFailed')),
           }),
       },
     ]);
 
   const confirmComplete = () =>
     Alert.alert(
-      'Səyahəti tamamla',
-      `Səyahət tamamlanmış kimi işarələnəcək. İlk tamamlama +${XP_RULES.trip_completed.xp} XP qazandırır.`,
+      tr('detail.completeTrip'),
+      tr('detail.completeMessage', { xp: XP_RULES.trip_completed.xp }),
       [
-        { text: 'İmtina', style: 'cancel' },
+        { text: tr('common:actions.cancel'), style: 'cancel' },
         {
-          text: 'Tamamla',
+          text: tr('detail.complete'),
           onPress: () =>
             complete.mutate(undefined, {
               onSuccess: ({ rewards }) => {
                 const xp = rewards?.xpGained ?? 0;
                 Alert.alert(
-                  xp > 0 ? `+${xp} XP` : 'Səyahət tamamlandı',
+                  xp > 0 ? tr('shared.xpGain', { xp }) : tr('detail.completed'),
                   rewards?.leveledUp
-                    ? `Level ${rewards.levelAfter}-ə yüksəldin!`
+                    ? tr('detail.levelUp', { level: rewards.levelAfter })
                     : xp > 0
-                      ? 'Təbriklər, səyahət tamamlandı!'
-                      : 'Səyahət yenidən tamamlandı — XP yalnız ilk dəfə verilir.',
+                      ? tr('detail.congrats')
+                      : tr('detail.recompleted'),
                 );
               },
-              onError: (error) => alertError(error, 'Səyahət tamamlanmadı'),
+              onError: (error) => alertError(error, tr('detail.completeFailed')),
             }),
         },
       ],
@@ -83,25 +85,25 @@ export function TripDetailScreen({ route, navigation }: AppScreenProps<'TripDeta
       footer={
         canComplete ? (
           <View style={styles.footer}>
-            {tr.status === 'planned' ? (
+            {trip.status === 'planned' ? (
               <Button
-                label="Səyahəti başlat"
+                label={tr('detail.start')}
                 loading={start.isPending}
                 disabled={busy}
-                onPress={() => start.mutate(undefined, { onError: (error) => alertError(error, 'Səyahət başladılmadı') })}
+                onPress={() => start.mutate(undefined, { onError: (error) => alertError(error, tr('detail.startFailed')) })}
                 left={<Icon name="navigation" size={18} color="#fff" />}
                 style={styles.ctaButton}
               />
             ) : null}
             <Button
-              label="Səyahəti tamamla"
-              variant={tr.status === 'active' ? 'primary' : 'ghost'}
-              size={tr.status === 'active' ? 'lg' : 'sm'}
+              label={tr('detail.completeTrip')}
+              variant={trip.status === 'active' ? 'primary' : 'ghost'}
+              size={trip.status === 'active' ? 'lg' : 'sm'}
               loading={complete.isPending}
               disabled={busy}
               onPress={confirmComplete}
               left={
-                <Icon name="flag" size={18} color={tr.status === 'active' ? '#fff' : t.colors.green900} />
+                <Icon name="flag" size={18} color={trip.status === 'active' ? '#fff' : t.colors.green900} />
               }
               style={styles.ctaButton}
             />
@@ -110,41 +112,41 @@ export function TripDetailScreen({ route, navigation }: AppScreenProps<'TripDeta
       }
     >
       <TopBar
-        title={tr.title}
+        title={trip.title}
         onBack={navigation.goBack}
-        actions={[{ icon: 'trash', label: 'Səyahəti sil', onPress: confirmDelete }]}
+        actions={[{ icon: 'trash', label: tr('detail.deleteA11y'), onPress: confirmDelete }]}
       />
 
       <View style={styles.head}>
         <View style={styles.headRow}>
-          <Pill label={label(TRIP_STATUS_LABEL, tr.status)} tone={tr.status === 'active' ? 'teal' : 'gray'} />
+          <Pill label={label(TRIP_STATUS_LABEL, trip.status)} tone={trip.status === 'active' ? 'teal' : 'gray'} />
           <Text variant="meta">
-            {tr.startDate ? tr.startDate.slice(0, 10) : 'Tarixsiz'} · {tr.travelers} nəfər
+            {trip.startDate ? trip.startDate.slice(0, 10) : tr('shared.undated')} · {tpr('shared.people', trip.travelers)}
           </Text>
         </View>
 
-        <Progress percent={tr.progress.percent} />
+        <Progress percent={trip.progress.percent} />
         <View style={styles.progressMeta}>
           <Text variant="small" color="muted">
-            {tr.progress.done} / {tr.progress.total} tamamlandı
+            {tr('shared.progressDone', { done: trip.progress.done, total: trip.progress.total })}
           </Text>
           <Text variant="small" color="green900" style={styles.bold}>
-            {tr.progress.percent}%
+            {trip.progress.percent}%
           </Text>
         </View>
       </View>
 
       <View style={styles.body}>
-        {tr.itinerary.map((day) => (
+        {trip.itinerary.map((day) => (
           <View key={day.day} style={styles.day}>
             <View style={styles.dayHead}>
-              <Pill label={`${day.day}-ci gün`} tone="green" />
+              <Pill label={tr('shared.dayN', { day: day.day })} tone="green" />
               {day.date ? <Text variant="caption">{day.date.slice(0, 10)}</Text> : null}
             </View>
 
             {day.items.length === 0 ? (
               <Text variant="meta" style={styles.emptyDay}>
-                Bu günə hələ nə isə əlavə edilməyib
+                {tr('detail.emptyDay')}
               </Text>
             ) : (
               day.items.map((item) => (
@@ -154,7 +156,7 @@ export function TripDetailScreen({ route, navigation }: AppScreenProps<'TripDeta
                   onToggle={() =>
                     toggle.mutate(
                       { itemId: item.itemId, isDone: !item.isDone },
-                      { onError: (error) => alertError(error, 'Element yenilənmədi') },
+                      { onError: (error) => alertError(error, tr('detail.itemFailed')) },
                     )
                   }
                   onOpen={
@@ -170,7 +172,7 @@ export function TripDetailScreen({ route, navigation }: AppScreenProps<'TripDeta
                       ? () =>
                           navigation.navigate('Checkin', {
                             place: item.target.slug as string,
-                            trip: tr.publicId,
+                            trip: trip.publicId,
                           })
                       : undefined
                   }
@@ -180,10 +182,10 @@ export function TripDetailScreen({ route, navigation }: AppScreenProps<'TripDeta
           </View>
         ))}
 
-        {tr.notes.length ? (
+        {trip.notes.length ? (
           <View style={styles.day}>
-            <Text variant="h2">Qeydlər</Text>
-            {tr.notes.map((n) => (
+            <Text variant="h2">{tr('detail.notes')}</Text>
+            {trip.notes.map((n) => (
               <Card key={n.id} padded>
                 <Text variant="small" color="ink2">
                   {n.body}
@@ -208,13 +210,14 @@ function ItemRow({
   onOpen?: () => void;
   onCheckin?: () => void;
 }) {
+  const { t: tr } = useT('trips');
   return (
     <Card padded style={styles.item}>
       <Pressable
         onPress={onToggle}
         hitSlop={8}
         accessibilityRole="checkbox"
-        accessibilityLabel={`Tamamlandı işarəsi: ${item.target.name}`}
+        accessibilityLabel={tr('detail.itemDoneA11y', { name: item.target.name })}
         accessibilityState={{ checked: item.isDone }}
       >
         <View style={[styles.checkbox, item.isDone && styles.checkboxOn]}>
@@ -235,13 +238,13 @@ function ItemRow({
               <Text variant="caption">{item.startTime}</Text>
             </>
           ) : null}
-          {item.durationMin ? <Text variant="caption">· {item.durationMin} dəq</Text> : null}
+          {item.durationMin ? <Text variant="caption">· {tr('detail.minutes', { min: item.durationMin })}</Text> : null}
           {item.target.priceAzn ? <Text variant="caption">· {item.target.priceAzn} AZN</Text> : null}
         </View>
       </Pressable>
 
       {onCheckin ? (
-        <Button label="Check-in" variant="soft" size="xs" onPress={onCheckin} />
+        <Button label={tr('detail.checkin')} variant="soft" size="xs" onPress={onCheckin} />
       ) : null}
     </Card>
   );

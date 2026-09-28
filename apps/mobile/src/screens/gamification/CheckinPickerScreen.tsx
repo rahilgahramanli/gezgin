@@ -5,6 +5,7 @@ import {
 } from '@/components';
 import { useCheckinCandidates } from '@/api/hooks/gamification';
 import { locate, locateFailureText, type Coords, type LocateFailure } from '@/lib/location';
+import i18n, { useT } from '@/i18n';
 import { t } from '@/theme';
 import type { AppScreenProps } from '@/navigation/types';
 
@@ -12,7 +13,9 @@ type Phase = { kind: 'locating' } | { kind: 'noLocation'; reason: LocateFailure 
 
 const distanceLabel = (km: number | null): string | null => {
   if (km === null || km === undefined) return null;
-  return km < 1 ? `${Math.round(km * 1000)} m` : `${km} km`;
+  return km < 1
+    ? i18n.t('gamification:picker.meters', { value: Math.round(km * 1000) })
+    : i18n.t('gamification:picker.km', { value: km });
 };
 
 /**
@@ -22,6 +25,7 @@ const distanceLabel = (km: number | null): string | null => {
  * və check-in yalnız səyahət planındakı elementdən mümkün idi.
  */
 export function CheckinPickerScreen({ navigation }: AppScreenProps<'CheckinPicker'>) {
+  const { t: tr } = useT('gamification');
   const [phase, setPhase] = useState<Phase>({ kind: 'locating' });
   const attempt = useRef(0);
 
@@ -46,8 +50,8 @@ export function CheckinPickerScreen({ navigation }: AppScreenProps<'CheckinPicke
   if (phase.kind === 'locating') {
     return (
       <Screen padded={false} scroll={false}>
-        <TopBar title="Check-in et" onBack={navigation.goBack} />
-        <Loading label="Mövqe müəyyən edilir…" />
+        <TopBar title={tr('picker.title')} onBack={navigation.goBack} />
+        <Loading label={tr('shared.locating')} />
       </Screen>
     );
   }
@@ -55,18 +59,18 @@ export function CheckinPickerScreen({ navigation }: AppScreenProps<'CheckinPicke
   if (phase.kind === 'noLocation') {
     return (
       <Screen padded={false} scroll={false}>
-        <TopBar title="Check-in et" onBack={navigation.goBack} />
+        <TopBar title={tr('picker.title')} onBack={navigation.goBack} />
         <EmptyState
           icon="pin"
-          title="Yerləşmə alınmadı"
-          message={`${locateFailureText(phase.reason)} Yaxınlıqdakı məkanları göstərmək üçün mövqeyin lazımdır.`}
+          title={tr('shared.noLocationTitle')}
+          message={tr('picker.noLocationMessage', { reason: locateFailureText(phase.reason) })}
           action={
             <View style={styles.actions}>
-              <Button label="Yenidən cəhd et" onPress={() => void run()} block />
+              <Button label={tr('common:actions.retry')} onPress={() => void run()} block />
               {phase.reason === 'denied' ? (
-                <Button label="Tənzimləmələri aç" variant="outline" onPress={() => void Linking.openSettings()} block />
+                <Button label={tr('shared.openSettings')} variant="outline" onPress={() => void Linking.openSettings()} block />
               ) : null}
-              <Button label="Axtarışla tap" variant="soft" onPress={() => navigation.navigate('Search')} block />
+              <Button label={tr('picker.searchInstead')} variant="soft" onPress={() => navigation.navigate('Search')} block />
             </View>
           }
         />
@@ -83,14 +87,14 @@ export function CheckinPickerScreen({ navigation }: AppScreenProps<'CheckinPicke
   return (
     <Screen padded={false}>
       <TopBar
-        title="Check-in et"
+        title={tr('picker.title')}
         onBack={navigation.goBack}
-        actions={[{ icon: 'compass', label: 'Mövqeyi yenilə', onPress: () => void run() }]}
+        actions={[{ icon: 'compass', label: tr('picker.refresh'), onPress: () => void run() }]}
       />
 
       <View style={styles.body}>
         <Text variant="small" color="ink2">
-          Ən yaxın məkanlar. Check-in yalnız məkanın yanında olanda qəbul olunur və ilk ziyarət XP qazandırır.
+          {tr('picker.intro')}
         </Text>
 
         {places.isLoading ? (
@@ -98,9 +102,9 @@ export function CheckinPickerScreen({ navigation }: AppScreenProps<'CheckinPicke
         ) : list.length === 0 ? (
           <EmptyState
             icon="compass"
-            title="Yaxınlıqda məkan tapılmadı"
-            message="Başqa yerdə yenidən yoxla və ya məkanı axtarışla tap."
-            action={<Button label="Axtarışla tap" variant="soft" onPress={() => navigation.navigate('Search')} />}
+            title={tr('picker.emptyTitle')}
+            message={tr('picker.emptyMessage')}
+            action={<Button label={tr('picker.searchInstead')} variant="soft" onPress={() => navigation.navigate('Search')} />}
           />
         ) : (
           list.map((p) => (
@@ -125,12 +129,12 @@ export function CheckinPickerScreen({ navigation }: AppScreenProps<'CheckinPicke
               <Pressable
                 onPress={() => navigation.navigate('Checkin', { place: p.slug })}
                 accessibilityRole="button"
-                accessibilityLabel={`Check-in: ${p.name}`}
+                accessibilityLabel={tr('picker.checkinA11y', { name: p.name })}
                 hitSlop={6}
                 style={({ pressed }) => [styles.checkin, pressed && styles.pressed]}
               >
                 <Text variant="small" color="green900" style={styles.checkinText}>
-                  Check-in
+                  {tr('shared.checkin')}
                 </Text>
               </Pressable>
             </Card>

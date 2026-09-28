@@ -1,1 +1,71 @@
-{}
+{
+  "shared": {
+    "checkin": "Check-in",
+    "locating": "Mövqe müəyyən edilir…",
+    "noLocationTitle": "Yerləşmə alınmadı",
+    "openSettings": "Tənzimləmələri aç",
+    "gezginScore": "Gezgin Score",
+    "level": "Level {{level}}",
+    "loadFailed": "Məlumat yüklənmədi",
+    "tryAgain": "Yenidən cəhd edin."
+  },
+  "checkin": {
+    "noLocationMessage": "{{reason}} Check-in yalnız məkanda olduğun təsdiqlənəndə qeydə alınır.",
+    "goBack": "Geri qayıt",
+    "guestMessage": "Check-in edib XP qazanmaq üçün qeydiyyatdan keç.",
+    "guestFallback": "Check-in üçün hesab yaratmalısan.",
+    "sending": "Check-in edilir…",
+    "alreadyTitle": "Artıq check-in etmisən",
+    "alreadyMessage": "{{message}}. Sabah yenidən gələ bilərsən.",
+    "failedTitle": "Check-in alınmadı",
+    "failedFallback": "Check-in alınmadı — bir az sonra yenidən cəhd et.",
+    "firstVisit": "{{region}} · ilk ziyarətin!",
+    "visitedBefore": "Bu məkanda əvvəl olmusan",
+    "xpGain": "+{{xp}} XP",
+    "dailyCapped": "gündəlik limit dolub",
+    "xpLabel": "təcrübə xalı",
+    "levelTier": "Level {{level}} · {{tier}}",
+    "toNext": "növbətiyə {{xp}} XP",
+    "levelUp": "Level {{from}} → {{to}}! Təbriklər 🎉",
+    "newBadge": "Yeni nailiyyət",
+    "tripProgress": "Səyahət planı: {{done}} / {{total}} tamamlandı"
+  },
+  "picker": {
+    "title": "Check-in et",
+    "noLocationMessage": "{{reason}} Yaxınlıqdakı məkanları göstərmək üçün mövqeyin lazımdır.",
+    "searchInstead": "Axtarışla tap",
+    "refresh": "Mövqeyi yenilə",
+    "intro": "Ən yaxın məkanlar. Check-in yalnız məkanın yanında olanda qəbul olunur və ilk ziyarət XP qazandırır.",
+    "emptyTitle": "Yaxınlıqda məkan tapılmadı",
+    "emptyMessage": "Başqa yerdə yenidən yoxla və ya məkanı axtarışla tap.",
+    "checkinA11y": "Check-in: {{name}}",
+    "meters": "{{value}} m",
+    "km": "{{value}} km"
+  },
+  "score": {
+    "loading": "Score yüklənir…",
+    "trend": "son 30 gündə {{trend}}%",
+    "toNextLevel": "növbəti levelə XP",
+    "xpProgress": "{{current}} / {{total}} XP",
+    "last30": "son 30 gün: {{xp}} XP",
+    "earnTitle": "Xal qazanma yolları",
+    "dailyCap_other": "gündə maksimum {{count}} dəfə"
+  },
+  "badges": {
+    "loading": "Nailiyyətlər yüklənir…",
+    "title": "Nailiyyətlər",
+    "earned": "badge qazanılıb"
+  },
+  "leaderboard": {
+    "title": "Liderlər",
+    "periods": {
+      "weekly": "Həftəlik",
+      "monthly": "Aylıq",
+      "all_time": "Bütün zamanlar"
+    },
+    "points_other": "xal",
+    "xp": "XP",
+    "expert": "Expert",
+    "you": "Sən"
+  }
+}

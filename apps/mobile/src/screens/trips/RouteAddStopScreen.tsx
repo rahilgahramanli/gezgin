@@ -5,11 +5,13 @@ import { usePlaces, useSearch } from '@/api/hooks/content';
 import { useAddStop } from '@/api/hooks/routeBuilder';
 import { useRouteDetail } from '@/api/hooks/details';
 import { ApiError } from '@/api/client';
+import { useT } from '@/i18n';
 import { t } from '@/theme';
 import type { AppScreenProps } from '@/navigation/types';
 
 /** Ekran 50 alt-ekranı — marşruta məkan seçimi (axtarış + region təklifləri). */
 export function RouteAddStopScreen({ route, navigation }: AppScreenProps<'RouteAddStop'>) {
+  const { t: tr } = useT('trips');
   const { slug, day } = route.params;
   const [q, setQ] = useState('');
 
@@ -47,14 +49,14 @@ export function RouteAddStopScreen({ route, navigation }: AppScreenProps<'RouteA
 
   return (
     <Screen padded={false}>
-      <TopBar title={`${day}-ci günə əlavə et`} onBack={navigation.goBack} />
+      <TopBar title={tr('addStop.title', { day })} onBack={navigation.goBack} />
 
       <View style={styles.body}>
-        <Input icon="search" placeholder="Məkan axtar" value={q} onChangeText={setQ} error={error} />
+        <Input icon="search" placeholder={tr('addStop.searchPlaceholder')} value={q} onChangeText={setQ} error={error} />
 
         {!searching && detail.data ? (
           <Text variant="small" color="ink2">
-            {detail.data.region.name} regionundakı məkanlar
+            {tr('addStop.regionPlaces', { region: detail.data.region.name })}
           </Text>
         ) : null}
 
@@ -62,8 +64,8 @@ export function RouteAddStopScreen({ route, navigation }: AppScreenProps<'RouteA
           <Loading />
         ) : items.length === 0 ? (
           <EmptyState
-            title="Nəticə yoxdur"
-            message={searching ? 'Başqa açar söz yoxla' : 'Bu regionda hələ məkan yoxdur'}
+            title={tr('addStop.noResults')}
+            message={searching ? tr('addStop.tryOther') : tr('addStop.regionEmpty')}
           />
         ) : (
           items.map((item) => {

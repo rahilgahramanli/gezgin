@@ -6,6 +6,7 @@ import { useTrips } from '@/api/hooks/trips';
 import { ApiError } from '@/api/client';
 import { TRIP_STATUS_LABEL, label } from '@/lib/labels';
 import { isGuestBlocked, promptGuestSignup } from '@/lib/errors';
+import { useT } from '@/i18n';
 import { t } from '@/theme';
 import type { AppScreenProps } from '@/navigation/types';
 
@@ -14,6 +15,7 @@ import type { AppScreenProps } from '@/navigation/types';
  * Səyahət və gün seçimi; seçim yoxdursa əvvəlcə səyahət yaradılır.
  */
 export function AddToPlanScreen({ route, navigation }: AppScreenProps<'AddToPlan'>) {
+  const { t: tr, tp: tpr } = useT('trips');
   const { type, slug, name } = route.params;
   const [tripId, setTripId] = useState<string | undefined>();
   const [day, setDay] = useState(1);
@@ -21,7 +23,7 @@ export function AddToPlanScreen({ route, navigation }: AppScreenProps<'AddToPlan
   const trips = useTrips();
   const add = useAddTripItem(tripId ?? '');
 
-  const selected = trips.data?.data.find((tr) => tr.publicId === tripId);
+  const selected = trips.data?.data.find((trip) => trip.publicId === tripId);
   const error = add.error instanceof ApiError ? add.error.message : null;
 
   const submit = () => {
@@ -32,18 +34,19 @@ export function AddToPlanScreen({ route, navigation }: AppScreenProps<'AddToPlan
     );
   };
 
-  const typeLabel = type === 'experience' ? 'Təcrübə' : type === 'event' ? 'Tədbir' : 'Məkan';
+  const typeLabel =
+    type === 'experience' ? tr('addToPlan.typeExperience') : type === 'event' ? tr('addToPlan.typeEvent') : tr('addToPlan.typePlace');
 
   if (!trips.data) {
     if (isGuestBlocked(trips.error)) {
       return (
         <Screen padded={false} scroll={false}>
-          <TopBar title="Plana əlavə et" onBack={navigation.goBack} />
+          <TopBar title={tr('addToPlan.title')} onBack={navigation.goBack} />
           <EmptyState
             icon="lock"
-            title="Hesab lazımdır"
-            message="Səyahət planı qurmaq üçün qeydiyyatdan keç."
-            action={<Button label="Qeydiyyatdan keç" onPress={() => promptGuestSignup()} />}
+            title={tr('common:guest.title')}
+            message={tr('addToPlan.guestMessage')}
+            action={<Button label={tr('common:actions.signUp')} onPress={() => promptGuestSignup()} />}
           />
         </Screen>
       );
@@ -53,14 +56,14 @@ export function AddToPlanScreen({ route, navigation }: AppScreenProps<'AddToPlan
     }
     return (
       <Screen padded={false} scroll={false}>
-        <TopBar title="Plana əlavə et" onBack={navigation.goBack} />
-        <Loading label="Səyahətlər yüklənir…" />
+        <TopBar title={tr('addToPlan.title')} onBack={navigation.goBack} />
+        <Loading label={tr('shared.loadingTrips')} />
       </Screen>
     );
   }
 
   // Tamamlanmış və ləğv edilmiş səyahətə yeni element əlavə etməyin mənası yoxdur
-  const list = trips.data.data.filter((tr) => tr.status === 'planned' || tr.status === 'active');
+  const list = trips.data.data.filter((trip) => trip.status === 'planned' || trip.status === 'active');
 
   return (
     <Screen
@@ -69,7 +72,7 @@ export function AddToPlanScreen({ route, navigation }: AppScreenProps<'AddToPlan
       footer={
         list.length > 0 ? (
           <Button
-            label="Plana əlavə et"
+            label={tr('addToPlan.title')}
             onPress={submit}
             loading={add.isPending}
             disabled={!tripId}
@@ -78,7 +81,7 @@ export function AddToPlanScreen({ route, navigation }: AppScreenProps<'AddToPlan
         ) : null
       }
     >
-      <TopBar title="Plana əlavə et" onBack={navigation.goBack} />
+      <TopBar title={tr('addToPlan.title')} onBack={navigation.goBack} />
 
       <View style={styles.body}>
         <Card padded style={styles.target}>
@@ -93,37 +96,37 @@ export function AddToPlanScreen({ route, navigation }: AppScreenProps<'AddToPlan
 
         {list.length === 0 ? (
           <EmptyState
-            title="Aktiv səyahətin yoxdur"
-            message="Əvvəlcə səyahət yarat, sonra bura əlavə et."
+            title={tr('addToPlan.emptyTitle')}
+            message={tr('addToPlan.emptyMessage')}
             action={
-              <Button label="Səyahət yarat" onPress={() => navigation.replace('CreateTrip')} />
+              <Button label={tr('shared.createTrip')} onPress={() => navigation.replace('CreateTrip')} />
             }
           />
         ) : (
           <>
             <View>
               <Text variant="h2" style={styles.sectionTitle}>
-                Səyahət seç
+                {tr('addToPlan.pickTrip')}
               </Text>
-              {list.map((tr) => {
-                const active = tripId === tr.publicId;
+              {list.map((trip) => {
+                const active = tripId === trip.publicId;
                 return (
-                  <Pressable key={tr.publicId} onPress={() => setTripId(tr.publicId)}>
+                  <Pressable key={trip.publicId} onPress={() => setTripId(trip.publicId)}>
                     <Card padded style={[styles.option, active && styles.optionActive]}>
                       <View style={[styles.radio, active && styles.radioOn]}>
                         {active ? <View style={styles.radioDot} /> : null}
                       </View>
                       <View style={styles.flex}>
                         <Text variant="h3" numberOfLines={1}>
-                          {tr.title}
+                          {trip.title}
                         </Text>
                         <Text variant="caption">
-                          {tr.startDate ? tr.startDate.slice(0, 10) : 'Tarixsiz'} · {tr.dayCount} gün
+                          {trip.startDate ? trip.startDate.slice(0, 10) : tr('shared.undated')} · {tpr('shared.days', trip.dayCount)}
                         </Text>
                       </View>
                       <Pill
-                        label={label(TRIP_STATUS_LABEL, tr.status)}
-                        tone={tr.status === 'active' ? 'teal' : 'gray'}
+                        label={label(TRIP_STATUS_LABEL, trip.status)}
+                        tone={trip.status === 'active' ? 'teal' : 'gray'}
                       />
                     </Card>
                   </Pressable>
@@ -134,7 +137,7 @@ export function AddToPlanScreen({ route, navigation }: AppScreenProps<'AddToPlan
             {selected ? (
               <View>
                 <Text variant="h2" style={styles.sectionTitle}>
-                  Gün seç
+                  {tr('addToPlan.pickDay')}
                 </Text>
                 <View style={styles.days}>
                   {Array.from({ length: Math.max(1, selected.dayCount) }, (_, i) => i + 1).map((d) => {
@@ -149,7 +152,7 @@ export function AddToPlanScreen({ route, navigation }: AppScreenProps<'AddToPlan
                           {d}
                         </Text>
                         <Text variant="caption" color={active ? 'paper' : 'muted'}>
-                          gün
+                          {tr('addToPlan.dayUnit')}
                         </Text>
                       </Pressable>
                     );

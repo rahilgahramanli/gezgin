@@ -8,6 +8,7 @@ import { usePlaceDetail } from '@/api/hooks/details';
 import { locate, locateFailureText, type LocateFailure } from '@/lib/location';
 import { isGuestBlocked, isGuestSession, promptGuestSignup } from '@/lib/errors';
 import { ApiError, NETWORK_ERROR } from '@/api/client';
+import { useT } from '@/i18n';
 import { t } from '@/theme';
 import type { AppScreenProps } from '@/navigation/types';
 
@@ -26,6 +27,7 @@ type Phase =
  * geri düyməsi var: istifadəçi heç bir yüklənmə ekranında ilişib qalmır.
  */
 export function CheckinScreen({ route, navigation }: AppScreenProps<'Checkin'>) {
+  const { t: tr } = useT('gamification');
   const { place: slug, trip } = route.params;
   const place = usePlaceDetail(slug);
   const checkin = useCheckin();
@@ -71,37 +73,42 @@ export function CheckinScreen({ route, navigation }: AppScreenProps<'Checkin'>) 
   const placeName = place.data?.name;
 
   if (phase.kind === 'locating') {
-    return <Busy label="Mövqe müəyyən edilir…" onBack={navigation.goBack} />;
+    return <Busy label={tr('shared.locating')} onBack={navigation.goBack} />;
   }
 
   if (phase.kind === 'noLocation') {
     return (
       <Outcome
         icon="pin"
-        title="Yerləşmə alınmadı"
-        message={`${locateFailureText(phase.reason)} Check-in yalnız məkanda olduğun təsdiqlənəndə qeydə alınır.`}
+        title={tr('shared.noLocationTitle')}
+        message={tr('checkin.noLocationMessage', { reason: locateFailureText(phase.reason) })}
         onBack={navigation.goBack}
       >
-        <Button label="Yenidən cəhd et" onPress={retry} style={styles.cta} />
+        <Button label={tr('common:actions.retry')} onPress={retry} style={styles.cta} />
         {phase.reason === 'denied' ? (
-          <Button label="Tənzimləmələri aç" variant="outline" onPress={() => void Linking.openSettings()} style={styles.ctaAlt} />
+          <Button label={tr('shared.openSettings')} variant="outline" onPress={() => void Linking.openSettings()} style={styles.ctaAlt} />
         ) : null}
-        <Button label="Geri qayıt" variant="soft" onPress={navigation.goBack} style={styles.ctaAlt} />
+        <Button label={tr('checkin.goBack')} variant="soft" onPress={navigation.goBack} style={styles.ctaAlt} />
       </Outcome>
     );
   }
 
   if (phase.kind === 'guest') {
     return (
-      <Outcome icon="lock" title="Hesab lazımdır" message="Check-in edib XP qazanmaq üçün qeydiyyatdan keç." onBack={navigation.goBack}>
-        <Button label="Qeydiyyatdan keç" onPress={() => promptGuestSignup()} style={styles.cta} />
-        <Button label="Geri qayıt" variant="soft" onPress={navigation.goBack} style={styles.ctaAlt} />
+      <Outcome
+        icon="lock"
+        title={tr('common:guest.title')}
+        message={tr('checkin.guestMessage')}
+        onBack={navigation.goBack}
+      >
+        <Button label={tr('common:actions.signUp')} onPress={() => promptGuestSignup()} style={styles.cta} />
+        <Button label={tr('checkin.goBack')} variant="soft" onPress={navigation.goBack} style={styles.ctaAlt} />
       </Outcome>
     );
   }
 
   if (checkin.isPending || checkin.isIdle) {
-    return <Busy label="Check-in edilir…" onBack={navigation.goBack} />;
+    return <Busy label={tr('checkin.sending')} onBack={navigation.goBack} />;
   }
 
   if (checkin.error) {
@@ -109,9 +116,14 @@ export function CheckinScreen({ route, navigation }: AppScreenProps<'Checkin'>) 
 
     if (isGuestBlocked(checkin.error)) {
       return (
-        <Outcome icon="lock" title="Hesab lazımdır" message={err?.message ?? 'Check-in üçün hesab yaratmalısan.'} onBack={navigation.goBack}>
-          <Button label="Qeydiyyatdan keç" onPress={() => promptGuestSignup(err?.message)} style={styles.cta} />
-          <Button label="Geri qayıt" variant="soft" onPress={navigation.goBack} style={styles.ctaAlt} />
+        <Outcome
+          icon="lock"
+          title={tr('common:guest.title')}
+          message={err?.message ?? tr('checkin.guestFallback')}
+          onBack={navigation.goBack}
+        >
+          <Button label={tr('common:actions.signUp')} onPress={() => promptGuestSignup(err?.message)} style={styles.cta} />
+          <Button label={tr('checkin.goBack')} variant="soft" onPress={navigation.goBack} style={styles.ctaAlt} />
         </Outcome>
       );
     }
@@ -122,11 +134,11 @@ export function CheckinScreen({ route, navigation }: AppScreenProps<'Checkin'>) 
         <Outcome
           icon="check"
           tone="ok"
-          title={placeName ?? 'Artıq check-in etmisən'}
-          message={`${err.message}. Sabah yenidən gələ bilərsən.`}
+          title={placeName ?? tr('checkin.alreadyTitle')}
+          message={tr('checkin.alreadyMessage', { message: err.message })}
           onBack={navigation.goBack}
         >
-          <Button label="Geri qayıt" onPress={navigation.goBack} style={styles.cta} />
+          <Button label={tr('checkin.goBack')} onPress={navigation.goBack} style={styles.cta} />
         </Outcome>
       );
     }
@@ -135,22 +147,22 @@ export function CheckinScreen({ route, navigation }: AppScreenProps<'Checkin'>) 
     return (
       <Outcome
         icon={network ? 'wifiOff' : 'x'}
-        title={network ? 'Bağlantı yoxdur' : 'Check-in alınmadı'}
-        message={err?.message ?? 'Check-in alınmadı — bir az sonra yenidən cəhd et.'}
+        title={network ? tr('common:states.offlineTitle') : tr('checkin.failedTitle')}
+        message={err?.message ?? tr('checkin.failedFallback')}
         onBack={navigation.goBack}
       >
-        <Button label="Yenidən cəhd et" onPress={retry} style={styles.cta} />
-        <Button label="Geri qayıt" variant="soft" onPress={navigation.goBack} style={styles.ctaAlt} />
+        <Button label={tr('common:actions.retry')} onPress={retry} style={styles.cta} />
+        <Button label={tr('checkin.goBack')} variant="soft" onPress={navigation.goBack} style={styles.ctaAlt} />
       </Outcome>
     );
   }
 
-  if (!checkin.data) return <Busy label="Check-in edilir…" onBack={navigation.goBack} />;
+  if (!checkin.data) return <Busy label={tr('checkin.sending')} onBack={navigation.goBack} />;
   const r = checkin.data.rewards;
 
   return (
     <Screen padded={false}>
-      <TopBar onBack={navigation.goBack} actions={[{ icon: 'x', label: 'Bağla', onPress: navigation.goBack }]} />
+      <TopBar onBack={navigation.goBack} actions={[{ icon: 'x', label: tr('common:actions.close'), onPress: navigation.goBack }]} />
 
       <View style={styles.center}>
         <View style={styles.badge}>
@@ -162,8 +174,8 @@ export function CheckinScreen({ route, navigation }: AppScreenProps<'Checkin'>) 
         </Text>
         <Text variant="meta" center style={styles.sub}>
           {checkin.data.isFirstVisit
-            ? `${checkin.data.place.region.name} · ilk ziyarətin!`
-            : 'Bu məkanda əvvəl olmusan'}
+            ? tr('checkin.firstVisit', { region: checkin.data.place.region.name })
+            : tr('checkin.visitedBefore')}
         </Text>
 
         {place.data?.photos[0]?.url ? (
@@ -175,27 +187,27 @@ export function CheckinScreen({ route, navigation }: AppScreenProps<'Checkin'>) 
           <View style={styles.rewardTop}>
             <View>
               <Text variant="titleLg" color="green900">
-                +{r.xpGained} XP
+                {tr('checkin.xpGain', { xp: r.xpGained })}
               </Text>
               <Text variant="caption">
-                {r.cappedByDailyLimit ? 'gündəlik limit dolub' : 'təcrübə xalı'}
+                {r.cappedByDailyLimit ? tr('checkin.dailyCapped') : tr('checkin.xpLabel')}
               </Text>
             </View>
             <View style={styles.rewardRight}>
               <Text variant="h2" color="teal400">
                 +{r.scoreDelta}
               </Text>
-              <Text variant="caption">Gezgin Score</Text>
+              <Text variant="caption">{tr('shared.gezginScore')}</Text>
             </View>
           </View>
 
           <Progress percent={r.percent} />
           <View style={styles.levelRow}>
             <Text variant="small" color="muted">
-              Level {r.levelAfter} · {r.tier}
+              {tr('checkin.levelTier', { level: r.levelAfter, tier: r.tier })}
             </Text>
             <Text variant="small" color="muted">
-              növbətiyə {r.xpToNext} XP
+              {tr('checkin.toNext', { xp: r.xpToNext })}
             </Text>
           </View>
 
@@ -203,7 +215,7 @@ export function CheckinScreen({ route, navigation }: AppScreenProps<'Checkin'>) 
             <View style={styles.levelUp}>
               <Icon name="sparkle" size={18} color={t.colors.brown700} />
               <Text variant="small" color="brown700" style={styles.bold}>
-                Level {r.levelBefore} → {r.levelAfter}! Təbriklər 🎉
+                {tr('checkin.levelUp', { from: r.levelBefore, to: r.levelAfter })}
               </Text>
             </View>
           ) : null}
@@ -212,7 +224,7 @@ export function CheckinScreen({ route, navigation }: AppScreenProps<'Checkin'>) 
         {r.newBadges.length ? (
           <View style={styles.badges}>
             <Text variant="h3" center>
-              Yeni nailiyyət
+              {tr('checkin.newBadge')}
             </Text>
             <View style={styles.badgeList}>
               {r.newBadges.map((b) => (
@@ -225,13 +237,13 @@ export function CheckinScreen({ route, navigation }: AppScreenProps<'Checkin'>) 
         {checkin.data.trip ? (
           <Card padded style={styles.tripCard}>
             <Text variant="small" color="ink2">
-              Səyahət planı: {checkin.data.trip.done} / {checkin.data.trip.total} tamamlandı
+              {tr('checkin.tripProgress', { done: checkin.data.trip.done, total: checkin.data.trip.total })}
             </Text>
             <Progress percent={checkin.data.trip.percent} thin />
           </Card>
         ) : null}
 
-        <Button label="Davam et" onPress={navigation.goBack} style={styles.cta} />
+        <Button label={tr('common:actions.continue')} onPress={navigation.goBack} style={styles.cta} />
       </View>
     </Screen>
   );
@@ -239,9 +251,10 @@ export function CheckinScreen({ route, navigation }: AppScreenProps<'Checkin'>) 
 
 /** Gözləmə — geri düyməsi ilə, istifadəçi heç vaxt ilişib qalmır. */
 function Busy({ label, onBack }: { label: string; onBack: () => void }) {
+  const { t: tr } = useT('gamification');
   return (
     <Screen padded={false} scroll={false}>
-      <TopBar title="Check-in" onBack={onBack} />
+      <TopBar title={tr('shared.checkin')} onBack={onBack} />
       <Loading label={label} />
     </Screen>
   );
@@ -263,9 +276,10 @@ function Outcome({
   onBack: () => void;
   children: ReactNode;
 }) {
+  const { t: tr } = useT('gamification');
   return (
     <Screen padded={false}>
-      <TopBar title="Check-in" onBack={onBack} />
+      <TopBar title={tr('shared.checkin')} onBack={onBack} />
       <View style={styles.center}>
         <View style={[styles.badge, tone === 'error' ? styles.badgeError : styles.badgeSoft]}>
           <Icon
