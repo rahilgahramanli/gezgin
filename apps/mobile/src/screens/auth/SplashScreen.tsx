@@ -5,10 +5,12 @@ import { Button, LogoMark, Text } from '@/components';
 import { useGuestLogin } from '@/api/hooks/auth';
 import { useAuth } from '@/store/auth';
 import { t } from '@/theme';
+import { useT } from '@/i18n';
 import type { AuthScreenProps } from '@/navigation/types';
 
 /** Ekran 01 — açılış. */
 export function SplashScreen({ navigation }: AuthScreenProps<'Splash'>) {
+  const { t: tr } = useT('auth');
   const guest = useGuestLogin();
   const consumeAuthEntry = useAuth((st) => st.consumeAuthEntry);
 
@@ -39,31 +41,31 @@ export function SplashScreen({ navigation }: AuthScreenProps<'Splash'>) {
             GEZGIN
           </Text>
           <Text variant="body" style={styles.tagline}>
-            Səyahət etmək yaşamaqdır
+            {tr('splash.tagline')}
           </Text>
         </View>
 
         <View style={styles.bottom}>
           <Text variant="titleLg" style={styles.slogan}>
-            Gəz, yaşa, paylaş!
+            {tr('splash.slogan')}
           </Text>
           <Text variant="small" style={styles.sub}>
-            Hər səyahət bir hekayədir. Sənin hekayən GEZGIN ilə başlayır.
+            {tr('splash.sub')}
           </Text>
 
           <Button
-            label="Qeydiyyat"
+            label={tr('splash.register')}
             onPress={() => navigation.navigate('Register')}
             style={styles.cta}
           />
           <Button
-            label="Daxil ol"
+            label={tr('splash.login')}
             variant="light"
             onPress={() => navigation.navigate('Login')}
             style={styles.cta}
           />
           <Button
-            label="Qonaq kimi davam et"
+            label={tr('splash.guest')}
             variant="ghost"
             loading={guest.isPending}
             onPress={() => guest.mutate()}

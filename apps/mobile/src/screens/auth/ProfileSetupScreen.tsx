@@ -8,6 +8,7 @@ import { useAuth } from '@/store/auth';
 import { ensurePermission } from '@/lib/location';
 import { alertError } from '@/lib/errors';
 import { t } from '@/theme';
+import { useT } from '@/i18n';
 import { sanitizeUsername } from '@/lib/username';
 
 const BIO_MAX = 300;
@@ -17,6 +18,7 @@ const BIO_MAX = 300;
  * Addım keçilə bilər; maraqlar artıq yadda saxlanıldığı üçün hesab hazırdır.
  */
 export function ProfileSetupScreen() {
+  const { t: tr } = useT('auth');
   const me = useMe();
   const update = useUpdateMe();
   const setAvatar = useSetProfileMedia('avatar');
@@ -39,7 +41,7 @@ export function ProfileSetupScreen() {
       const media = await uploadImage(asset, 'avatar');
       await setAvatar.mutateAsync(media.publicId);
     } catch (error) {
-      alertError(error, 'Şəkil yüklənmədi');
+      alertError(error, tr('setup.photoFailed'));
     } finally {
       setUploading(false);
     }
@@ -50,10 +52,7 @@ export function ProfileSetupScreen() {
     // İcazə dialoqu yalnız bir dəfə çıxır — rədd edilsə tənzimləmələrdən açılır
     const granted = await ensurePermission();
     if (!granted) {
-      Alert.alert(
-        'Yerləşmə icazəsi verilmədi',
-        'Check-in və “Yaxınlıqda” lenti üçün sonradan Tənzimləmələrdən icazə verə bilərsən.',
-      );
+      Alert.alert(tr('setup.locationDeniedTitle'), tr('setup.locationDeniedMessage'));
     }
   };
 
@@ -66,7 +65,7 @@ export function ProfileSetupScreen() {
       });
       finish();
     } catch (error) {
-      alertError(error, 'Profil yadda saxlanılmadı');
+      alertError(error, tr('setup.saveFailed'));
     }
   };
 
@@ -75,22 +74,22 @@ export function ProfileSetupScreen() {
       padded={false}
       footer={
         <View style={styles.footer}>
-          <Button block label="Başlayaq" loading={update.isPending} onPress={() => void save()} />
-          <Button block label="Sonra edərəm" variant="ghost" onPress={finish} />
+          <Button block label={tr('setup.start')} loading={update.isPending} onPress={() => void save()} />
+          <Button block label={tr('setup.later')} variant="ghost" onPress={finish} />
         </View>
       }
     >
       <TopBar />
 
       <View style={styles.body}>
-        <Pill label="Addım 3 / 3" tone="green" />
-        <Text variant="titleXl">Özünü tanıt</Text>
-        <Text variant="meta">Digər gezginlər səni belə görəcək</Text>
+        <Pill label={tr('step', { current: 3, total: 3 })} tone="green" />
+        <Text variant="titleXl">{tr('setup.title')}</Text>
+        <Text variant="meta">{tr('setup.sub')}</Text>
 
         <View style={styles.avatarRow}>
           <Avatar uri={me.data?.avatarUrl} size={88} name={me.data?.fullName} />
           <Button
-            label={uploading ? 'Yüklənir…' : 'Şəkil seç'}
+            label={uploading ? tr('common:states.loading') : tr('setup.pickPhoto')}
             variant="soft"
             size="sm"
             left={<Icon name="camera" size={16} color={t.colors.green900} />}
@@ -99,7 +98,7 @@ export function ProfileSetupScreen() {
         </View>
 
         <Input
-          label="İstifadəçi adı"
+          label={tr('fields.username')}
           icon="at"
           autoCapitalize="none"
           value={username ?? me.data?.username ?? ''}
@@ -108,10 +107,10 @@ export function ProfileSetupScreen() {
           spellCheck={false}
         />
         <Input
-          label={`Haqqında (${bio.length}/${BIO_MAX})`}
+          label={tr('setup.bio', { length: bio.length, max: BIO_MAX })}
           multiline
           numberOfLines={3}
-          placeholder="Nələri sevirsən? Hansı regionları gəzmisən?"
+          placeholder={tr('setup.bioPlaceholder')}
           value={bio}
           onChangeText={(v) => setBio(v.slice(0, BIO_MAX))}
         />
@@ -119,13 +118,13 @@ export function ProfileSetupScreen() {
         <Card padded style={styles.permission}>
           <Icon name="pin" size={20} color={t.colors.green900} />
           <View style={styles.permissionText}>
-            <Text variant="body">Yerləşmə icazəsi</Text>
+            <Text variant="body">{tr('setup.locationTitle')}</Text>
             <Text variant="meta" color="muted">
-              Check-in etmək və yaxınlıqdakı məkanları görmək üçün
+              {tr('setup.locationSub')}
             </Text>
           </View>
           <Button
-            label={locationAsked ? 'Soruşuldu' : 'İcazə ver'}
+            label={locationAsked ? tr('setup.asked') : tr('common:location.allow')}
             variant={locationAsked ? 'soft' : 'primary'}
             size="sm"
             disabled={locationAsked}
@@ -136,7 +135,7 @@ export function ProfileSetupScreen() {
         <View style={styles.reward}>
           <Icon name="sparkle" size={18} color={t.colors.brown700} />
           <Text variant="small" color="brown700">
-            Profil tamamlandı — +100 XP qazandın
+            {tr('setup.reward')}
           </Text>
         </View>
       </View>

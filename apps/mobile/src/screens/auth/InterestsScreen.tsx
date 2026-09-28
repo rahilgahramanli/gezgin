@@ -5,10 +5,12 @@ import { useCategoryList } from '@/api/hooks/content';
 import { useSetInterests } from '@/api/hooks/me';
 import { alertError } from '@/lib/errors';
 import { t } from '@/theme';
+import { useT } from '@/i18n';
 import type { AuthScreenProps } from '@/navigation/types';
 
 /** Ekran 04 — maraqların seçimi. Onboarding-in son addımı. */
 export function InterestsScreen({ navigation }: AuthScreenProps<'Interests'>) {
+  const { t: tr, tp: tpr } = useT('auth');
   const [selected, setSelected] = useState<string[]>([]);
   const categories = useCategoryList();
   const save = useSetInterests();
@@ -16,20 +18,20 @@ export function InterestsScreen({ navigation }: AuthScreenProps<'Interests'>) {
   const toggle = (slug: string) =>
     setSelected((prev) => (prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug]));
 
-  if (categories.isLoading) return <Loading label="Kateqoriyalar yüklənir…" />;
+  if (categories.isLoading) return <Loading label={tr('interests.loading')} />;
 
   return (
     <Screen
       padded={false}
       footer={
         <Button
-          label={selected.length ? `Davam et (${selected.length} seçildi)` : 'Ən azı 1 maraq seç'}
+          label={selected.length ? tpr('interests.continue', selected.length) : tr('interests.pickOne')}
           disabled={selected.length === 0}
           loading={save.isPending}
           onPress={() =>
             save.mutate(selected, {
               onSuccess: () => navigation.navigate('ProfileSetup'),
-              onError: (error) => alertError(error, 'Maraqlar yadda saxlanılmadı'),
+              onError: (error) => alertError(error, tr('interests.saveFailed')),
             })
           }
         />
@@ -37,11 +39,11 @@ export function InterestsScreen({ navigation }: AuthScreenProps<'Interests'>) {
     >
       <TopBar />
       <View style={styles.body}>
-        <Pill label="Addım 2 / 3" tone="green" />
+        <Pill label={tr('step', { current: 2, total: 3 })} tone="green" />
         <Text variant="titleXl" style={styles.title}>
-          Səni nə maraqlandırır?
+          {tr('interests.title')}
         </Text>
-        <Text variant="meta">Tövsiyələri sənin zövqünə görə hazırlayaq</Text>
+        <Text variant="meta">{tr('interests.sub')}</Text>
 
         <View style={styles.grid}>
           {(categories.data ?? []).map((c) => {

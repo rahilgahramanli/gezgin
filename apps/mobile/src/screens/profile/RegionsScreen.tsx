@@ -2,22 +2,24 @@ import { StyleSheet, View } from 'react-native';
 import { Card, Icon, ListSkeleton, Photo, Progress, Screen, Text, TopBar } from '@/components';
 import { useRegionProgress } from '@/api/hooks/me';
 import { t } from '@/theme';
+import { useT } from '@/i18n';
 import type { AppScreenProps } from '@/navigation/types';
 
 /** Ekran 32 — regionların kəşfi: neçəsi açılıb, hansı qalıb. */
 export function RegionsScreen({ navigation }: AppScreenProps<'Regions'>) {
+  const { t: tr, tp: tpr } = useT('profile');
   const progress = useRegionProgress();
   const p = progress.data;
   const left = p ? p.total - p.discovered : 0;
 
   return (
     <Screen padded={false}>
-      <TopBar title="Regionlar" onBack={navigation.goBack} />
+      <TopBar title={tr('regions.title')} onBack={navigation.goBack} />
 
       <Card padded style={styles.head}>
         <View style={styles.headRow}>
           <Text variant="titleLg">
-            {p?.discovered ?? 0} / {p?.total ?? 0} region
+            {tpr('regions.progress', p?.total ?? 0, { replace: { discovered: p?.discovered ?? 0 } })}
           </Text>
           <Text variant="h2" color="green700">
             {p?.percent ?? 0}%
@@ -25,7 +27,7 @@ export function RegionsScreen({ navigation }: AppScreenProps<'Regions'>) {
         </View>
         <Progress percent={p?.percent ?? 0} />
         <Text variant="meta" color="muted">
-          {left > 0 ? `Azərbaycanın ${left} regionu qalıb` : 'Bütün regionları kəşf etmisən!'}
+          {left > 0 ? tpr('regions.left', left) : tr('regions.allDone')}
         </Text>
       </Card>
 
@@ -38,7 +40,7 @@ export function RegionsScreen({ navigation }: AppScreenProps<'Regions'>) {
               key={r.slug}
               style={styles.row}
               onPress={() => navigation.navigate('Places', { region: r.slug })}
-              accessibilityLabel={`${r.name}, ${r.visitedPlaces} / ${r.placeCount} məkan`}
+              accessibilityLabel={`${r.name}, ${tpr('regions.placesProgress', r.placeCount, { replace: { visited: r.visitedPlaces } })}`}
             >
               <Photo uri={r.coverUrl} style={[styles.thumb, !r.discovered && styles.dim]} />
               <View style={styles.rowBody}>
@@ -46,7 +48,9 @@ export function RegionsScreen({ navigation }: AppScreenProps<'Regions'>) {
                   {r.name}
                 </Text>
                 <Text variant="meta" color="muted">
-                  {r.discovered ? `${r.visitedPlaces} / ${r.placeCount} məkan` : `${r.placeCount} məkan səni gözləyir`}
+                  {r.discovered
+                    ? tpr('regions.placesProgress', r.placeCount, { replace: { visited: r.visitedPlaces } })
+                    : tpr('regions.placesWaiting', r.placeCount)}
                 </Text>
                 {/* Kəşf edilməmiş regionda boş çubuq və "0%" eyni şeyi iki dəfə deyirdi */}
                 {r.discovered ? <Progress percent={r.percent} thin /> : null}

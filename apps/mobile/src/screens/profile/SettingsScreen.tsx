@@ -6,25 +6,21 @@ import { useBlockedUsers, useDeleteAccount, useMe, useSettings, useUnblock, useU
 import { useLogout } from '@/api/hooks/auth';
 import { applyLanguage } from '@/lib/language';
 import { t } from '@/theme';
+import { useT } from '@/i18n';
 import type { AppScreenProps } from '@/navigation/types';
 
-const LANGS = [
-  { code: 'az', label: 'Azərbaycan' },
-  { code: 'en', label: 'English' },
-  { code: 'ru', label: 'Русский' },
-] as const;
+/** Dillər öz adı ilə göstərilir (`settings.languages.*` hər üç faylda eynidir). */
+const LANGS = ['az', 'en', 'ru'] as const;
 
-const VISIBILITY = [
-  { code: 'public', label: 'Hamı' },
-  { code: 'followers', label: 'İzləyicilər' },
-  { code: 'private', label: 'Yalnız mən' },
-] as const;
+/** Etiketlər render zamanı tərcümə olunur — `settings.visibility.<kod>`. */
+const VISIBILITY = ['public', 'followers', 'private'] as const;
 
 /** Bölmə başlığı — sıx siyahıda oxu ritmini saxlayır. */
 function SectionTitle({ children }: { children: string }) {
+  const { lang } = useT('profile');
   return (
     <Text variant="small" color="muted" style={styles.sectionTitle}>
-      {children.toLocaleUpperCase('az')}
+      {children.toLocaleUpperCase(lang)}
     </Text>
   );
 }
@@ -145,6 +141,7 @@ function ToggleRow({
 
 /** Ekran 34 — tənzimləmələr: hesab, dil, bildirişlər, məxfilik, hüquqi, çıxış. */
 export function SettingsScreen({ navigation }: AppScreenProps<'Settings'>) {
+  const { t: tr, tp: tpr } = useT('profile');
   const me = useMe();
   const settings = useSettings();
   const update = useUpdateSettings();
@@ -162,94 +159,87 @@ export function SettingsScreen({ navigation }: AppScreenProps<'Settings'>) {
   const openLegal = (slug: 'terms' | 'privacy') => navigation.navigate('Legal', { slug });
 
   const confirmLogout = () =>
-    Alert.alert('Çıxış', 'Hesabdan çıxmaq istəyirsən?', [
-      { text: 'İmtina', style: 'cancel' },
-      { text: 'Çıxış', style: 'destructive', onPress: () => logout.mutate() },
+    Alert.alert(tr('settings.logoutTitle'), tr('settings.logoutMessage'), [
+      { text: tr('common:actions.cancel'), style: 'cancel' },
+      { text: tr('settings.logout'), style: 'destructive', onPress: () => logout.mutate() },
     ]);
 
   const confirmDelete = () =>
-    Alert.alert(
-      'Hesabı silmək?',
-      'Paylaşımların, rəylərin və marşrutların anonimləşdiriləcək. Bu əməliyyat geri qaytarılmır.',
-      [
-        { text: 'İmtina', style: 'cancel' },
-        { text: 'Hesabı sil', style: 'destructive', onPress: () => removeAccount.mutate() },
-      ],
-    );
+    Alert.alert(tr('settings.deleteTitle'), tr('settings.deleteMessage'), [
+      { text: tr('common:actions.cancel'), style: 'cancel' },
+      { text: tr('settings.deleteAccount'), style: 'destructive', onPress: () => removeAccount.mutate() },
+    ]);
 
   return (
     <Screen padded={false}>
-      <TopBar title="Tənzimləmələr" onBack={navigation.goBack} />
+      <TopBar title={tr('settings.title')} onBack={navigation.goBack} />
 
       <View style={styles.body}>
-        <SectionTitle>Hesab</SectionTitle>
+        <SectionTitle>{tr('settings.sections.account')}</SectionTitle>
         <Group>
           <Row
             icon="user"
-            label="Profili redaktə et"
+            label={tr('settings.editProfile')}
             value={me.data?.username ? `@${me.data.username}` : undefined}
             onPress={() => navigation.navigate('EditProfile')}
           />
           <Row
             icon="heart"
-            label="Maraqlarım"
-            value={`${me.data?.interests.length ?? 0} seçim`}
+            label={tr('settings.interests')}
+            value={tpr('settings.interestsCount', me.data?.interests.length ?? 0)}
             onPress={() => navigation.navigate('EditProfile')}
           />
-          <Row icon="coins" label="Ödəniş üsullarım" onPress={() => navigation.navigate('PaymentMethods')} />
-          <Row icon="mail" label="E-mail" value={me.data?.email ?? '—'} last />
+          <Row icon="coins" label={tr('settings.paymentMethods')} onPress={() => navigation.navigate('PaymentMethods')} />
+          <Row icon="mail" label={tr('settings.email')} value={me.data?.email ?? '—'} last />
         </Group>
 
-        <SectionTitle>Kontent dili</SectionTitle>
-        <Text variant="caption" color="muted" style={styles.hint}>
-          Məkan, marşrut və region adları seçilmiş dildə göstərilir. Tətbiqin interfeysi hazırda azərbaycancadır.
-        </Text>
+        <SectionTitle>{tr('settings.sections.language')}</SectionTitle>
         <Group>
-          {LANGS.map((l, i) => (
+          {LANGS.map((code, i) => (
             <ChoiceRow
-              key={l.code}
-              label={l.label}
-              active={(s?.language ?? 'az') === l.code}
+              key={code}
+              label={tr(`settings.languages.${code}`)}
+              active={(s?.language ?? 'az') === code}
               last={i === LANGS.length - 1}
               onPress={() => {
-                update.mutate({ language: l.code });
-                // Kontent (məkan, marşrut, region adları) seçilmiş dildə yenidən yüklənir
-                void applyLanguage(l.code, qc);
+                update.mutate({ language: code });
+                // İnterfeys dili dəyişir, kontent (məkan, marşrut, region adları) seçilmiş dildə yenidən yüklənir
+                void applyLanguage(code, qc);
               }}
             />
           ))}
         </Group>
 
-        <SectionTitle>Bildirişlər</SectionTitle>
+        <SectionTitle>{tr('settings.sections.notifications')}</SectionTitle>
         <Group>
           <ToggleRow
             icon="bell"
-            label="Push bildirişləri"
-            hint="Bəyənmə, şərh, izləyici və rezervasiya"
+            label={tr('settings.push')}
+            hint={tr('settings.pushHint')}
             value={s?.pushEnabled ?? true}
             onChange={(v) => update.mutate({ pushEnabled: v })}
           />
           <ToggleRow
             icon="mail"
-            label="E-mail bildirişləri"
+            label={tr('settings.emailNotifications')}
             value={s?.emailEnabled ?? true}
             onChange={(v) => update.mutate({ emailEnabled: v })}
             last
           />
         </Group>
 
-        <SectionTitle>Məxfilik</SectionTitle>
+        <SectionTitle>{tr('settings.sections.privacy')}</SectionTitle>
         <Text variant="meta" color="muted" style={styles.hint}>
-          Profilini kim görə bilər
+          {tr('settings.visibilityHint')}
         </Text>
         <Group>
-          {VISIBILITY.map((v, i) => (
+          {VISIBILITY.map((code, i) => (
             <ChoiceRow
-              key={v.code}
-              label={v.label}
-              active={(s?.profileVisibility ?? 'public') === v.code}
+              key={code}
+              label={tr(`settings.visibility.${code}`)}
+              active={(s?.profileVisibility ?? 'public') === code}
               last={i === VISIBILITY.length - 1}
-              onPress={() => update.mutate({ profileVisibility: v.code })}
+              onPress={() => update.mutate({ profileVisibility: code })}
             />
           ))}
         </Group>
@@ -257,14 +247,14 @@ export function SettingsScreen({ navigation }: AppScreenProps<'Settings'>) {
         <Group>
           <ToggleRow
             icon="pin"
-            label="Yerləşmə"
-            hint="Check-in və “Yaxınlıqda” lenti üçün"
+            label={tr('settings.location')}
+            hint={tr('settings.locationHint')}
             value={s?.locationEnabled ?? true}
             onChange={(v) => update.mutate({ locationEnabled: v })}
           />
           <Row
             icon="users"
-            label="Bloklanmış hesablar"
+            label={tr('settings.blocked')}
             value={`${blocked.data?.length ?? 0}`}
             onPress={() => setBlockedOpen((o) => !o)}
             last
@@ -283,7 +273,7 @@ export function SettingsScreen({ navigation }: AppScreenProps<'Settings'>) {
                     </Text>
                   </View>
                   <Button
-                    label="Bloku götür"
+                    label={tr('settings.unblock')}
                     variant="soft"
                     onPress={() => unblock.mutate(b.username)}
                     style={styles.unblock}
@@ -292,33 +282,33 @@ export function SettingsScreen({ navigation }: AppScreenProps<'Settings'>) {
               ))
             ) : (
               <Text variant="small" color="muted" style={styles.empty}>
-                Heç kimi bloklamamısan.
+                {tr('settings.noBlocked')}
               </Text>
             )}
           </View>
         ) : null}
 
-        <SectionTitle>Yükləmə</SectionTitle>
+        <SectionTitle>{tr('settings.sections.downloads')}</SectionTitle>
         <Group>
           <ToggleRow
             icon="download"
-            label="Yalnız Wi-Fi ilə yüklə"
-            hint="Offline xəritə paketləri"
+            label={tr('settings.wifiOnly')}
+            hint={tr('settings.wifiOnlyHint')}
             value={s?.wifiOnlyDownload ?? true}
             onChange={(v) => update.mutate({ wifiOnlyDownload: v })}
             last
           />
         </Group>
 
-        <SectionTitle>Hüquqi</SectionTitle>
+        <SectionTitle>{tr('settings.sections.legal')}</SectionTitle>
         <Group>
-          <Row icon="info" label="İstifadə şərtləri" onPress={() => openLegal('terms')} />
-          <Row icon="lock" label="Məxfilik siyasəti" onPress={() => openLegal('privacy')} last />
+          <Row icon="info" label={tr('settings.terms')} onPress={() => openLegal('terms')} />
+          <Row icon="lock" label={tr('settings.privacyPolicy')} onPress={() => openLegal('privacy')} last />
         </Group>
 
         <View style={styles.footer}>
-          <Button block label="Çıxış" variant="outline" onPress={confirmLogout} loading={logout.isPending} />
-          <Button block label="Hesabı sil" variant="ghost" textColor={t.colors.danger} onPress={confirmDelete} loading={removeAccount.isPending} />
+          <Button block label={tr('settings.logout')} variant="outline" onPress={confirmLogout} loading={logout.isPending} />
+          <Button block label={tr('settings.deleteAccount')} variant="ghost" textColor={t.colors.danger} onPress={confirmDelete} loading={removeAccount.isPending} />
           <Text variant="meta" color="muted" style={styles.version}>
             GEZGIN 1.0.0
           </Text>

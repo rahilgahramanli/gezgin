@@ -1,1 +1,136 @@
-{}
+{
+  "profile": {
+    "loading": "Загружаем профиль…",
+    "edit": "Редактировать профиль",
+    "settings": "Настройки",
+    "level": "Уровень {{level}}",
+    "nextLevel": "До следующего уровня: {{xp}} XP",
+    "stats": {
+      "regions": "Регионы",
+      "places": "Места",
+      "experiences": "Впечатления",
+      "routes": "Маршруты",
+      "wishlist": "Избранное"
+    },
+    "followers_one": "{{count}} подписчик",
+    "followers_few": "{{count}} подписчика",
+    "followers_many": "{{count}} подписчиков",
+    "following_one": "{{count}} подписка",
+    "following_few": "{{count}} подписки",
+    "following_many": "{{count}} подписок",
+    "myPosts": "Мои публикации",
+    "badges": "Достижения",
+    "leaderboard": "Рейтинг",
+    "wishlist": "Избранное",
+    "bookings": "Мои бронирования"
+  },
+  "tiers": {
+    "baslangic": "Новичок",
+    "kesf_eden": "Исследователь",
+    "seyyah": "Путешественник",
+    "kesfci": "Первооткрыватель",
+    "gezgin": "Gezgin"
+  },
+  "edit": {
+    "title": "Редактировать профиль",
+    "changeCover": "Сменить обложку",
+    "changePhoto": "Сменить фото",
+    "fullName": "Имя и фамилия",
+    "username": "Имя пользователя",
+    "bio": "О себе ({{length}}/{{max}})",
+    "bioPlaceholder": "Пара предложений о себе",
+    "homeRegion": "Домашний регион",
+    "interests": "Интересы",
+    "photoFailed": "Не удалось загрузить фото",
+    "saveFailed": "Не удалось сохранить профиль",
+    "nameShortTitle": "Слишком короткое имя",
+    "nameShortMessage": "Имя должно содержать не менее 2 букв",
+    "usernameShortTitle": "Слишком короткое имя пользователя",
+    "usernameShortMessage": "Имя пользователя должно содержать не менее 3 символов",
+    "interestsEmptyTitle": "Выберите интерес",
+    "interestsEmptyMessage": "Для рекомендаций выберите хотя бы 1 интерес"
+  },
+  "settings": {
+    "title": "Настройки",
+    "sections": {
+      "account": "Аккаунт",
+      "language": "Язык",
+      "notifications": "Уведомления",
+      "privacy": "Конфиденциальность",
+      "downloads": "Загрузки",
+      "legal": "Правовая информация"
+    },
+    "editProfile": "Редактировать профиль",
+    "interests": "Мои интересы",
+    "interestsCount_one": "Выбрано: {{count}}",
+    "interestsCount_few": "Выбрано: {{count}}",
+    "interestsCount_many": "Выбрано: {{count}}",
+    "paymentMethods": "Способы оплаты",
+    "email": "E-mail",
+    "languages": {
+      "az": "Azərbaycan",
+      "en": "English",
+      "ru": "Русский"
+    },
+    "push": "Push-уведомления",
+    "pushHint": "Лайки, комментарии, подписчики и бронирования",
+    "emailNotifications": "Уведомления по e-mail",
+    "visibilityHint": "Кто может видеть ваш профиль",
+    "visibility": {
+      "public": "Все",
+      "followers": "Подписчики",
+      "private": "Только я"
+    },
+    "location": "Геопозиция",
+    "locationHint": "Для чек-инов и ленты «Рядом»",
+    "blocked": "Заблокированные аккаунты",
+    "unblock": "Разблокировать",
+    "noBlocked": "Вы никого не заблокировали.",
+    "wifiOnly": "Загружать только по Wi-Fi",
+    "wifiOnlyHint": "Офлайн-карты",
+    "terms": "Условия использования",
+    "privacyPolicy": "Политика конфиденциальности",
+    "logout": "Выйти",
+    "logoutTitle": "Выход",
+    "logoutMessage": "Выйти из аккаунта?",
+    "deleteAccount": "Удалить аккаунт",
+    "deleteTitle": "Удалить аккаунт?",
+    "deleteMessage": "Ваши публикации, отзывы и маршруты будут анонимизированы. Это действие нельзя отменить."
+  },
+  "regions": {
+    "title": "Регионы",
+    "progress_one": "{{discovered}} из {{count}} региона",
+    "progress_few": "{{discovered}} из {{count}} регионов",
+    "progress_many": "{{discovered}} из {{count}} регионов",
+    "left_one": "Осталось открыть {{count}} регион Азербайджана",
+    "left_few": "Осталось открыть {{count}} региона Азербайджана",
+    "left_many": "Осталось открыть {{count}} регионов Азербайджана",
+    "allDone": "Вы открыли все регионы!",
+    "placesProgress_one": "{{visited}} из {{count}} места",
+    "placesProgress_few": "{{visited}} из {{count}} мест",
+    "placesProgress_many": "{{visited}} из {{count}} мест",
+    "placesWaiting_one": "Вас ждёт {{count}} место",
+    "placesWaiting_few": "Вас ждут {{count}} места",
+    "placesWaiting_many": "Вас ждут {{count}} мест"
+  },
+  "saved": {
+    "title": "Избранное",
+    "filters": {
+      "all": "Все",
+      "place": "Места",
+      "route": "Маршруты",
+      "experience": "Впечатления",
+      "post": "Публикации",
+      "business": "Отели",
+      "event": "События"
+    },
+    "guestTitle": "Сохраняйте то, что нравится",
+    "guestMessage": "Создайте аккаунт, чтобы сохранять места, маршруты и впечатления на потом.",
+    "emptyTitle": "Список пуст",
+    "emptyMessage": "Сохраните понравившееся место, маршрут или впечатление — потом вы найдёте его здесь."
+  },
+  "legal": {
+    "fallbackTitle": "Документ",
+    "version": "Версия {{version}} · {{date}}"
+  }
+}
