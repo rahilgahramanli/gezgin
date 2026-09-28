@@ -49,11 +49,13 @@ Image-lər **lokal maşında** `linux/amd64` üçün qurulur və serverə axınl
 serverin diski və 908 MB RAM-ı build üçün kifayət etmir:
 
 ```bash
-# 1. Kodu köçür (node_modules, ios/, .env, *.pem xaric)
-rsync -az --delete -e "ssh -i awskey.pem" \
-  --exclude node_modules --exclude .git --exclude apps/mobile/ios \
+# 1. Kodu köçür (node_modules, ios/, sirlər, agent worktree-ləri xaric).
+#    DİQQƏT: `--delete` işlətmə və `.env.production`-ı istisna et — serverdəki
+#    konfiqurasiya lokal nüsxədən yenidir (məs. connection_limit), üstünə yazılmamalıdır.
+rsync -az -e "ssh -i awskey.pem" \
+  --exclude node_modules --exclude .git --exclude .claude --exclude apps/mobile/ios \
   --exclude apps/mobile/android --exclude .next --exclude dist \
-  --exclude '*.pem' --exclude .env \
+  --exclude '*.pem' --exclude .env --exclude .env.production --exclude '*.pdf' \
   ./ ubuntu@13.60.173.66:~/gezgin/
 
 # 2. Image-ləri qur və axınla köçür (diskdə tar qalmır)
@@ -72,6 +74,13 @@ ssh -i awskey.pem ubuntu@13.60.173.66 \
   'cd ~/gezgin && sudo docker compose -f docker-compose.prod.yml \
    --env-file .env.production up -d'
 ```
+
+## Mühit dəyişənləri (serverdə `.env.production`)
+
+| Dəyişən | Qiymət | Niyə |
+|---|---|---|
+| `DEMO_SLOTS` | `true` | Expert paneli hazır olana qədər hər dərc olunmuş təcrübəyə növbəti 30 gün üçün tarix açır — əks halda heç bir təcrübə bron edilmir |
+| `BOOKING_PAYMENT_TTL_MIN` | `30` (defolt) | Ödənilməmiş rezervasiya bu müddətdən sonra ləğv olunur, yer boşalır |
 
 ## Miqrasiya və seed
 

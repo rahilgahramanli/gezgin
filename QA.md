@@ -35,7 +35,16 @@ onlarla giriş olmur — onları lentdə, rəylərdə, profillərdə görəcəks
 | `4000 0000 0000 3220` | 3-D Secure → OTP **`123456`** |
 | `4000 0000 0000 0069` | müddəti bitmiş kart |
 
-Tarix və CVC istənilən ola bilər.
+Tarix gələcəkdə, CVC istənilən 3 rəqəm ola bilər. Kart **rezervasiya ekranında "Kart əlavə et"** və ya
+**Tənzimləmələr → Ödəniş üsullarım** ilə əlavə olunur. 3-D Secure kartında ödənişdən sonra OTP pəncərəsi açılır.
+
+**Ləğv siyasəti:** başlanğıca ≥48 saat — 100%, 24–48 saat — 50%, <24 saat — geri qaytarma yoxdur.
+Ödənilməmiş rezervasiya 30 dəqiqə sonra avtomatik ləğv olunur.
+
+## Test sənədi
+
+Bütün biznes məntiqi testləri, gözlənilən nəticələri və son statusları: **`TEST-CASES.md`**.
+API səviyyəli qaydalar avtomatik yoxlanılır: `python3 scripts/qa/api_rules.py` (lokal API + dev baza).
 
 ## Nəyi test etmək
 
@@ -71,8 +80,10 @@ Tarix və CVC istənilən ola bilər.
 | Paylaşılan linklər (`gezgin.app/…`) açılmır | Veb sayt yoxdur |
 | Push bildirişi gəlmir | Sprint 9 |
 | Tədbirlər, offline xəritə, PRO, expert paneli, "Local Expert ol", təcrübə yaratma ekranları yoxdur | Plan üzrə Sprint 8–9 |
+| Təcrübə tarixləri avtomatik açılır (hər 2 gündən bir, 10:00; gecə turları 19:00) | Expert paneli gələnə qədər `DEMO_SLOTS` |
 | Biznes sahibi üçün idarəetmə ekranı yoxdur | Hələ planlaşdırılmayıb |
-| İngilis dili qismən, rus dili ümumiyyətlə yoxdur | i18n tamamlanmayıb |
+| İnterfeys yalnız azərbaycancadır; Tənzimləmələr → "Kontent dili" yalnız məkan/marşrut/region adlarını dəyişir | Tam i18n ayrıca işdir |
+| Hüquqi sənədlərin mətni hüquqşünas tərəfindən yoxlanılmayıb | Yayımdan əvvəl |
 | Hər qonaq girişi serverdə yeni hesab yaradır | Qonaq hesablarının təmizlənməsi hələ yazılmayıb |
 
 ## Xətanı necə yazmaq
