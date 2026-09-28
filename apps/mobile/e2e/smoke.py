@@ -373,8 +373,15 @@ def flow_report(ctx: Ctx) -> str:
 
 def flow_chat(ctx: Ctx) -> str:
     """Mesajlar → söhbət → yaz → göndər; mesaj serverdə, oxunmamış sayğac 0."""
+    convs = call('/conversations', ctx.token)['data']
+    if not convs:
+        # Təzə hesabda söhbət yoxdur — köməkçi yazır ki, siyahıda biri olsun
+        _, token = fresh_helper(ctx)
+        started = call('/conversations', token, 'POST', {'username': ctx.user})
+        call(f"/conversations/{started['publicId']}/messages", token, 'POST', {'body': 'Salam!'})
+        convs = call('/conversations', ctx.token)['data']
+    conv = convs[0]
     relaunch()
-    conv = call('/conversations', ctx.token)['data'][0]
     tap('Mesajlar')
     wait(conv['title'])
     tap(conv['title'])
@@ -412,7 +419,10 @@ def flow_notifications(ctx: Ctx) -> str:
     name, token = fresh_helper(ctx)
     # İki bildiriş: birinə toxunub oxuyuruq, "Hamısını oxu" qalan üçün lazım olur
     call(f'/users/{ctx.user}/follow', token, 'POST')
-    my_post = call(f'/users/{ctx.user}/posts?limit=1', ctx.token)['data'][0]
+    posts = call(f'/users/{ctx.user}/posts?limit=1', ctx.token)['data']
+    # Təzə hesabın paylaşımı yoxdursa bəyənmək üçün müvəqqəti biri yaradılır
+    temp = None if posts else call('/posts', ctx.token, 'POST', {'body': 'Smoke bildiriş testi'})
+    my_post = posts[0] if posts else temp
     call(f"/posts/{my_post['publicId']}/like", token, 'POST')
 
     wait('Bildirişlər, oxunmamış var', timeout=12)
@@ -423,6 +433,8 @@ def flow_notifications(ctx: Ctx) -> str:
     tap('Hamısını oxu', exact=True)
     time.sleep(1.5)
     assert call('/notifications?limit=1', ctx.token)['unreadCount'] == 0, 'oxunmamış qaldı'
+    if temp:
+        call(f"/posts/{temp['publicId']}", ctx.token, 'DELETE')
     return 'canlı nöqtə → bildiriş → profil → hamısı oxundu'
 
 

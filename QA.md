@@ -82,7 +82,7 @@ API səviyyəli qaydalar avtomatik yoxlanılır: `python3 scripts/qa/api_rules.p
 | Tədbirlər, offline xəritə, PRO, expert paneli, "Local Expert ol", təcrübə yaratma ekranları yoxdur | Plan üzrə Sprint 8–9 |
 | Təcrübə tarixləri avtomatik açılır (hər 2 gündən bir, 10:00; gecə turları 19:00) | Expert paneli gələnə qədər `DEMO_SLOTS` |
 | Biznes sahibi üçün idarəetmə ekranı yoxdur | Hələ planlaşdırılmayıb |
-| İnterfeys yalnız azərbaycancadır; Tənzimləmələr → "Kontent dili" yalnız məkan/marşrut/region adlarını dəyişir | Tam i18n ayrıca işdir |
+| Marşrut, təcrübə, tədbir adlarının rus tərcüməsi bazada yoxdur — rus interfeysində azərbaycanca görünür (interfeys, server mesajları, bildirişlər, hüquqi sənədlər isə tam az/en/ru) | Kontent tərcüməsi (seed `title_ru`) |
 | Hüquqi sənədlərin mətni hüquqşünas tərəfindən yoxlanılmayıb | Yayımdan əvvəl |
 | Hər qonaq girişi serverdə yeni hesab yaradır | Qonaq hesablarının təmizlənməsi hələ yazılmayıb |
 

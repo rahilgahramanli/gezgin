@@ -245,7 +245,7 @@ fon prosesləri) API səviyyəsində yoxlanılır.
 | PROF-01 | UI | Profil tabı | Level, tier, XP, score, statistika — hamısı azərbaycanca; rəqəmlər bazaya uyğun | 🔧 T1: statistika etiketləri ingiliscə → azərbaycanca, toxunulan; bio göstərilir |
 | PROF-02 | UI+DB | Redaktə: avatar, cover, ad, istifadəçi adı, bio, ev regionu (seç və götür), maraqlar | Hamısı saxlanılır; region götürüləndə serverdə də silinir | 🔧 T1: KRİTİK — region seçiləndə profil saxlanmırdı (homeRegion≠homeRegionSlug); null 500 verirdi → düzəldi |
 | PROF-03 | UI | Redaktə: ad 1 hərf; bütün maraqları götür | "Ad qısadır"; maraqsız saxlamaq olmur (aydın mesaj) | ✅ |
-| PROF-04 | UI | Tənzimləmələr → Dil: English | Kontent (məkan adları və s.) ingiliscə gəlir; seçim yadda qalır | 🔧 T1: dil seçimi heç nəyi dəyişmirdi → kontent seçilmiş dildə, yadda qalır ("Kontent dili") |
+| PROF-04 | UI | Tənzimləmələr → Dil: English | İnterfeys və kontent ingiliscə; seçim yadda qalır və hesabda saxlanılır | 🔧 T1: dil seçimi heç nəyi dəyişmirdi → T3: tam lokalizasiya (bax: I18N) |
 | PROF-05 | UI+DB | Bildiriş açarları | Serverdə saxlanılır, yenidən açanda qalır | ✅ |
 | PROF-06 | UI+API | Məxfilik → "İzləyicilər" | Profil başqaları üçün qapalı olur | 🔧 T1: "İzləyicilər" seçimi profili qapatmırdı → isPublic ilə sinxron |
 | PROF-07 | UI | Hüquqi sənədlər | Açılır və ya aydın mesaj | 🔧 T1: mövcud olmayan sayta aparırdı → tətbiqdaxili sənəd + HTML səhifə |
@@ -283,16 +283,19 @@ fon prosesləri) API səviyyəsində yoxlanılır.
 
 | ID | Üsul | Test | Gözlənilən nəticə | Status |
 |---|---|---|---|---|
-| I18N-01 | UI | Tənzimləmələr → Dil → English; bütün tabları və əsas ekranları gəz | Tablar, başlıqlar, düymələr, boş/xəta vəziyyətləri ingiliscə; kontent (məkan, region, kateqoriya adları) ingiliscə, tərcüməsi yoxdursa azərbaycanca | ⏳ |
-| I18N-02 | UI | Dil → Русский | Eyni ekranlar rusca; cəm formaları düzgün (1 отзыв / 2 отзыва / 5 отзывов) | ⏳ |
-| I18N-03 | UI | Dil seçilib, tətbiq bağlanıb açılır | Seçilmiş dil qalır | ⏳ |
-| I18N-04 | UI+API | en/ru-da yanlış şifrə, qapasitet xətası, check-in məsafə xətası | Server xətaları seçilmiş dildə | ⏳ |
-| I18N-05 | UI | en/ru-da bildirişlər | "X liked your post" / "X понравилась ваша публикация", səviyyə/nişan adları tərcümədə | ⏳ |
-| I18N-06 | UI | en/ru-da vaxt və tarixlər | "2 days ago" / "2 дня назад", ay adları (Oct / окт), Bakı vaxtı ilə bron saatı | ⏳ |
-| I18N-07 | UI | en/ru-da Gezgin Score, nailiyyətlər, liderlər | Tier, XP qaydası, badge adları seçilmiş dildə | ⏳ |
-| I18N-08 | UI | en/ru-da rezervasiya: qiymət sətirləri, ləğv siyasəti, rədd edilən kart | Hamısı seçilmiş dildə | ⏳ |
-| I18N-09 | UI | en/ru-da hüquqi sənədlər | Sənəd seçilmiş dildə | ⏳ |
-| I18N-10 | UI | Dil → Azərbaycan | İnterfeys əvvəlki kimi (avtomatik UI axınları 13/13) | ⏳ |
+| I18N-01 | UI | Tənzimləmələr → Dil → English; bütün tabları və əsas ekranları gəz | Tablar, başlıqlar, düymələr, boş/xəta vəziyyətləri ingiliscə; kontent (məkan, region, kateqoriya adları) ingiliscə, tərcüməsi yoxdursa azərbaycanca | ✅ T3: bütün tablar, lent, kəşf, profil, tənzimləmələr, giriş ingiliscə; kateqoriya/məkan/region adları ingiliscə |
+| I18N-02 | UI | Dil → Русский | Eyni ekranlar rusca; cəm formaları düzgün (1 отзыв / 2 отзыва / 5 отзывов) | ✅ T3: rusca; "1 место / 2 места / 8 мест", "Смотреть все 7 комментариев", "15 часов назад" |
+| I18N-03 | UI | Dil seçilib, tətbiq bağlanıb açılır | Seçilmiş dil qalır | ✅ T3: tətbiq yenidən açılanda seçilmiş dil qalır |
+| I18N-04 | UI+API | en/ru-da yanlış şifrə, qapasitet xətası, check-in məsafə xətası | Server xətaları seçilmiş dildə | ✅ T3: "Неверный e-mail или пароль", validasiya sahə mesajları rusca, "Недостаточно средств на карте" (API skripti I18N-01/02 + UI) |
+| I18N-05 | UI | en/ru-da bildirişlər | "X liked your post" / "X понравилась ваша публикация", səviyyə/nişan adları tərcümədə | ✅ T3: "Lang подписался(-ась) на вас"; səviyyə/nişan adları tərcümədə, canlı bildiriş socket dilində |
+| I18N-06 | UI | en/ru-da vaxt və tarixlər | "2 days ago" / "2 дня назад", ay adları (Oct / окт), Bakı vaxtı ilə bron saatı | ✅ T3: "21 сен", "15 часов назад", slot saatları Bakı vaxtı ilə |
+| I18N-07 | UI | en/ru-da Gezgin Score, nailiyyətlər, liderlər | Tier, XP qaydası, badge adları seçilmiş dildə | ✅ T3: "Новичок", "Открыть место +600", nişanlar ("Первый шаг") rusca |
+| I18N-08 | UI | en/ru-da rezervasiya: qiymət sətirləri, ləğv siyasəti, rədd edilən kart | Hamısı seçilmiş dildə | ✅ T3: "Взрослый × 2", ləğv siyasəti və rədd edilən kart rusca |
+| I18N-09 | UI | en/ru-da hüquqi sənədlər | Sənəd seçilmiş dildə | ✅ T3: "Условия использования", bölmələr rusca |
+| I18N-10 | UI | Dil → Azərbaycan | İnterfeys əvvəlki kimi (avtomatik UI axınları 13/13) | ✅ T3: azərbaycanca interfeys dəyişməyib, UI axınları 13/13 |
+| I18N-11 | UI | Başqa cihazda dili "English" olan hesabla daxil ol | İnterfeys və kontent hesabın dilinə keçir; yeni hesab cihazın dilini serverə yazır | 🔧 T3: dil yalnız cihazda saxlanılırdı, server dəyəri nəzərə alınmırdı; girişdən dərhal sonrakı sorğular köhnə dildə qalırdı |
+| I18N-12 | UI | ru-da məsafə və hündürlük | "12,5 км", "2140 м" — bütün ekranlarda eyni | 🔧 T3: bəzi ekranlarda "km/m", bəzilərində "км/м" |
+| I18N-13 | UI | en/ru-da təcrübə "Nə daxildir" | "Гид", "Местный обед" | 🔧 T3: API adı azərbaycanca göstərilirdi |
 
 ---
 
@@ -302,6 +305,7 @@ fon prosesləri) API səviyyəsində yoxlanılır.
 |---|---|---|
 | 1 | 2026-09-28 | UI: 97 qeyd, ~50 xəta. API skripti (`scripts/qa/api_rules.py`): 31/44 → 17 biznes məntiqi xətası |
 | 2 (reqressiya) | 2026-09-28 | Bütün 🔧 testlər simulyatorda təkrar keçirildi. API skripti **72/72**, API jest **269/269**, mobil jest **65/65**, köhnə UI smoke axınları (`apps/mobile/e2e/smoke.py`) **13/13**. 2-ci turda əlavə 4 xəta tapılıb düzəldildi (USER-05, EXP-09, REV-05, marşrut XP alerti) |
+| 3 (i18n + admin) | 2026-09-28 | Tam lokalizasiya (az/en/ru: interfeys, server xətaları, bildirişlər, oyunlaşdırma, rezervasiya, hüquqi sənədlər) və admin panelinin UI testi. API skripti **78/78** (yeni I18N bölməsi), API jest **299/299**, mobil jest **69/69**, UI axınları **13/13**. 3-cü turda 9 xəta tapılıb düzəldildi (AUTH-22, BOOK-21, MOD-05..08, I18N-11..13) |
 
 ## Tapılan xətalar — kateqoriyalar üzrə
 
@@ -316,7 +320,7 @@ fon prosesləri) API səviyyəsində yoxlanılır.
 
 ## Məlum məhdudiyyətlər (xəta deyil, plan üzrə)
 
-- Tətbiqin interfeysi yalnız azərbaycancadır; "Kontent dili" məkan/marşrut/region adlarını dəyişir (tam i18n — ayrıca iş).
+- Marşrut, təcrübə və tədbir adlarının **rus** tərcüməsi bazada yoxdur (seed-də yalnız az/en; region və məkanlarda ru var) — rus interfeysində bu adlar azərbaycanca göstərilir. İstifadəçi kontenti (paylaşım, şərh, rəy, səyahət adı) yazıldığı dildə qalır; e-poçt şablonları azərbaycancadır.
 - Təcrübə tarixlərini expert paneli yarada bilmir (Sprint 8–9) — demo mühitdə `DEMO_SLOTS=true` hər təcrübəyə 30 günlük tarix açır.
 - Ödəniş mock provayderdir (real PSP Sprint 11); push bildirişi, tədbirlər, oflayn xəritə — QA.md-dəki siyahı.
 - Hüquqi sənədlərin mətni platformanın faktiki qaydalarına əsasən yazılıb — yayımdan əvvəl hüquqşünas yoxlamalıdır.
