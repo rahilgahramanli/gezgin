@@ -1,6 +1,9 @@
 import { ArgumentsHost, Catch, ExceptionFilter, HttpException, HttpStatus, Logger } from '@nestjs/common';
 import { ERROR_CODES, type ErrorCode } from '@gezgin/shared';
 import type { Request, Response } from 'express';
+import { parseLang, type Lang } from '../i18n/lang';
+import { translateDetails, translateMessage } from '../i18n/messages';
+import { socketLang, type SocketLike } from '../i18n/socket-lang';
 
 interface ErrorBody {
   statusCode: number;
@@ -26,6 +29,9 @@ const STATUS_TO_CODE: Record<number, ErrorCode> = {
 /**
  * Bütün xətaları vahid formata salır — mobil tərəf `code` sahəsinə görə
  * istifadəçiyə tərcümə göstərir, `message` yalnız developer üçündür.
+ *
+ * `message` və `details` sətirləri `Accept-Language`-ə görə tərcümə olunur
+ * (kataloq: `common/i18n/messages.ts`). az-da mətn toxunulmaz qalır.
  */
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
@@ -61,8 +67,15 @@ export class AllExceptionsFilter implements ExceptionFilter {
       if (status >= 500) {
         this.logger.error(`WS → ${status} ${code}`, exception instanceof Error ? exception.stack : undefined);
       }
-      const client = host.switchToWs().getClient<{ emit?: (event: string, payload: unknown) => void }>();
-      client.emit?.('exception', { statusCode: status, code, message, ...(details !== undefined ? { details } : {}) });
+      const client = host.switchToWs().getClient<SocketLike & { emit?: (event: string, payload: unknown) => void }>();
+      const lang = socketLang(client);
+      const localized = this.localize(message, details, lang);
+      client.emit?.('exception', {
+        statusCode: status,
+        code,
+        message: localized.message,
+        ...(localized.details !== undefined ? { details: localized.details } : {}),
+      });
       return;
     }
 
@@ -78,16 +91,22 @@ export class AllExceptionsFilter implements ExceptionFilter {
       this.logger.warn(`${req.method} ${req.url} → 400 ${JSON.stringify(details)}`);
     }
 
+    const localized = this.localize(message, details, parseLang(req.headers['accept-language']));
     const body: ErrorBody = {
       statusCode: status,
       code,
-      message,
-      ...(details !== undefined ? { details } : {}),
+      message: localized.message,
+      ...(localized.details !== undefined ? { details: localized.details } : {}),
       path: req.url,
       timestamp: new Date().toISOString(),
       requestId: req.headers['x-request-id'] as string | undefined,
     };
 
     res.status(status).json(body);
+  }
+
+  /** Loqa orijinal (az) mətn düşür, müştəriyə isə tərcümə. */
+  private localize(message: string, details: unknown, lang: Lang): { message: string; details: unknown } {
+    return { message: translateMessage(message, lang), details: translateDetails(details, lang) };
   }
 }

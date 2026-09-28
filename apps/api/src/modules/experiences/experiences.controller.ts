@@ -7,12 +7,7 @@ import { ExperiencesService } from './experiences.service';
 import {
   AvailabilityDto, CreateExperienceDto, CreateSlotsDto, ListExperiencesDto, UpdateExperienceDto,
 } from './dto/experiences.dto';
-
-type Lang = 'az' | 'en' | 'ru';
-const parseLang = (h?: string): Lang => {
-  const v = h?.slice(0, 2).toLowerCase();
-  return v === 'en' || v === 'ru' ? v : 'az';
-};
+import { parseLang } from '@/common/i18n';
 
 @ApiTags('experiences')
 @Controller('experiences')

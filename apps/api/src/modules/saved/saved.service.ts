@@ -4,6 +4,7 @@ import { ulid } from 'ulid';
 import { ERROR_CODES } from '@gezgin/shared';
 import { PrismaService } from '@/common/prisma/prisma.service';
 import { StorageService } from '@/modules/storage/storage.service';
+import { daysText, text, titleFor } from '@/common/i18n';
 import type { CreateCollectionDto, ListSavedDto, SaveItemDto, UpdateCollectionDto } from './dto/saved.dto';
 
 type Lang = 'az' | 'en' | 'ru';
@@ -82,7 +83,7 @@ export class SavedService {
       return {
         id: row.id,
         title: t?.title ?? row.slug,
-        subtitle: `${row.days} gün · ${rt?.name ?? row.region.slug}`,
+        subtitle: `${daysText(row.days, lang)} · ${rt?.name ?? row.region.slug}`,
         imageKey: row.cover?.storageKey ?? null,
         rating: Number(row.ratingAvg),
         priceAzn: null,
@@ -107,7 +108,7 @@ export class SavedService {
       const rt = row.region.translations.find((x) => x.lang === lang) ?? row.region.translations.find((x) => x.lang === 'az');
       return {
         id: row.id,
-        title: row.titleAz,
+        title: titleFor(row, lang),
         subtitle: rt?.name ?? null,
         imageKey: row.photos[0]?.media.storageKey ?? null,
         rating: Number(row.ratingAvg),
@@ -127,7 +128,7 @@ export class SavedService {
       const rt = row.region.translations.find((x) => x.lang === lang) ?? row.region.translations.find((x) => x.lang === 'az');
       return {
         id: row.id,
-        title: row.titleAz,
+        title: titleFor(row, lang),
         subtitle: rt?.name ?? null,
         imageKey: row.cover?.storageKey ?? null,
         rating: null,
@@ -162,7 +163,7 @@ export class SavedService {
     if (!row) throw notFound();
     return {
       id: row.id,
-      title: row.body?.slice(0, 80) ?? 'Paylaşım',
+      title: row.body?.slice(0, 80) ?? text('post', lang),
       subtitle: row.user.fullName,
       imageKey: row.media[0]?.media.storageKey ?? null,
       rating: null,
@@ -364,7 +365,7 @@ export class SavedService {
     const total = await this.prisma.savedItem.count({ where: { userId } });
 
     return {
-      all: { publicId: null, name: 'Hamısı', itemCount: total, isPrivate: false, coverUrl: null },
+      all: { publicId: null, name: text('all'), itemCount: total, isPrivate: false, coverUrl: null },
       collections: rows.map((c) => ({
         publicId: c.publicId,
         name: c.name,

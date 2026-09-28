@@ -682,8 +682,64 @@ def extra():
     check("PROF-11b", rk.get("conditionValue", rk.get("condition")) in (5, None) , f"region-kesfcisi şərti: {rk.get('conditionValue', rk.get('condition'))}")
 
 
+# ───────────────────────────── I18N ─────────────────────────────
+
+EN = {"Accept-Language": "en-US,en;q=0.9"}
+RU = {"Accept-Language": "ru"}
+
+
+@safe
+def i18n():
+    # Xəta mesajı Accept-Language-ə görə; başlıqsız sorğu (admin paneli kimi) az qalır
+    bad = {"identifier": "aysel.demo", "password": "yanlis-sifre"}
+    s_az, j_az = U().post("/auth/login", bad)
+    s_en, j_en = U().post("/auth/login", bad, headers=EN)
+    s_ru, j_ru = U().post("/auth/login", bad, headers=RU)
+    check("I18N-01", s_az == s_en == s_ru == 401 and j_az.get("message") == "E-mail və ya şifrə yanlışdır"
+          and j_en.get("message") == "Incorrect email or password" and j_ru.get("message") == "Неверный e-mail или пароль",
+          f"az '{j_az.get('message')}', en '{j_en.get('message')}', ru '{j_ru.get('message')}'")
+
+    # Validasiya detalları da tərcümə olunur
+    s, j = U().post("/auth/register", {"fullName": "QA", "username": "A B", "email": "yox", "password": "1"}, headers=RU)
+    check("I18N-02", s == 400 and j.get("message") == "Ошибка валидации" and "Некорректный e-mail" in (j.get("details") or []),
+          f"{s} '{j.get('message')}' {j.get('details')}")
+
+    # Tier və XP qaydalarının adı
+    u = new_user("qai18n")
+    s, j = u.get("/me/score", headers=RU)
+    rules = {r.get("action"): r.get("name") for r in j.get("earnRules", [])}
+    s2, j2 = u.get("/me/score")
+    check("I18N-03", j.get("tier") == "Новичок" and rules.get("place_checkin") == "Открыть место" and j2.get("tier") == "Başlanğıc",
+          f"ru tier '{j.get('tier')}', qayda '{rules.get('place_checkin')}', az tier '{j2.get('tier')}'")
+
+    # Kateqoriya adları
+    s, cats = U().get("/categories", headers=EN)
+    s2, f = U().get("/places/filters", headers=EN)
+    tebiet = next((c for c in cats if c.get("slug") == "tebiet"), {}) if isinstance(cats, list) else {}
+    fnames = {c.get("slug"): c.get("name") for c in f.get("categories", [])}
+    check("I18N-04", tebiet.get("label") == "Nature" and tebiet.get("name", {}).get("az") == "Təbiət" and fnames.get("tebiet") == "Nature",
+          f"/categories label '{tebiet.get('label')}', /places/filters '{fnames.get('tebiet')}'")
+
+    # Hüquqi sənəd
+    s, j = U().get("/legal/terms", headers=EN)
+    r = requests.get(API + "/legal/privacy/page", params={"lang": "ru"}, timeout=30)
+    check("I18N-05", s == 200 and j.get("title") == "Terms of Use" and j.get("url", "").endswith("/legal/terms/page?lang=en")
+          and '<html lang="ru">' in r.text and "Политика конфиденциальности" in r.text,
+          f"en '{j.get('title')}', url {j.get('url')}, ru səhifə {r.status_code}")
+
+    # Bildiriş oxunanda tərcümə olunur (bazada az qalır)
+    v = new_user("qai18v")
+    v.post(f"/users/{u.username}/follow")
+    s, j = u.get("/notifications", headers=EN)
+    s2, j2 = u.get("/notifications")
+    t_en = next((n.get("title") for n in j.get("data", []) if n.get("type") == "social_follow"), None)
+    t_az = next((n.get("title") for n in j2.get("data", []) if n.get("type") == "social_follow"), None)
+    check("I18N-06", t_en == "QA started following you" and t_az == "QA səni izləməyə başladı", f"en '{t_en}', az '{t_az}'")
+
+
 SECTIONS = [("AUTH", auth), ("ONB", onb), ("FEED", feed), ("STORY", story), ("USER", user), ("REV", rev),
-            ("ROUTE", route), ("TRIP", trip), ("CHK", chk), ("BOOK", book), ("PROF", prof), ("SAVED", saved), ("MOD", mod), ("EXTRA", extra)]
+            ("ROUTE", route), ("TRIP", trip), ("CHK", chk), ("BOOK", book), ("PROF", prof), ("SAVED", saved), ("MOD", mod), ("EXTRA", extra),
+            ("I18N", i18n)]
 
 def cleanup():
     """Bu işin test paylaşımlarını və hekayələrini gizlədir — dev lenti QA məlumatı ilə dolmasın."""

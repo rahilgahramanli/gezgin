@@ -6,12 +6,7 @@ import { Public } from '@/common/decorators/public.decorator';
 import { CurrentUser, type AuthUser } from '@/common/decorators/current-user.decorator';
 import { GuestBlockedGuard } from '@/common/guards/guest-blocked.guard';
 import { BusinessesService } from './businesses.service';
-
-type Lang = 'az' | 'en' | 'ru';
-const parseLang = (h?: string): Lang => {
-  const v = h?.slice(0, 2).toLowerCase();
-  return v === 'en' || v === 'ru' ? v : 'az';
-};
+import { parseLang } from '@/common/i18n';
 
 class ContactDto {
   @ApiProperty({ minLength: 5, maxLength: 1000 })

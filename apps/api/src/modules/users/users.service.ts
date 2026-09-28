@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import type { Prisma } from '@prisma/client';
 import { PrismaService } from '@/common/prisma/prisma.service';
+import { badgeText, pickTr, text, trWhere } from '@/common/i18n';
 import { NotificationsService } from '@/modules/community/notifications.service';
 import { ReportsService } from '@/modules/community/reports.service';
 import { SocialGraphService, USER_CARD_SELECT, type UserCardRow } from '@/modules/community/social-graph.service';
@@ -40,7 +41,7 @@ export class UsersService {
           gezginScore: true,
           createdAt: true,
           cover: { select: { storageKey: true } },
-          homeRegion: { select: { slug: true, translations: { where: { lang: 'az' }, select: { name: true } } } },
+          homeRegion: { select: { slug: true, translations: { where: trWhere(), select: { lang: true, name: true } } } },
           expertProfile: { select: { ratingAvg: true, ratingCount: true, experienceCount: true, specialties: true } },
         },
       }),
@@ -61,7 +62,7 @@ export class UsersService {
       bio: extra.bio,
       coverUrl: this.graph.url(extra.cover?.storageKey),
       homeRegion: extra.homeRegion
-        ? { slug: extra.homeRegion.slug, name: extra.homeRegion.translations[0]?.name ?? extra.homeRegion.slug }
+        ? { slug: extra.homeRegion.slug, name: pickTr(extra.homeRegion.translations)?.name ?? extra.homeRegion.slug }
         : null,
       isPublic: user.isPublic,
       gezginScore: extra.gezginScore,
@@ -103,8 +104,8 @@ export class UsersService {
         skip: offset,
         take: limit + 1,
         include: {
-          translations: { where: { lang: 'az' }, select: { title: true } },
-          region: { select: { slug: true, translations: { where: { lang: 'az' }, select: { name: true } } } },
+          translations: { where: trWhere(), select: { lang: true, title: true } },
+          region: { select: { slug: true, translations: { where: trWhere(), select: { lang: true, name: true } } } },
           cover: { select: { storageKey: true } },
           _count: { select: { stops: true } },
         },
@@ -115,7 +116,7 @@ export class UsersService {
     return {
       data: rows.slice(0, limit).map((r) => ({
         slug: r.slug,
-        title: r.translations[0]?.title ?? r.slug,
+        title: pickTr(r.translations)?.title ?? r.slug,
         days: r.days,
         difficulty: r.difficulty,
         categories: r.categories ? r.categories.split('|') : [],
@@ -125,7 +126,7 @@ export class UsersService {
         copyCount: r.copyCount,
         visibility: r.visibility,
         coverUrl: this.graph.url(r.cover?.storageKey),
-        region: { slug: r.region.slug, name: r.region.translations[0]?.name ?? r.region.slug },
+        region: { slug: r.region.slug, name: pickTr(r.region.translations)?.name ?? r.region.slug },
       })),
       nextOffset: rows.length > limit ? offset + limit : null,
       total,
@@ -147,8 +148,7 @@ export class UsersService {
         const progress = Math.min(mine?.progress ?? 0, b.conditionValue);
         return {
           slug: b.slug,
-          name: b.nameAz,
-          description: b.descriptionAz,
+          ...badgeText(b),
           icon: b.icon,
           tier: b.tier,
           conditionValue: b.conditionValue,
@@ -254,7 +254,7 @@ export class UsersService {
       select: {
         ...USER_CARD_SELECT,
         homeRegionId: true,
-        homeRegion: { select: { translations: { where: { lang: 'az' }, select: { name: true } } } },
+        homeRegion: { select: { translations: { where: trWhere(), select: { lang: true, name: true } } } },
         interests: { select: { categoryId: true } },
       },
     });
@@ -273,9 +273,9 @@ export class UsersService {
     return {
       data: ranked.map(({ c, sameRegion, shared }) => ({
         ...this.graph.card(c),
-        region: c.homeRegion?.translations[0]?.name ?? null,
+        region: pickTr(c.homeRegion?.translations)?.name ?? null,
         isFollowing: false,
-        reason: sameRegion ? 'Sənin regionundan' : shared ? 'Ortaq maraqlar' : 'Populyar gezgin',
+        reason: text(sameRegion ? 'fromYourRegion' : shared ? 'sharedInterests' : 'popularGezgin'),
       })),
     };
   }

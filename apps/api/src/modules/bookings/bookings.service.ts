@@ -10,10 +10,14 @@ import { StorageService } from '@/modules/storage/storage.service';
 import { XpService } from '@/modules/gamification/xp.service';
 import { PaymentsService } from '@/modules/payments/payments.service';
 import { newBookingCode } from '@/common/ulid';
+import { cancellationLabel, packageLabel, paymentFailureText, priceLineLabel, text, titleFor } from '@/common/i18n';
 import { EXTRAS, type CancelBookingDto, type CreateBookingDto, type ListBookingsDto, type PayBookingDto, type QuoteDto } from './dto/bookings.dto';
 import { ACTIVE_STATUSES, BookingLifecycleService, PAYABLE_STATUSES } from './booking-lifecycle.service';
 
-/** Ləğv siyasəti — ekran 53. Başlanğıca qalan saata görə geri qaytarma faizi. */
+/**
+ * Ləğv siyasəti — ekran 53. Başlanğıca qalan saata görə geri qaytarma faizi.
+ * `label` az-dır (loq üçün); cavabda `cancellationLabel()` ilə sorğunun dilində.
+ */
 const CANCELLATION_TIERS = [
   { hoursBefore: 48, refundRate: 1.0, label: '48 saatdan çox qalıb — tam geri qaytarma' },
   { hoursBefore: 24, refundRate: 0.5, label: '24–48 saat qalıb — 50% geri qaytarma' },
@@ -129,7 +133,7 @@ export class BookingsService implements OnModuleInit {
       nights = pkg.nights;
       unitPrice = Number(pkg.priceAzn);
       // Otel paketi bütün qonaqlar üçün vahid qiymətdir — ekran 49
-      lines.push({ code: 'package', label: `${pkg.nights} gecə / ${pkg.days} gün`, quantity: 1, unitAzn: unitPrice, totalAzn: unitPrice });
+      lines.push({ code: 'package', label: packageLabel(pkg.nights, pkg.days, 'az'), quantity: 1, unitAzn: unitPrice, totalAzn: unitPrice });
     }
 
     for (const code of dto.extras ?? []) {
@@ -176,12 +180,13 @@ export class BookingsService implements OnModuleInit {
     let seatsLeft: number | null = null;
     if (q.slot) seatsLeft = Math.max(0, q.slot.capacity - q.slot.booked);
 
+    // Sətirlər bazaya az yazılır (`create`), cavabda isə sorğunun dilindədir
     return {
       type: q.type,
-      title: q.title,
+      title: q.experience ? titleFor(q.experience) : q.title,
       adults: q.adults,
       children: q.children,
-      lines: q.lines,
+      lines: q.lines.map((l) => ({ ...l, label: priceLineLabel(l.code, l.label) })),
       subtotalAzn: q.subtotalAzn,
       extrasAzn: q.extrasAzn,
       serviceFeeAzn: q.serviceFeeAzn,
@@ -191,7 +196,11 @@ export class BookingsService implements OnModuleInit {
       commission: q.commission,
       rewards: q.rewards,
       slot: q.slot ? { slotId: Number(q.slot.id), startAt: q.slot.startAt, seatsLeft } : null,
-      cancellationPolicy: CANCELLATION_TIERS.map((t) => ({ hoursBefore: t.hoursBefore, refundPercent: t.refundRate * 100, label: t.label })),
+      cancellationPolicy: CANCELLATION_TIERS.map((t) => ({
+        hoursBefore: t.hoursBefore,
+        refundPercent: t.refundRate * 100,
+        label: cancellationLabel(t.hoursBefore, t.label),
+      })),
     };
   }
 
@@ -526,7 +535,7 @@ export class BookingsService implements OnModuleInit {
 
     return {
       cancelled: true,
-      policy: { hoursBefore: Math.round(hoursLeft), refundPercent: tier.refundRate * 100, label: tier.label },
+      policy: { hoursBefore: Math.round(hoursLeft), refundPercent: tier.refundRate * 100, label: cancellationLabel(tier.hoursBefore, tier.label) },
       refund,
     };
   }
@@ -564,7 +573,7 @@ export class BookingsService implements OnModuleInit {
       code: b.code,
       type: b.type,
       status: b.status,
-      title: b.experience?.titleAz ?? b.package?.titleAz ?? 'Rezervasiya',
+      title: b.experience ? titleFor(b.experience) : (b.package?.titleAz ?? text('booking')),
       subtitle: b.experience
         ? `${b.experience.expert.fullName} · Local Expert`
         : b.package
@@ -579,7 +588,7 @@ export class BookingsService implements OnModuleInit {
       pricing: {
         lines: b.items.map((i) => ({
           code: i.code,
-          label: i.nameAz,
+          label: priceLineLabel(i.code, i.nameAz),
           quantity: i.quantity,
           unitAzn: Number(i.unitAzn),
           totalAzn: Number(i.totalAzn),
@@ -603,14 +612,14 @@ export class BookingsService implements OnModuleInit {
             amountAzn: Number(payment.amountAzn),
             refundedAzn: Number(payment.refundedAzn),
             paidAt: payment.paidAt,
-            failureMessage: payment.failureMessage,
+            failureMessage: paymentFailureText(payment.failureMessage),
           }
         : null,
       cancellation: {
         canCancel: ['pending', 'awaiting_payment', 'confirmed'].includes(b.status),
         hoursLeft: Math.round(hoursLeft),
         refundPercent: tier.refundRate * 100,
-        label: tier.label,
+        label: cancellationLabel(tier.hoursBefore, tier.label),
       },
       confirmedAt: b.confirmedAt,
       cancelledAt: b.cancelledAt,

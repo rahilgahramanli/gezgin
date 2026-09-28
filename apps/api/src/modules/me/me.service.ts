@@ -3,6 +3,7 @@ import { ERROR_CODES, gezginScore, levelProgress } from '@gezgin/shared';
 import { PrismaService } from '@/common/prisma/prisma.service';
 import { StorageService } from '@/modules/storage/storage.service';
 import { XpService } from '@/modules/gamification/xp.service';
+import { CATEGORY_NAME_SELECT, categoryName, pickTr, tierName, trWhere } from '@/common/i18n';
 import type { BlockUserDto, SetInterestsDto, UpdateMeDto, UpdateSettingsDto } from './dto/me.dto';
 
 @Injectable()
@@ -23,8 +24,8 @@ export class MeService {
       include: {
         avatar: { select: { storageKey: true, blurhash: true } },
         cover: { select: { storageKey: true, blurhash: true } },
-        homeRegion: { select: { slug: true, translations: { where: { lang: 'az' }, select: { name: true } } } },
-        interests: { include: { category: { select: { slug: true, nameAz: true, icon: true } } } },
+        homeRegion: { select: { slug: true, translations: { where: trWhere(), select: { lang: true, name: true } } } },
+        interests: { include: { category: { select: { slug: true, ...CATEGORY_NAME_SELECT, icon: true } } } },
         expertProfile: { select: { ratingAvg: true, ratingCount: true, experienceCount: true, specialties: true } },
       },
     });
@@ -46,16 +47,16 @@ export class MeService {
       avatarUrl: this.mediaUrl(user.avatar?.storageKey),
       coverUrl: this.mediaUrl(user.cover?.storageKey),
       homeRegion: user.homeRegion
-        ? { slug: user.homeRegion.slug, name: user.homeRegion.translations[0]?.name ?? user.homeRegion.slug }
+        ? { slug: user.homeRegion.slug, name: pickTr(user.homeRegion.translations)?.name ?? user.homeRegion.slug }
         : null,
       interests: user.interests.map((i) => ({
         slug: i.category.slug,
-        name: i.category.nameAz,
+        name: categoryName(i.category),
         icon: i.category.icon,
       })),
       gamification: {
         level: progress.level,
-        tier: progress.tier.nameAz,
+        tier: tierName(progress.tier),
         xp: user.xp,
         xpInLevel: progress.xpInLevel,
         xpForLevel: progress.xpForLevel,
@@ -135,9 +136,9 @@ export class MeService {
   async interests(userId: bigint) {
     const rows = await this.prisma.userInterest.findMany({
       where: { userId },
-      include: { category: { select: { slug: true, nameAz: true, nameEn: true, icon: true } } },
+      include: { category: { select: { slug: true, ...CATEGORY_NAME_SELECT, icon: true } } },
     });
-    return rows.map((r) => ({ slug: r.category.slug, name: r.category.nameAz, icon: r.category.icon }));
+    return rows.map((r) => ({ slug: r.category.slug, name: categoryName(r.category), icon: r.category.icon }));
   }
 
   /** Ekran 04 — maraqları tam əvəz edir. */
@@ -250,7 +251,7 @@ export class MeService {
       select: {
         slug: true,
         placeCount: true,
-        translations: { where: { lang: 'az' }, select: { name: true } },
+        translations: { where: trWhere(), select: { lang: true, name: true } },
         cover: { select: { storageKey: true } },
       },
       orderBy: { sortOrder: 'asc' },
@@ -276,7 +277,7 @@ export class MeService {
       const v = visitedBySlug.get(r.slug);
       return {
         slug: r.slug,
-        name: r.translations[0]?.name ?? r.slug,
+        name: pickTr(r.translations)?.name ?? r.slug,
         coverUrl: this.mediaUrl(r.cover?.storageKey),
         placeCount: r.placeCount,
         visitedPlaces: v?.places ?? 0,

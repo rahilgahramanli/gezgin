@@ -5,12 +5,7 @@ import { CurrentUser, type AuthUser } from '@/common/decorators/current-user.dec
 import { GuestBlockedGuard } from '@/common/guards/guest-blocked.guard';
 import { SavedService } from './saved.service';
 import { CreateCollectionDto, ListSavedDto, SaveItemDto, UpdateCollectionDto } from './dto/saved.dto';
-
-type Lang = 'az' | 'en' | 'ru';
-const parseLang = (h?: string): Lang => {
-  const v = h?.slice(0, 2).toLowerCase();
-  return v === 'en' || v === 'ru' ? v : 'az';
-};
+import { parseLang } from '@/common/i18n';
 
 @ApiTags('saved')
 @ApiBearerAuth()

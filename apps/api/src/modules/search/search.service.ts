@@ -5,6 +5,7 @@ import { StorageService } from '@/modules/storage/storage.service';
 import { distanceMeters, formatDistanceKm } from '@/common/search/geo';
 import { toBooleanQuery } from '@/common/search/normalize';
 import { translationJoin } from '@/common/search/translation';
+import { dayMonthText, daysText, levelText, pickTr, titleFor, trWhere } from '@/common/i18n';
 
 type Lang = 'az' | 'en' | 'ru';
 export type SearchType = 'place' | 'route' | 'experience' | 'event' | 'user' | 'business';
@@ -107,7 +108,7 @@ export class SearchService {
         type: 'route' as const,
         slug: r.slug,
         title: r.title,
-        subtitle: `${r.days} gün · ${r.region_name}`,
+        subtitle: `${daysText(r.days, lang)} · ${r.region_name}`,
         imageUrl: this.url(r.cover_key),
         rating: Number(r.rating_avg),
         ratingCount: r.rating_count,
@@ -118,8 +119,8 @@ export class SearchService {
     }
 
     if (types.includes('experience')) {
-      const rows = await this.prisma.$queryRaw<Array<{ slug: string; title_az: string; price_azn: Prisma.Decimal; rating_avg: Prisma.Decimal; rating_count: number; region_name: string; cover_key: string | null; score: number }>>`
-        SELECT e.slug, e.title_az, e.price_azn, e.rating_avg, e.rating_count,
+      const rows = await this.prisma.$queryRaw<Array<{ slug: string; title_az: string; title_en: string | null; price_azn: Prisma.Decimal; rating_avg: Prisma.Decimal; rating_count: number; region_name: string; cover_key: string | null; score: number }>>`
+        SELECT e.slug, e.title_az, e.title_en, e.price_azn, e.rating_avg, e.rating_count,
                rt.name AS region_name,
                (SELECT m.storage_key FROM experience_photos ep JOIN media_assets m ON m.id = ep.media_id
                 WHERE ep.experience_id = e.id AND m.deleted_at IS NULL
@@ -136,7 +137,7 @@ export class SearchService {
       hits.push(...rows.map((r) => ({
         type: 'experience' as const,
         slug: r.slug,
-        title: r.title_az,
+        title: titleFor({ titleAz: r.title_az, titleEn: r.title_en }, lang),
         subtitle: r.region_name,
         imageUrl: this.url(r.cover_key),
         rating: Number(r.rating_avg),
@@ -148,8 +149,8 @@ export class SearchService {
     }
 
     if (types.includes('event')) {
-      const rows = await this.prisma.$queryRaw<Array<{ slug: string; title_az: string; start_date: Date; region_name: string; cover_key: string | null; score: number }>>`
-        SELECT ev.slug, ev.title_az, ev.start_date, rt.name AS region_name, m.storage_key AS cover_key,
+      const rows = await this.prisma.$queryRaw<Array<{ slug: string; title_az: string; title_en: string | null; start_date: Date; region_name: string; cover_key: string | null; score: number }>>`
+        SELECT ev.slug, ev.title_az, ev.title_en, ev.start_date, rt.name AS region_name, m.storage_key AS cover_key,
                MATCH(ev.search_text) AGAINST(${bq} IN BOOLEAN MODE) AS score
         FROM events ev
         JOIN regions r ON r.id = ev.region_id
@@ -163,8 +164,8 @@ export class SearchService {
       hits.push(...rows.map((r) => ({
         type: 'event' as const,
         slug: r.slug,
-        title: r.title_az,
-        subtitle: `${new Date(r.start_date).toLocaleDateString('az-AZ', { day: 'numeric', month: 'long' })} · ${r.region_name}`,
+        title: titleFor({ titleAz: r.title_az, titleEn: r.title_en }, lang),
+        subtitle: `${dayMonthText(new Date(r.start_date), lang)} · ${r.region_name}`,
         imageUrl: this.url(r.cover_key),
         rating: null,
         ratingCount: null,
@@ -195,7 +196,7 @@ export class SearchService {
         type: 'user' as const,
         slug: r.username,
         title: r.full_name,
-        subtitle: r.role === 'local_expert' ? `Local Expert · Level ${r.level}` : `Level ${r.level}`,
+        subtitle: r.role === 'local_expert' ? `Local Expert · ${levelText(r.level, lang)}` : levelText(r.level, lang),
         imageUrl: this.url(r.avatar_key),
         rating: null,
         ratingCount: null,
@@ -272,9 +273,9 @@ export class SearchService {
     // Soyuq start: hələ axtarış tarixçəsi yoxdursa, seçilmiş məkanları təklif edirik
     const featured = await this.prisma.place.findMany({
       where: { isFeatured: true, deletedAt: null },
-      select: { translations: { where: { lang: 'az' }, select: { name: true } } },
+      select: { translations: { where: trWhere(), select: { lang: true, name: true } } },
       take: limit,
     });
-    return featured.map((f) => ({ query: f.translations[0]?.name ?? '', count: 0 })).filter((f) => f.query);
+    return featured.map((f) => ({ query: pickTr(f.translations)?.name ?? '', count: 0 })).filter((f) => f.query);
   }
 }

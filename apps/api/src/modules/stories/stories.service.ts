@@ -3,6 +3,7 @@ import type { Prisma } from '@prisma/client';
 import { ulid } from 'ulid';
 import { ERROR_CODES } from '@gezgin/shared';
 import { PrismaService } from '@/common/prisma/prisma.service';
+import { pickTr, trWhere } from '@/common/i18n';
 import { MediaService } from '@/modules/media/media.service';
 import { SocialGraphService, USER_CARD_SELECT, type UserCardRow } from '@/modules/community/social-graph.service';
 import type { CreateStoryDto } from './dto/stories.dto';
@@ -167,8 +168,8 @@ export class StoriesService {
           select: {
             id: true,
             slug: true,
-            translations: { where: { lang: 'az' }, select: { name: true } },
-            region: { select: { translations: { where: { lang: 'az' }, select: { name: true } } } },
+            translations: { where: trWhere(), select: { lang: true, name: true } },
+            region: { select: { translations: { where: trWhere(), select: { lang: true, name: true } } } },
           },
         })
       : [];
@@ -186,7 +187,7 @@ export class StoriesService {
           height: s.media.height,
           caption: s.caption,
           place: p
-            ? { slug: p.slug, name: p.translations[0]?.name ?? p.slug, region: p.region.translations[0]?.name ?? null }
+            ? { slug: p.slug, name: pickTr(p.translations)?.name ?? p.slug, region: pickTr(p.region.translations)?.name ?? null }
             : null,
           createdAt: s.createdAt,
           expiresAt: s.expiresAt,

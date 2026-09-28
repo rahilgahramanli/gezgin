@@ -6,6 +6,7 @@ import {
 import type { Namespace, Socket } from 'socket.io';
 import { ERROR_CODES } from '@gezgin/shared';
 import { PrismaService } from '@/common/prisma/prisma.service';
+import { socketLang, translateMessage } from '@/common/i18n';
 import type { JwtPayload } from '@/modules/auth/token.service';
 import { RealtimeService } from './realtime.service';
 
@@ -37,6 +38,8 @@ export class RealtimeGateway implements OnGatewayInit<Namespace>, OnGatewayConne
   }
 
   async handleConnection(client: Socket): Promise<void> {
+    // Bildiriş və xəta mətnləri bu socket üçün həmin dildə göndərilir
+    client.data.lang = socketLang(client);
     const token = this.extractToken(client);
     if (!token) return this.reject(client, ERROR_CODES.UNAUTHORIZED, 'Token göndərilməyib');
 
@@ -102,7 +105,7 @@ export class RealtimeGateway implements OnGatewayInit<Namespace>, OnGatewayConne
   }
 
   private reject(client: Socket, code: string, message: string): void {
-    client.emit('exception', { code, message });
+    client.emit('exception', { code, message: translateMessage(message, socketLang(client)) });
     client.disconnect(true);
   }
 }

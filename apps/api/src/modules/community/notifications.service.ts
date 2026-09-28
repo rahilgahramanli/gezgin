@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import type { Notification, NotificationType, Prisma } from '@prisma/client';
 import { ulid } from 'ulid';
 import { PrismaService } from '@/common/prisma/prisma.service';
+import { currentLang, translateNotification, type Lang } from '@/common/i18n';
 import { RealtimeService } from './realtime.service';
 import { SocialGraphService, USER_CARD_SELECT, type UserCardRow } from './social-graph.service';
 import type { ListNotificationsDto } from './dto/community.dto';
@@ -88,20 +89,23 @@ export class NotificationsService {
       },
     });
 
-    this.realtime.emitToUser(recipient.publicId, 'notification.new', this.shape(row, actor));
+    // Alıcının dili yaradan sorğunun dili deyil — hər socket öz dilində alır
+    await this.realtime.emitToUserLocalized(recipient.publicId, 'notification.new', (lang) => this.shape(row, actor, lang));
   }
 
-  private shape(n: Notification, actor: UserCardRow | null | undefined) {
+  /** Mətn bazada az saxlanılır, oxunanda tərcümə olunur — bax `common/i18n/notifications.ts`. */
+  private shape(n: Notification, actor: UserCardRow | null | undefined, lang: Lang = currentLang()) {
+    const text = translateNotification({ type: n.type, title: n.titleAz, body: n.bodyAz }, lang);
     return {
       publicId: n.publicId,
       type: n.type,
       category: SOCIAL_TYPES.includes(n.type) ? ('social' as const) : ('system' as const),
-      title: n.titleAz,
-      body: n.bodyAz,
+      title: text.title,
+      body: text.body,
       imageUrl: n.imageUrl,
       deepLink: n.deepLink,
       targetType: n.targetType,
-      actor: actor ? this.graph.card(actor) : null,
+      actor: actor ? this.graph.card(actor, lang) : null,
       isRead: n.readAt !== null,
       createdAt: n.createdAt,
     };

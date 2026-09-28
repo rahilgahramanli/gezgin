@@ -57,10 +57,26 @@ export const MEDIA = {
  * `scope`: təcrübədə nəfər başına, otel paketində rezervasiya başına.
  */
 export const BOOKING_EXTRAS = {
-  transfer: { nameAz: 'Transfer', hintAz: 'Gediş-gəliş, rahat mikroavtobus', priceAzn: 25 },
-  sigorta: { nameAz: 'Səyahət sığortası', hintAz: 'Bütün səyahət müddəti', priceAzn: 5 },
-  spa: { nameAz: 'Spa paketi', hintAz: 'Sauna, hovuz, 45 dəq masaj', priceAzn: 60 },
-  'ferdi-beledci': { nameAz: 'Fərdi bələdçi', hintAz: 'Yerli bələdçi müşayiəti', priceAzn: 40 },
+  transfer: {
+    nameAz: 'Transfer', nameEn: 'Transfer', nameRu: 'Трансфер',
+    hintAz: 'Gediş-gəliş, rahat mikroavtobus', hintEn: 'Round trip in a comfortable minibus', hintRu: 'Туда и обратно на комфортном микроавтобусе',
+    priceAzn: 25,
+  },
+  sigorta: {
+    nameAz: 'Səyahət sığortası', nameEn: 'Travel insurance', nameRu: 'Туристическая страховка',
+    hintAz: 'Bütün səyahət müddəti', hintEn: 'For the entire trip', hintRu: 'На весь срок поездки',
+    priceAzn: 5,
+  },
+  spa: {
+    nameAz: 'Spa paketi', nameEn: 'Spa package', nameRu: 'Спа-пакет',
+    hintAz: 'Sauna, hovuz, 45 dəq masaj', hintEn: 'Sauna, pool, 45-min massage', hintRu: 'Сауна, бассейн, массаж 45 мин',
+    priceAzn: 60,
+  },
+  'ferdi-beledci': {
+    nameAz: 'Fərdi bələdçi', nameEn: 'Private guide', nameRu: 'Личный гид',
+    hintAz: 'Yerli bələdçi müşayiəti', hintEn: 'Accompanied by a local guide', hintRu: 'Сопровождение местного гида',
+    priceAzn: 40,
+  },
 } as const;
 export type BookingExtraCode = keyof typeof BOOKING_EXTRAS;
 
