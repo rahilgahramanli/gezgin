@@ -155,5 +155,9 @@
     "saveNotDone": "Saxlanılmadı",
     "photoMissing": "Foto tapılmadı",
     "photoUploadFailed": "Foto yüklənmədi — şəbəkəni yoxlayıb yenidən cəhd edin"
+  },
+  "units": {
+    "km": "{{value}} km",
+    "m": "{{value}} m"
   }
 }

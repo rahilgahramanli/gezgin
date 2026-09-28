@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Chip, EmptyState, Icon, Input, Loading, RowCard, Screen, Text, TopBar } from '@/components';
 import { useSearch, type SearchHit } from '@/api/hooks/content';
-import { SEARCH_TYPE_LABEL, label } from '@/lib/labels';
+import { SEARCH_TYPE_LABEL, label, kmLabel } from '@/lib/labels';
 import { useT } from '@/i18n';
 import { t } from '@/theme';
 import type { AppScreenProps } from '@/navigation/types';
@@ -88,7 +88,7 @@ export function SearchScreen({ navigation }: AppScreenProps<'Search'>) {
                         </View>
                       ) : null}
                       {hit.priceAzn ? <Text variant="caption">{hit.priceAzn} AZN</Text> : null}
-                      {hit.distanceKm != null ? <Text variant="caption">{hit.distanceKm} km</Text> : null}
+                      {hit.distanceKm != null ? <Text variant="caption">{kmLabel(hit.distanceKm)}</Text> : null}
                     </View>
                   }
                   onPress={() => open(hit)}

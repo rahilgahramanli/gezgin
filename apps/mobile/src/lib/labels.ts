@@ -48,3 +48,7 @@ export function durationLabel(value: string | null | undefined): string {
   if (days) return tp('common:labels.duration.days', Number(days[1]));
   return value;
 }
+
+/** Məsafə və hündürlük — rusca "км/м", digər dillərdə "km/m". */
+export const kmLabel = (value: number | string): string => i18n.t('common:units.km', { value });
+export const metersLabel = (value: number | string): string => i18n.t('common:units.m', { value });

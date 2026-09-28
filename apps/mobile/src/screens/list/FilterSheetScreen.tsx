@@ -6,6 +6,7 @@ import { usePlaces } from '@/api/hooks/content';
 import { useT } from '@/i18n';
 import { t } from '@/theme';
 import type { AppScreenProps } from '@/navigation/types';
+import { kmLabel } from '@/lib/labels';
 
 export interface PlaceFilterValue {
   categories: string[];
@@ -137,7 +138,7 @@ export function FilterSheetScreen({ route, navigation }: AppScreenProps<'FilterS
           {DISTANCES.map((km) => (
             <Chip
               key={km}
-              label={`${km} km`}
+              label={kmLabel(km)}
               active={draft.maxDistanceKm === km}
               onPress={() => setDraft((d) => ({ ...d, maxDistanceKm: d.maxDistanceKm === km ? undefined : km }))}
             />

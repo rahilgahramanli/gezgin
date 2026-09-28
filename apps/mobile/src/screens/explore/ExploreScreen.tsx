@@ -8,7 +8,7 @@ import { errorText } from '@/lib/errors';
 import { useT } from '@/i18n';
 import { useExperiences, usePlaces, useRegions, useRoutes } from '@/api/hooks/content';
 import { useBusinesses } from '@/api/hooks/business';
-import { BUSINESS_TYPE_LABEL, label } from '@/lib/labels';
+import { BUSINESS_TYPE_LABEL, label, kmLabel } from '@/lib/labels';
 import { useUser } from '@/store/auth';
 import { t } from '@/theme';
 import type { TabScreenProps } from '@/navigation/types';
@@ -204,7 +204,7 @@ export function ExploreScreen({ navigation }: TabScreenProps<'Explore'>) {
                   meta={
                     <Text variant="small" color="muted">
                       {tpr('units.stops', r.stopCount)}
-                      {r.distanceKm ? ` · ${r.distanceKm} km` : ''}
+                      {r.distanceKm ? ` · ${kmLabel(r.distanceKm)}` : ''}
                     </Text>
                   }
                   onPress={() => navigation.navigate('RouteDetail', { slug: r.slug })}

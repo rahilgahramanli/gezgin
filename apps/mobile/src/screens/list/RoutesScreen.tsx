@@ -5,6 +5,7 @@ import { useRoutes } from '@/api/hooks/content';
 import { useT } from '@/i18n';
 import { t } from '@/theme';
 import type { AppScreenProps } from '@/navigation/types';
+import { kmLabel } from '@/lib/labels';
 
 /** Ekran 14 — marşrutlar, müddət filtri ilə. Çip mətni render zamanı tərcümə olunur. */
 const DURATIONS = [
@@ -61,7 +62,7 @@ export function RoutesScreen({ navigation }: AppScreenProps<'Routes'>) {
                   <View style={styles.meta}>
                     {r.ratingCount > 0 ? <Rating value={r.rating} count={r.ratingCount} /> : null}
                     <Text variant="caption">{tpr('units.stops', r.stopCount)}</Text>
-                    {r.distanceKm ? <Text variant="caption">{r.distanceKm} km</Text> : null}
+                    {r.distanceKm ? <Text variant="caption">{kmLabel(r.distanceKm)}</Text> : null}
                     {r.isOfficial ? <Pill label={tr('routes.official')} tone="teal" /> : null}
                   </View>
                 }

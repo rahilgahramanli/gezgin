@@ -6,6 +6,7 @@ import { toQuery, type PlaceFilterValue } from '@/screens/list/FilterSheetScreen
 import { useT } from '@/i18n';
 import { t } from '@/theme';
 import type { AppScreenProps } from '@/navigation/types';
+import { kmLabel } from '@/lib/labels';
 
 /** Ekran 12 — yerlər siyahısı və filtrlər. */
 export function PlacesScreen({ route, navigation }: AppScreenProps<'Places'>) {
@@ -73,7 +74,7 @@ export function PlacesScreen({ route, navigation }: AppScreenProps<'Places'>) {
                     <View style={styles.meta}>
                       <Rating value={p.rating} count={p.ratingCount} />
                       {p.distanceKm != null ? (
-                        <Text variant="caption">{p.distanceKm} km</Text>
+                        <Text variant="caption">{kmLabel(p.distanceKm)}</Text>
                       ) : null}
                       {p.entranceFeeAzn === 0 ? <Text variant="caption">{tr('free')}</Text> : null}
                     </View>

@@ -3,7 +3,7 @@ import {
   Avatar, Button, Card, DetailSkeleton, ErrorState, HeroScreen, Icon, Photo, Pill, Progress, Rating, SectionHead, Text,
 } from '@/components';
 import { useExperienceDetail, useToggleSaved } from '@/api/hooks/details';
-import { durationLabel } from '@/lib/labels';
+import { AMENITY_LABEL, durationLabel } from '@/lib/labels';
 import { shareItem } from '@/lib/share';
 import { bakuDate, bakuTime } from '@/lib/time';
 import { useT } from '@/i18n';
@@ -126,7 +126,8 @@ export function ExperienceDetailScreen({ route, navigation }: AppScreenProps<'Ex
                   <View style={styles.includeIcon}>
                     <Icon name="check" size={16} color={t.colors.green900} strokeWidth={2.4} />
                   </View>
-                  <Text variant="small">{i.name}</Text>
+                  {/* API adı azərbaycancadır — kod tanınırsa cari dildə göstərilir */}
+                  <Text variant="small">{AMENITY_LABEL[i.code] ?? i.name}</Text>
                 </View>
               ))}
             </View>

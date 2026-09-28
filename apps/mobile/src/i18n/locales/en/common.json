@@ -163,5 +163,9 @@
     "saveNotDone": "Not saved",
     "photoMissing": "Photo not found",
     "photoUploadFailed": "Photo upload failed — check your network and try again"
+  },
+  "units": {
+    "km": "{{value}} km",
+    "m": "{{value}} m"
   }
 }

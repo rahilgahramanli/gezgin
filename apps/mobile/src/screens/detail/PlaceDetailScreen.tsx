@@ -8,6 +8,7 @@ import { useT } from '@/i18n';
 import { t } from '@/theme';
 import type { AppScreenProps } from '@/navigation/types';
 import { ReviewsBlock } from './ReviewsBlock';
+import { kmLabel, metersLabel } from '@/lib/labels';
 
 const HERO_HEIGHT = 320;
 
@@ -72,7 +73,7 @@ export function PlaceDetailScreen({ route, navigation }: AppScreenProps<'PlaceDe
               <Icon name="pin" size={15} color="rgba(255,255,255,0.9)" />
               <Text variant="small" style={styles.onPhotoMeta}>
                 {p.region.name}
-                {p.altitudeM ? ` · ${p.altitudeM} m` : ''}
+                {p.altitudeM ? ` · ${metersLabel(p.altitudeM)}` : ''}
               </Text>
             </View>
           </View>
@@ -91,7 +92,7 @@ export function PlaceDetailScreen({ route, navigation }: AppScreenProps<'PlaceDe
 
         {/* Faktlar — ekran 13-dəki üç xana */}
         <View style={styles.facts}>
-          {p.altitudeM ? <Fact icon="mountain" value={`${p.altitudeM} m`} label={tr('place.altitude')} /> : null}
+          {p.altitudeM ? <Fact icon="mountain" value={metersLabel(p.altitudeM)} label={tr('place.altitude')} /> : null}
           {p.visitDurationH ? (
             <Fact
               icon="clock"
@@ -139,7 +140,7 @@ export function PlaceDetailScreen({ route, navigation }: AppScreenProps<'PlaceDe
                   key={n.slug}
                   uri={n.coverUrl}
                   title={n.name}
-                  subtitle={n.distanceKm != null ? `${n.distanceKm} km` : undefined}
+                  subtitle={n.distanceKm != null ? kmLabel(n.distanceKm) : undefined}
                   meta={<Rating value={n.rating} />}
                   onPress={() => navigation.push('PlaceDetail', { slug: n.slug })}
                 />

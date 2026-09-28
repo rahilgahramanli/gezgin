@@ -4,7 +4,7 @@ import {
 } from '@/components';
 import { useRouteDetail, useToggleSaved } from '@/api/hooks/details';
 import { useDeleteRoute } from '@/api/hooks/routeBuilder';
-import { DIFFICULTY_LABEL, label } from '@/lib/labels';
+import { DIFFICULTY_LABEL, label, kmLabel } from '@/lib/labels';
 import { alertError } from '@/lib/errors';
 import { shareItem } from '@/lib/share';
 import { useT } from '@/i18n';
@@ -86,7 +86,7 @@ export function RouteDetailScreen({ route, navigation }: AppScreenProps<'RouteDe
     >
       <View style={styles.body}>
         <View style={styles.stats}>
-          <StatCell value={r.distanceKm ? `${r.distanceKm} km` : '—'} label={tr('route.distance')} />
+          <StatCell value={r.distanceKm ? kmLabel(r.distanceKm) : '—'} label={tr('route.distance')} />
           <StatCell value={tpr('common:labels.duration.days', r.days)} label={tr('route.duration')} />
           <StatCell value={r.stopCount} label={tr('route.places')} />
         </View>

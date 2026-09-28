@@ -11,6 +11,7 @@ import { Icon, type IconName } from './Icon';
 import { Avatar, Photo } from './Media';
 import { Pill } from './Pill';
 import { Text } from './Text';
+import { kmLabel } from '@/lib/labels';
 
 /**
  * Heşteq sərhədi — `\p{L}` əvəzinə "boşluq və durğu işarəsi olmayan" sinif:
@@ -69,7 +70,7 @@ export function PostCard({ post, full, onOpen, onAuthor, onPlace, onLike, onComm
   const { width: screen } = useWindowDimensions();
   const width = screen - t.spacing.page * 2;
 
-  const meta = [post.location, timeAgo(post.createdAt), post.distanceKm != null ? `${post.distanceKm} km` : null]
+  const meta = [post.location, timeAgo(post.createdAt), post.distanceKm != null ? kmLabel(post.distanceKm) : null]
     .filter(Boolean)
     .join(' · ');
 
